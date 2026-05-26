@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DTL">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<title>Dark Trace Loom</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-0: #050508;
+  --bg-1: #0a0a10;
+  --bg-2: #111118;
+  --bg-3: #1a1a24;
+  --bg-4: #222230;
+  --tx-0: #e8e8f0;
+  --tx-1: #a0a0b8;
+  --tx-2: #686880;
+  --ac-1: #00e5ff;
+  --ac-2: #7c4dff;
+  --ac-3: #ff1744;
+  --ac-4: #00e676;
+  --ac-glow: rgba(0,229,255,0.15);
+  --radius: 12px;
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tab-h: 64px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; overflow:hidden; }
+body {
+  font-family:'Outfit',sans-serif;
+  background:var(--bg-0);
+  color:var(--tx-0);
+  overscroll-behavior:none;
+}
+
+/* === SPLASH === */
+#splash {
+  position:fixed;inset:0;z-index:9999;background:var(--bg-0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.6s, visibility 0.6s;
+}
+#splash.hide { opacity:0; visibility:hidden; pointer-events:none; }
+#splash .logo { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:700; letter-spacing:3px; }
+#splash .logo span { color:var(--ac-1); }
+#splash .sub { color:var(--tx-2); font-size:11px; letter-spacing:6px; text-transform:uppercase; margin-top:8px; }
+#splash .bar { width:120px; height:2px; background:var(--bg-3); margin-top:24px; border-radius:1px; overflow:hidden; }
+#splash .bar div { width:0; height:100%; background:var(--ac-1); border-radius:1px; animation:load 1.5s ease forwards; }
+@keyframes load { to { width:100%; } }
+
+/* === APP SHELL === */
+#app { display:flex; flex-direction:column; height:100%; padding-top:var(--safe-top); }
+
+/* === HEADER === */
+.header {
+  padding:12px 16px 8px; display:flex; align-items:center; justify-content:space-between;
+  background:var(--bg-1); border-bottom:1px solid var(--bg-3);
+}
+.header .brand { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px; letter-spacing:1px; }
+.header .brand span { color:var(--ac-1); }
+.header .status { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--tx-2); }
+.header .dot { width:6px; height:6px; border-radius:50%; background:var(--ac-3); }
+.header .dot.on { background:var(--ac-4); box-shadow:0 0 6px var(--ac-4); }
+
+/* === MAIN CONTENT AREA === */
+.content { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+.content::-webkit-scrollbar { display:none; }
+
+/* === TAB BAR === */
+.tabs {
+  display:flex; background:var(--bg-1); border-top:1px solid var(--bg-3);
+  padding-bottom:var(--safe-bottom); height:calc(var(--tab-h) + var(--safe-bottom));
+}
+.tab {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; color:var(--tx-2); font-size:10px; font-weight:500; cursor:pointer;
+  transition:color 0.2s;
+}
+.tab.active { color:var(--ac-1); }
+.tab svg { width:22px; height:22px; }
+
+/* === SCREENS === */
+.screen { display:none; padding:16px; min-height:100%; }
+.screen.active { display:block; }
+
+/* === SCAN SCREEN === */
+.scan-type-row { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:4px; }
+.scan-chip {
+  flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500;
+  background:var(--bg-3); color:var(--tx-1); cursor:pointer; transition:all 0.2s;
+  border:1px solid transparent;
+}
+.scan-chip.active { background:var(--ac-glow); color:var(--ac-1); border-color:var(--ac-1); }
+
+.scan-input-wrap {
+  position:relative; margin-bottom:16px;
+}
+.scan-input {
+  width:100%; padding:14px 48px 14px 16px; background:var(--bg-2); border:1px solid var(--bg-4);
+  border-radius:var(--radius); color:var(--tx-0); font-size:15px; font-family:'JetBrains Mono',monospace;
+  outline:none; transition:border-color 0.2s;
+}
+.scan-input:focus { border-color:var(--ac-1); }
+.scan-input::placeholder { color:var(--tx-2); }
+.scan-btn {
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:36px; height:36px; border-radius:10px; border:none;
+  background:var(--ac-1); color:var(--bg-0); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:transform 0.1s;
+}
+.scan-btn:active { transform:translateY(-50%) scale(0.92); }
+.scan-btn svg { width:18px; height:18px; }
+
+/* Scan options row */
+.scan-opts { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.scan-opt {
+  display:flex; align-items:center; gap:6px; font-size:12px; color:var(--tx-1);
+}
+.scan-opt input[type="checkbox"] {
+  appearance:none; width:16px; height:16px; border-radius:4px;
+  border:1px solid var(--bg-4); background:var(--bg-2); cursor:pointer;
+  position:relative;
+}
+.scan-opt input:checked { background:var(--ac-1); border-color:var(--ac-1); }
+.scan-opt input:checked::after {
+  content:''; position:absolute; left:5px; top:2px;
+  width:4px; height:8px; border:solid var(--bg-0); border-width:0 2px 2px 0;
+  transform:rotate(45deg);
+}
+
+/* === RESULTS === */
+.result-card {
+  background:var(--bg-2); border:1px solid var(--bg-3); border-radius:var(--radius);
+  padding:14px; margin-bottom:10px; transition:border-color 0.2s;
+}
+.result-card:active { border-color:var(--ac-1); }
+.result-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.result-site { font-weight:600; font-size:14px; }
+.result-tag {
+  font-size:10px; padding:2px 8px; border-radius:10px;
+  background:var(--ac-glow); color:var(--ac-1); font-weight:500;
+}
+.result-url {
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ac-1);
+  word-break:break-all; text-decoration:none;
+}
+.result-ids { margin-top:8px; padding-top:8px; border-top:1px solid var(--bg-3); }
+.result-ids .id-item {
+  display:inline-block; font-size:11px; padding:2px 8px; margin:2px;
+  background:var(--bg-3); border-radius:6px; color:var(--tx-1);
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* Stats banner */
+.stats-banner {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px;
+}
+.stat-box {
+  background:var(--bg-2); border:1px solid var(--bg-3); border-radius:var(--radius);
+  padding:12px; text-align:center;
+}
+.stat-val { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; }
+.stat-val.green { color:var(--ac-4); }
+.stat-val.red { color:var(--ac-3); }
+.stat-val.cyan { color:var(--ac-1); }
+.stat-label { font-size:10px; color:var(--tx-2); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+
+/* === GRAPH SCREEN === */
+#graph-canvas { width:100%; height:calc(100vh - var(--safe-top) - var(--tab-h) - var(--safe-bottom) - 60px); background:var(--bg-1); border-radius:var(--radius); border:1px solid var(--bg-3); }
+
+/* === CASES SCREEN === */
+.case-card {
+  background:var(--bg-2); border:1px solid var(--bg-3); border-radius:var(--radius);
+  padding:14px; margin-bottom:10px;
+}
+.case-name { font-weight:600; font-size:15px; margin-bottom:4px; }
+.case-meta { font-size:11px; color:var(--tx-2); }
+.case-entities { margin-top:6px; display:flex; gap:4px; flex-wrap:wrap; }
+.case-entity-badge {
+  font-size:10px; padding:2px 8px; border-radius:8px;
+  background:var(--bg-3); color:var(--tx-1);
+}
+.btn-add-case {
+  width:100%; padding:12px; border-radius:var(--radius); border:1px dashed var(--bg-4);
+  background:transparent; color:var(--tx-2); font-size:13px; cursor:pointer;
+  transition:all 0.2s; margin-top:8px;
+}
+.btn-add-case:active { border-color:var(--ac-1); color:var(--ac-1); }
+
+/* === SETTINGS === */
+.setting-group { margin-bottom:20px; }
+.setting-label { font-size:11px; color:var(--tx-2); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+.setting-input {
+  width:100%; padding:12px; background:var(--bg-2); border:1px solid var(--bg-3);
+  border-radius:var(--radius); color:var(--tx-0); font-size:14px;
+  font-family:'JetBrains Mono',monospace; outline:none;
+}
+.setting-input:focus { border-color:var(--ac-1); }
+.setting-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--bg-3); }
+.setting-row .name { font-size:14px; }
+.setting-row .val { font-size:12px; color:var(--tx-2); font-family:'JetBrains Mono',monospace; }
+.btn-save {
+  width:100%; padding:12px; border-radius:var(--radius); border:none;
+  background:var(--ac-1); color:var(--bg-0); font-size:14px; font-weight:600;
+  cursor:pointer; margin-top:8px;
+}
+.btn-save:active { opacity:0.8; }
+
+/* === SECTION HEADERS === */
+.section-h { font-size:13px; color:var(--tx-2); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; font-weight:600; }
+
+/* === LOADING OVERLAY === */
+.loading { display:none; position:fixed; inset:0; z-index:100; background:rgba(5,5,8,0.85); flex-direction:column; align-items:center; justify-content:center; }
+.loading.active { display:flex; }
+.spinner { width:32px; height:32px; border:3px solid var(--bg-4); border-top-color:var(--ac-1); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { margin-top:12px; font-size:13px; color:var(--tx-1); }
+
+/* === EMPTY STATE === */
+.empty { text-align:center; padding:40px 20px; }
+.empty .icon { font-size:48px; margin-bottom:12px; opacity:0.3; }
+.empty .msg { color:var(--tx-2); font-size:14px; }
+
+/* === TOAST === */
+.toast {
+  position:fixed; bottom:calc(var(--tab-h) + var(--safe-bottom) + 12px); left:50%; transform:translateX(-50%) translateY(80px);
+  background:var(--bg-3); color:var(--tx-0); padding:10px 20px; border-radius:20px;
+  font-size:13px; z-index:200; transition:transform 0.3s; white-space:nowrap;
+  border:1px solid var(--bg-4);
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* === HAPTIC ANIMATIONS === */
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+.scanning-pulse { animation:pulse 1.5s infinite; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="logo">DARK<span>TRACE</span>LOOM</div>
+  <div class="sub">Intelligence Platform</div>
+  <div class="bar"><div></div></div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading" id="loader">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loader-text">Scanning...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- APP -->
+<div id="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">DTL<span>.</span></div>
+    <div class="status">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text">offline</span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- SCAN SCREEN -->
+    <div class="screen active" id="screen-scan">
+      <div class="section-h">Target Input</div>
+      <div class="scan-type-row">
+        <div class="scan-chip active" data-type="auto">Auto Detect</div>
+        <div class="scan-chip" data-type="username">Username</div>
+        <div class="scan-chip" data-type="email">Email</div>
+        <div class="scan-chip" data-type="domain">Domain</div>
+        <div class="scan-chip" data-type="ip">IP Address</div>
+        <div class="scan-chip" data-type="phone">Phone</div>
+      </div>
+
+      <div class="scan-input-wrap">
+        <input class="scan-input" id="scan-query" placeholder="Enter target..." autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="scan-btn" id="btn-scan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
+
+      <div class="scan-opts" id="username-opts" style="display:none;">
+        <div class="scan-opt"><input type="checkbox" id="opt-allsites"><label for="opt-allsites">All 3000+ sites</label></div>
+        <div class="scan-opt"><input type="checkbox" id="opt-parse" checked><label for="opt-parse">Parse profiles</label></div>
+      </div>
+
+      <!-- Results area -->
+      <div id="results-area"></div>
+    </div>
+
+    <!-- GRAPH SCREEN -->
+    <div class="screen" id="screen-graph">
+      <div class="section-h">Entity Graph</div>
+      <canvas id="graph-canvas"></canvas>
+    </div>
+
+    <!-- CASES SCREEN -->
+    <div class="screen" id="screen-cases">
+      <div class="section-h">Cases</div>
+      <div id="cases-area"></div>
+      <button class="btn-add-case" id="btn-new-case">+ New Case</button>
+    </div>
+
+    <!-- SETTINGS SCREEN -->
+    <div class="screen" id="screen-settings">
+      <div class="section-h">Connection</div>
+      <div class="setting-group">
+        <div class="setting-label">Backend URL</div>
+        <input class="setting-input" id="set-url" placeholder="http://192.168.1.x:8000" value="">
+      </div>
+
+      <div class="section-h">API Keys</div>
+      <div class="setting-group">
+        <div class="setting-label">Anthropic (AI Analysis)</div>
+        <input class="setting-input" id="set-anthropic" type="password" placeholder="sk-ant-...">
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Hunter.io (Email)</div>
+        <input class="setting-input" id="set-hunter" type="password" placeholder="API key">
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">VirusTotal (Domain/IP)</div>
+        <input class="setting-input" id="set-vt" type="password" placeholder="API key">
+      </div>
+      <button class="btn-save" id="btn-save-settings">Save Settings</button>
+
+      <div style="margin-top:24px;">
+        <div class="section-h">Platform Info</div>
+        <div class="setting-row"><span class="name">Engine</span><span class="val" id="info-engine">--</span></div>
+        <div class="setting-row"><span class="name">Total Sites</span><span class="val" id="info-sites">--</span></div>
+        <div class="setting-row"><span class="name">Default Scan</span><span class="val" id="info-default">--</span></div>
+        <div class="setting-row"><span class="name">Tags</span><span class="val" id="info-tags">--</span></div>
+        <div class="setting-row"><span class="name">Entities</span><span class="val" id="info-entities">--</span></div>
+        <div class="setting-row"><span class="name">Version</span><span class="val">PWA 1.0</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tabs">
+    <div class="tab active" data-screen="scan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <span>Scan</span>
+    </div>
+    <div class="tab" data-screen="graph">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8 7.5l8 1M7.5 8.5l3 7.5M16 10l-2.5 6"/></svg>
+      <span>Graph</span>
+    </div>
+    <div class="tab" data-screen="cases">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      <span>Cases</span>
+    </div>
+    <div class="tab" data-screen="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Settings</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======== CONFIG ========
+const CFG = {
+  get url() { return localStorage.getItem('dtl_url') || ''; },
+  set url(v) { localStorage.setItem('dtl_url', v); },
+  get keys() { try { return JSON.parse(localStorage.getItem('dtl_keys')||'{}'); } catch { return {}; } },
+  set keys(v) { localStorage.setItem('dtl_keys', JSON.stringify(v)); },
+};
+
+// ======== API ========
+async function api(path, opts = {}) {
+  const base = CFG.url.replace(/\/+$/, '');
+  if (!base) throw new Error('Backend URL not configured');
+  const url = new URL(path, base);
+  if (opts.params) Object.entries(opts.params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const resp = await fetch(url, {
+    method: opts.method || 'GET',
+    headers: opts.body ? {'Content-Type':'application/json'} : {},
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+// ======== STATE ========
+let scanType = 'auto';
+let lastResults = null;
+
+// ======== UI HELPERS ========
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function toast(msg, ms=2500) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function showLoader(text='Scanning...') {
+  $('#loader-text').textContent = text;
+  $('#loader').classList.add('active');
+}
+function hideLoader() { $('#loader').classList.remove('active'); }
+
+// ======== NAVIGATION ========
+$$('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    $$('.tab').forEach(t => t.classList.remove('active'));
+    $$('.screen').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    $(`#screen-${tab.dataset.screen}`).classList.add('active');
+    if (tab.dataset.screen === 'graph') loadGraph();
+    if (tab.dataset.screen === 'cases') loadCases();
+    if (tab.dataset.screen === 'settings') loadSettings();
+  });
+});
+
+// ======== SCAN TYPE CHIPS ========
+$$('.scan-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    $$('.scan-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    scanType = chip.dataset.type;
+    const uopts = $('#username-opts');
+    uopts.style.display = scanType === 'username' ? 'flex' : 'none';
+    const inp = $('#scan-query');
+    const placeholders = {
+      auto:'Enter target...',username:'johndoe',email:'john@example.com',
+      domain:'example.com',ip:'8.8.8.8',phone:'+15125551234'
+    };
+    inp.placeholder = placeholders[scanType] || 'Enter target...';
+  });
+});
+
+// ======== SCAN ========
+$('#btn-scan').addEventListener('click', doScan);
+$('#scan-query').addEventListener('keydown', e => { if (e.key === 'Enter') doScan(); });
+
+async function doScan() {
+  const query = $('#scan-query').value.trim();
+  if (!query) return toast('Enter a target');
+  if (!CFG.url) return toast('Set backend URL in Settings');
+
+  try {
+    if (scanType === 'username' || scanType === 'auto') {
+      // Try maigret direct scan for usernames
+      const detected = await api('/api/scan/detect', { params: { q: query } });
+      const type = scanType === 'auto' ? detected.type : scanType;
+
+      if (type === 'username') {
+        showLoader(`Scanning ${query} across sites...`);
+        const allSites = $('#opt-allsites').checked;
+        const result = await api('/api/maigret/scan', {
+          method: 'POST',
+          params: { username: query, all_sites: allSites }
+        });
+        lastResults = result;
+        renderMaigretResults(result);
+        hideLoader();
+        return;
+      }
+    }
+
+    // General scan for non-username types
+    showLoader(`Scanning ${query}...`);
+    const result = await api('/api/scan', {
+      method: 'POST',
+      body: { query, scan_type: scanType === 'auto' ? null : scanType }
+    });
+    lastResults = result;
+    renderScanResults(result);
+    hideLoader();
+
+  } catch (err) {
+    hideLoader();
+    toast(`Error: ${err.message}`);
+  }
+}
+
+// ======== RENDER: MAIGRET RESULTS ========
+function renderMaigretResults(r) {
+  const area = $('#results-area');
+  let html = '';
+
+  // Stats banner
+  html += `<div class="stats-banner">
+    <div class="stat-box"><div class="stat-val green">${r.found_count}</div><div class="stat-label">Found</div></div>
+    <div class="stat-box"><div class="stat-val cyan">${r.total_checked}</div><div class="stat-label">Checked</div></div>
+    <div class="stat-box"><div class="stat-val red">${r.error_count}</div><div class="stat-label">Errors</div></div>
+  </div>`;
+
+  // Extracted IDs (maigret's killer feature)
+  const ids = r.extracted_ids || {};
+  const idKeys = Object.keys(ids);
+  if (idKeys.length > 0) {
+    html += `<div class="result-card" style="border-color:var(--ac-2);">
+      <div class="result-head"><span class="result-site">Extracted Identities</span>
+      <span class="result-tag" style="background:rgba(124,77,255,0.2);color:var(--ac-2);">${idKeys.length} types</span></div>
+      <div class="result-ids">`;
+    for (const [k, v] of Object.entries(ids)) {
+      const vals = Array.isArray(v) ? v : [v];
+      vals.forEach(val => {
+        if (val) html += `<span class="id-item">${k}: ${val}</span>`;
+      });
+    }
+    html += `</div></div>`;
+  }
+
+  // Found profiles grouped by tag
+  const byTag = r.found_by_tag || {};
+  const tagOrder = Object.entries(byTag).sort((a,b) => b[1].length - a[1].length);
+
+  for (const [tag, profiles] of tagOrder) {
+    html += `<div class="section-h" style="margin-top:16px;">${tag} (${profiles.length})</div>`;
+    for (const p of profiles) {
+      html += `<div class="result-card">
+        <div class="result-head">
+          <span class="result-site">${p.site_name}</span>
+          <span class="result-tag">${tag}</span>
+        </div>
+        <a href="${p.url}" target="_blank" rel="noopener" class="result-url">${p.url}</a>`;
+      // Show per-site extracted IDs
+      if (p.ids && Object.keys(p.ids).length) {
+        html += `<div class="result-ids">`;
+        for (const [ik, iv] of Object.entries(p.ids)) {
+          html += `<span class="id-item">${ik}: ${iv}</span>`;
+        }
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+  }
+
+  if (r.found_count === 0) {
+    html += `<div class="empty"><div class="icon">0</div><div class="msg">No profiles found for "${r.username}"</div></div>`;
+  }
+
+  area.innerHTML = html;
+}
+
+// ======== RENDER: GENERAL SCAN RESULTS ========
+function renderScanResults(r) {
+  const area = $('#results-area');
+  let html = '';
+
+  // Risk score
+  const risk = r.risk_score || 0;
+  const riskColor = risk > 60 ? 'red' : risk > 30 ? 'cyan' : 'green';
+
+  html += `<div class="stats-banner">
+    <div class="stat-box"><div class="stat-val ${riskColor}">${risk}</div><div class="stat-label">Risk</div></div>
+    <div class="stat-box"><div class="stat-val cyan">${r.type || '--'}</div><div class="stat-label">Type</div></div>
+    <div class="stat-box"><div class="stat-val green">${(r.discovered_entities||[]).length}</div><div class="stat-label">Entities</div></div>
+  </div>`;
+
+  // Module data
+  const mods = r.modules || {};
+  for (const [modName, modData] of Object.entries(mods)) {
+    if (typeof modData !== 'object') continue;
+    html += `<div class="result-card">
+      <div class="result-head"><span class="result-site">${modName}</span></div>
+      <pre style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tx-1);white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;">${JSON.stringify(modData, null, 2)}</pre>
+    </div>`;
+  }
+
+  // Discovered entities
+  const ents = r.discovered_entities || [];
+  if (ents.length) {
+    html += `<div class="section-h" style="margin-top:16px;">Discovered Entities</div>`;
+    for (const e of ents) {
+      html += `<div class="result-card">
+        <div class="result-head">
+          <span class="result-site">${e.value}</span>
+          <span class="result-tag">${e.type}</span>
+        </div>
+        <div style="font-size:11px;color:var(--tx-2);">${e.relationship} | confidence ${(e.confidence*100).toFixed(0)}%</div>
+      </div>`;
+    }
+  }
+
+  area.innerHTML = html;
+}
+
+// ======== GRAPH ========
+async function loadGraph() {
+  try {
+    const data = await api('/api/graph');
+    drawGraph(data);
+  } catch (e) {
+    $('#graph-canvas').getContext('2d').clearRect(0,0,9999,9999);
+  }
+}
+
+function drawGraph(data) {
+  const canvas = $('#graph-canvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx.scale(2, 2);
+  const W = rect.width, H = rect.height;
+
+  const nodes = data.nodes || [];
+  const edges = data.edges || [];
+  if (!nodes.length) {
+    ctx.fillStyle = '#686880';
+    ctx.font = '14px Outfit';
+    ctx.textAlign = 'center';
+    ctx.fillText('No entities yet. Run a scan.', W/2, H/2);
+    return;
+  }
+
+  // Simple force layout - position nodes
+  const positioned = nodes.map((n, i) => {
+    const angle = (2 * Math.PI * i) / nodes.length;
+    const r = Math.min(W, H) * 0.35;
+    return { ...n, x: W/2 + r * Math.cos(angle), y: H/2 + r * Math.sin(angle) };
+  });
+  const nodeMap = {};
+  positioned.forEach(n => nodeMap[n.id] = n);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw edges
+  ctx.strokeStyle = 'rgba(0,229,255,0.15)';
+  ctx.lineWidth = 1;
+  for (const e of edges) {
+    const from = nodeMap[e.source];
+    const to = nodeMap[e.target];
+    if (from && to) {
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    }
+  }
+
+  // Draw nodes
+  const typeColors = {
+    username:'#00e5ff', email:'#7c4dff', domain:'#ff1744',
+    ip:'#ff9100', phone:'#00e676', social:'#00e5ff', crypto:'#ffd600'
+  };
+  for (const n of positioned) {
+    const color = typeColors[n.type] || '#a0a0b8';
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = '#e8e8f0';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'center';
+    const label = (n.label || n.value || '').slice(0, 20);
+    ctx.fillText(label, n.x, n.y + 16);
+  }
+}
+
+// ======== CASES ========
+async function loadCases() {
+  try {
+    const cases = await api('/api/cases');
+    renderCases(cases);
+  } catch { $('#cases-area').innerHTML = '<div class="empty"><div class="msg">Connect to backend to view cases</div></div>'; }
+}
+
+function renderCases(cases) {
+  const area = $('#cases-area');
+  if (!cases.length) {
+    area.innerHTML = '<div class="empty"><div class="msg">No cases yet</div></div>';
+    return;
+  }
+  area.innerHTML = cases.map(c => `
+    <div class="case-card">
+      <div class="case-name">${c.name}</div>
+      <div class="case-meta">Created ${new Date(c.created_at).toLocaleDateString()}</div>
+    </div>
+  `).join('');
+}
+
+$('#btn-new-case').addEventListener('click', async () => {
+  const name = prompt('Case name:');
+  if (!name) return;
+  try {
+    await api('/api/cases', { method:'POST', body:{ name } });
+    toast('Case created');
+    loadCases();
+  } catch(e) { toast(`Error: ${e.message}`); }
+});
+
+// ======== SETTINGS ========
+function loadSettings() {
+  $('#set-url').value = CFG.url;
+  const keys = CFG.keys;
+  $('#set-anthropic').value = keys.anthropic || '';
+  $('#set-hunter').value = keys.hunter || '';
+  $('#set-vt').value = keys.virustotal || '';
+  checkConnection();
+  loadPlatformInfo();
+}
+
+$('#btn-save-settings').addEventListener('click', async () => {
+  CFG.url = $('#set-url').value.trim();
+  CFG.keys = {
+    anthropic: $('#set-anthropic').value.trim(),
+    hunter: $('#set-hunter').value.trim(),
+    virustotal: $('#set-vt').value.trim(),
+  };
+
+  // Push keys to backend
+  const keys = CFG.keys;
+  try {
+    for (const [name, val] of Object.entries(keys)) {
+      if (val) await api('/api/keys', { method:'POST', body:{ name, value: val } });
+    }
+    toast('Settings saved');
+    checkConnection();
+  } catch(e) { toast('Saved locally. Backend sync failed.'); }
+});
+
+async function checkConnection() {
+  const dot = $('#status-dot');
+  const txt = $('#status-text');
+  try {
+    await api('/api/stats');
+    dot.classList.add('on');
+    txt.textContent = 'connected';
+  } catch {
+    dot.classList.remove('on');
+    txt.textContent = 'offline';
+  }
+}
+
+async function loadPlatformInfo() {
+  try {
+    const [mstats, stats] = await Promise.all([api('/api/maigret/stats'), api('/api/stats')]);
+    $('#info-engine').textContent = `maigret v${mstats.version || '?'}`;
+    $('#info-sites').textContent = mstats.total_sites;
+    $('#info-default').textContent = mstats.default_scan_sites;
+    $('#info-tags').textContent = Object.keys(mstats.tags || {}).length;
+    $('#info-entities').textContent = stats.entities || 0;
+  } catch {}
+}
+
+// ======== INIT ========
+setTimeout(() => {
+  $('#splash').classList.add('hide');
+  checkConnection();
+}, 1800);
+
+// Service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

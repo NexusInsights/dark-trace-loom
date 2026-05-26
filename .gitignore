@@ -1,0 +1,85 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# ===== Project data =====
+# Local SQLite DBs and runtime artifacts — never commit
+data/
+reports/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ===== Secrets =====
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ===== Node / Expo =====
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/*.tsbuildinfo
+mobile/npm-debug.*
+mobile/yarn-debug.*
+mobile/yarn-error.*
+
+# Native build artifacts
+mobile/ios/
+mobile/android/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.mobileprovision
+mobile/*.orig.*
+
+# Metro
+mobile/.metro-health-check*
+
+# EAS
+mobile/.easignore.local
+
+# ===== Editor =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== Logs =====
+*.log
+logs/
