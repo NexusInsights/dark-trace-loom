@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { GlassPanel } from "@/components/intel";
 import { Button } from "@/components/ui/button";
 import { useCases } from "@/hooks/useInvestigationData";
-import { useAgents, useRunAgent, useSeedAgents, useAgentRuns } from "@/hooks/useAgentData";
+import { useAgents, useRunAgent, useAgentRuns, useCreateAgent } from "@/hooks/useAgentData";
 import { allTools } from "@/components/tools/toolDefinitions";
 import { toast } from "sonner";
 import {
-  Bot, Play, Loader2, CheckCircle, XCircle, Clock, Tag, ArrowRight,
+  Bot, Play, Loader2, CheckCircle, XCircle, Clock, Tag, ArrowRight, Plus,
   Zap, ChevronDown, ChevronUp,
 } from "lucide-react";
 
@@ -15,19 +15,12 @@ export default function AgentsPage() {
   const { data: cases = [] } = useCases();
   const { data: runs = [] } = useAgentRuns();
   const { startRun, runState, clearRunState } = useRunAgent();
-  const seedAgents = useSeedAgents();
+  const createAgent = useCreateAgent();
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [subject, setSubject] = useState("");
   const [caseId, setCaseId] = useState("");
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
-
-  // Seed default agents on first visit
-  useEffect(() => {
-    if (!agentsLoading && agents.length === 0) {
-      seedAgents.mutate();
-    }
-  }, [agentsLoading, agents.length]);
 
   const activeAgent = agents.find((a) => a.id === selectedAgent);
 
@@ -72,6 +65,29 @@ export default function AgentsPage() {
           <div className="col-span-3 flex justify-center py-10">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
+        ) : agents.length === 0 ? (
+          <GlassPanel className="col-span-3 p-10 text-center">
+            <Bot className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+            <h3 className="font-display font-semibold mb-2">No Agents Yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create an agent to chain OSINT tools into reusable investigation pipelines.
+            </p>
+            <Button
+              variant="neon"
+              size="sm"
+              className="gap-2"
+              disabled={createAgent.isPending}
+              onClick={() =>
+                createAgent.mutate({
+                  name: "New Agent",
+                  description: "Describe what this agent does",
+                  tool_sequence: [],
+                })
+              }
+            >
+              <Plus className="h-3.5 w-3.5" /> Create your first agent
+            </Button>
+          </GlassPanel>
         ) : (
           agents.map((agent) => {
             const seq = (agent.tool_sequence as string[]) ?? [];
