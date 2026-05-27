@@ -1,1 +1,19 @@
 project_id = "zisrsttmjeipkmllqubi"
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.api-gateway]
+verify_jwt = false
+
+[functions.analyze-case]
+verify_jwt = false
+
+[functions.check-alerts]
+verify_jwt = false
+
+[functions.osint-dispatch]
+verify_jwt = false
+
+[functions.breach-lookup]
+verify_jwt = false
