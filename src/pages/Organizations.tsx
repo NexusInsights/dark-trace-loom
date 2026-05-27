@@ -247,6 +247,7 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
         <TabsList>
           <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
           <TabsTrigger value="cases">Cases ({orgCases.length})</TabsTrigger>
+          {canManage && <TabsTrigger value="invitations">Invitations</TabsTrigger>}
           {canManage && <TabsTrigger value="settings">Settings</TabsTrigger>}
         </TabsList>
 
@@ -336,6 +337,13 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
             ))
           )}
         </TabsContent>
+
+        {/* Invitations Tab */}
+        {canManage && (
+          <TabsContent value="invitations" className="mt-4">
+            <InvitationsList orgId={org.id} />
+          </TabsContent>
+        )}
 
         {/* Settings Tab */}
         {canManage && (
