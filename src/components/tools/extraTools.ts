@@ -422,23 +422,34 @@ const geoReverse: ToolDefinition = {
   },
 };
 
-// 21. Wifi BSSID — flagged as demo (no free public BSSID API; WiGLE requires auth)
+// 21. WiFi BSSID — real lookup via WiGLE
 const wifiLookup: ToolDefinition = {
   id: "wifi-bssid", name: "WiFi BSSID Lookup",
-  description: "Geolocate WiFi BSSID (demo — production requires WiGLE API credentials)",
+  description: "Geolocate a WiFi BSSID via WiGLE",
   icon: Wifi, category: "Geospatial",
   fields: [{ key: "bssid", label: "BSSID", placeholder: "AA:BB:CC:DD:EE:FF", required: true }],
   process: async (inputs) => {
-    const b = inputs.bssid.trim(); await sleep(300); const seed = seedOf(b);
+    const bssid = inputs.bssid.trim();
+    const { data, error } = await supabase.functions.invoke("wigle-lookup", { body: { bssid } });
+    if (error) throw new Error(error.message);
+    if (data?.status === "not_configured") {
+      return {
+        summary: data.reason,
+        details: { bssid, ...data },
+        tags: ["wifi", "bssid", "geo", "not_configured"],
+      };
+    }
+    if (data?.status !== "success") {
+      return {
+        summary: `WiGLE lookup failed: ${data?.reason ?? "unknown"}`,
+        details: { bssid, ...data },
+        tags: ["wifi", "bssid", "geo"],
+      };
+    }
+    const r = data.result as { bssid: string; ssid: string | null; city: string | null; country: string | null };
     return {
-      summary: `BSSID format check`,
-      details: {
-        bssid: b,
-        valid_format: /^[0-9A-F]{2}([-:][0-9A-F]{2}){5}$/i.test(b),
-        oui: b.replace(/[-:]/g, "").slice(0, 6).toUpperCase(),
-        note: "Live BSSID geolocation requires WiGLE API credentials. Add WIGLE_API_KEY to enable.",
-        demo_position: { lat: ((seed % 180) - 90).toFixed(4), lng: ((seed % 360) - 180).toFixed(4) },
-      },
+      summary: `BSSID ${r.bssid} — ${r.ssid ?? "unknown"} (${r.city ?? "?"}, ${r.country ?? "?"})`,
+      details: r,
       tags: ["wifi", "bssid", "geo"],
     };
   },
