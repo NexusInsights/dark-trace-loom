@@ -141,19 +141,28 @@ const urlReputation: ToolDefinition = {
   },
 };
 
-// 7. Reverse Image Hash (mock — true pHash needs the actual image bytes)
+// 7. Reverse Image Hash — real pHash/dHash via edge function (decodes image bytes)
 const reverseImageHash: ToolDefinition = {
   id: "reverse-image-hash", name: "Image Perceptual Hash",
-  description: "Compute deterministic pHash/dHash from URL string (demo — true pHash requires uploaded bytes)",
+  description: "Compute perceptual hash (pHash) and difference hash (dHash) from image bytes",
   icon: Camera, category: "Media",
   fields: [{ key: "url", label: "Image URL", placeholder: "https://example.com/img.jpg", required: true }],
   process: async (inputs) => {
-    const url = inputs.url.trim(); await sleep(150); const seed = seedOf(url);
-    const hash = Array.from({ length: 16 }, (_, i) => ((seed * (i + 1)) % 16).toString(16)).join("");
+    const url = inputs.url.trim();
+    const { data, error } = await supabase.functions.invoke("image-hash", { body: { url } });
+    if (error) throw new Error(error.message);
+    if (data?.status !== "success") {
+      return {
+        summary: `Image hash failed: ${data?.reason ?? "unknown"}`,
+        details: data ?? { url },
+        tags: ["image", "phash", "dhash", "error"],
+      };
+    }
+    const r = data.result as { phash: string; dhash: string; width: number; height: number; format: string; bytes: number };
     return {
-      summary: `pHash: ${hash}`,
-      details: { source: url, phash: hash, dhash: hash.split("").reverse().join(""), note: "Demo — perceptual hashing on actual image bytes requires file upload + WASM image decoder." },
-      tags: ["image", "phash", "demo"],
+      summary: `pHash: ${r.phash.slice(0, 16)}... | ${r.width}x${r.height} ${r.format}`,
+      details: { url, ...r },
+      tags: ["image", "phash", "dhash"],
     };
   },
 };
@@ -413,23 +422,34 @@ const geoReverse: ToolDefinition = {
   },
 };
 
-// 21. Wifi BSSID — flagged as demo (no free public BSSID API; WiGLE requires auth)
+// 21. WiFi BSSID — real lookup via WiGLE
 const wifiLookup: ToolDefinition = {
   id: "wifi-bssid", name: "WiFi BSSID Lookup",
-  description: "Geolocate WiFi BSSID (demo — production requires WiGLE API credentials)",
+  description: "Geolocate a WiFi BSSID via WiGLE",
   icon: Wifi, category: "Geospatial",
   fields: [{ key: "bssid", label: "BSSID", placeholder: "AA:BB:CC:DD:EE:FF", required: true }],
   process: async (inputs) => {
-    const b = inputs.bssid.trim(); await sleep(300); const seed = seedOf(b);
+    const bssid = inputs.bssid.trim();
+    const { data, error } = await supabase.functions.invoke("wigle-lookup", { body: { bssid } });
+    if (error) throw new Error(error.message);
+    if (data?.status === "not_configured") {
+      return {
+        summary: data.reason,
+        details: { bssid, ...data },
+        tags: ["wifi", "bssid", "geo", "not_configured"],
+      };
+    }
+    if (data?.status !== "success") {
+      return {
+        summary: `WiGLE lookup failed: ${data?.reason ?? "unknown"}`,
+        details: { bssid, ...data },
+        tags: ["wifi", "bssid", "geo"],
+      };
+    }
+    const r = data.result as { bssid: string; ssid: string | null; city: string | null; country: string | null };
     return {
-      summary: `BSSID format check`,
-      details: {
-        bssid: b,
-        valid_format: /^[0-9A-F]{2}([-:][0-9A-F]{2}){5}$/i.test(b),
-        oui: b.replace(/[-:]/g, "").slice(0, 6).toUpperCase(),
-        note: "Live BSSID geolocation requires WiGLE API credentials. Add WIGLE_API_KEY to enable.",
-        demo_position: { lat: ((seed % 180) - 90).toFixed(4), lng: ((seed % 360) - 180).toFixed(4) },
-      },
+      summary: `BSSID ${r.bssid} — ${r.ssid ?? "unknown"} (${r.city ?? "?"}, ${r.country ?? "?"})`,
+      details: r,
       tags: ["wifi", "bssid", "geo"],
     };
   },

@@ -34,7 +34,13 @@ serve(async (req) => {
     if (customers.data.length === 0) throw new Error("No Stripe customer found");
 
     const customerId = customers.data[0].id;
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = req.headers.get("origin") || Deno.env.get("APP_ORIGIN") || "";
+    if (!origin) {
+      return new Response(
+        JSON.stringify({ error: "Origin header missing and APP_ORIGIN not configured" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,

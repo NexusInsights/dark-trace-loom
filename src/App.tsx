@@ -35,6 +35,7 @@ import Admin from "./pages/Admin";
 import PersonaDiscovery from "./pages/PersonaDiscovery";
 import PersonaProfile from "./pages/PersonaProfile";
 import PersonaIntelDashboard from "./pages/PersonaIntelDashboard";
+import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -62,6 +63,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/" element={<Index />} />
               <Route path="/landing" element={<Navigate to="/" replace />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

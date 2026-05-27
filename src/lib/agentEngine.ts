@@ -27,24 +27,6 @@ export const DEFAULT_TOOL_SEQUENCE = [
   "image-metadata",
 ];
 
-// Built-in agent templates
-export const AGENT_TEMPLATES = [
-  {
-    name: "Full OSINT Sweep",
-    description: "Run all OSINT tools sequentially: username search, domain lookup, email analysis, and image metadata extraction.",
-    toolSequence: DEFAULT_TOOL_SEQUENCE,
-  },
-  {
-    name: "Identity Recon",
-    description: "Focus on identity-related intelligence: username search across platforms and email header analysis.",
-    toolSequence: ["username-search", "email-header-analysis"],
-  },
-  {
-    name: "Domain Recon",
-    description: "Focused domain investigation: domain intelligence and site mapping.",
-    toolSequence: ["domain-intel"],
-  },
-];
 
 /**
  * Maps an input subject to tool-specific inputs.
