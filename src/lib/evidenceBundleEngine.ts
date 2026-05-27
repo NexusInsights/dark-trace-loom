@@ -424,9 +424,9 @@ export async function generateEvidenceBundle(
       content: `SHA-256 Verification Hash\n${verificationHash}\n\nGenerated: ${manifest.generatedAt}\nBundle ID: ${bundleId}`,
     });
 
-    blob = assembleZipBundle(files);
-    fileName = `evidence-bundle_${caseData.title.replace(/\s+/g, "-").toLowerCase()}_${bundleId.slice(0, 8)}.txt`;
-    mimeType = "text/plain";
+    blob = await assembleZipBundle(files);
+    fileName = `evidence-bundle_${caseData.title.replace(/\s+/g, "-").toLowerCase()}_${bundleId.slice(0, 8)}.zip`;
+    mimeType = "application/zip";
   }
 
   // Upload to storage
