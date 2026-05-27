@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateReport, type ReportData, type ReportType } from "./reportEngine";
+import JSZip from "jszip";
 
 export type BundleFormat = "zip" | "legal-pdf";
 
@@ -280,29 +281,15 @@ function generateManifestText(manifest: BundleManifest): string {
   return lines.join("\n");
 }
 
-/** Assemble all files into a single downloadable blob (simulated ZIP using concatenated text for browser) */
-function assembleZipBundle(files: Array<{ name: string; content: string }>): Blob {
-  // Build a simple multi-file text archive since browser lacks native ZIP
-  // Each file separated by a clear delimiter
-  const parts: string[] = [];
-  parts.push("╔══════════════════════════════════════════════════════════╗");
-  parts.push("║         OSINTHQ EVIDENCE BUNDLE — TEXT ARCHIVE          ║");
-  parts.push("╚══════════════════════════════════════════════════════════╝");
-  parts.push("");
-
-  files.forEach((f) => {
-    parts.push(`${"─".repeat(60)}`);
-    parts.push(`FILE: ${f.name}`);
-    parts.push(`SIZE: ${f.content.length} bytes`);
-    parts.push(`${"─".repeat(60)}`);
-    parts.push(f.content);
-    parts.push("");
+/** Assemble all files into a real ZIP archive using JSZip. */
+async function assembleZipBundle(files: Array<{ name: string; content: string }>): Promise<Blob> {
+  const zip = new JSZip();
+  for (const f of files) zip.file(f.name, f.content);
+  return zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
   });
-
-  parts.push("═".repeat(60));
-  parts.push("END OF EVIDENCE BUNDLE");
-
-  return new Blob([parts.join("\n")], { type: "text/plain" });
 }
 
 /** Main evidence bundle generation function */
