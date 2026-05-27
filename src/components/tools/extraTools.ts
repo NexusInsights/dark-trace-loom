@@ -141,19 +141,28 @@ const urlReputation: ToolDefinition = {
   },
 };
 
-// 7. Reverse Image Hash (mock — true pHash needs the actual image bytes)
+// 7. Reverse Image Hash — real pHash/dHash via edge function (decodes image bytes)
 const reverseImageHash: ToolDefinition = {
   id: "reverse-image-hash", name: "Image Perceptual Hash",
-  description: "Compute deterministic pHash/dHash from URL string (demo — true pHash requires uploaded bytes)",
+  description: "Compute perceptual hash (pHash) and difference hash (dHash) from image bytes",
   icon: Camera, category: "Media",
   fields: [{ key: "url", label: "Image URL", placeholder: "https://example.com/img.jpg", required: true }],
   process: async (inputs) => {
-    const url = inputs.url.trim(); await sleep(150); const seed = seedOf(url);
-    const hash = Array.from({ length: 16 }, (_, i) => ((seed * (i + 1)) % 16).toString(16)).join("");
+    const url = inputs.url.trim();
+    const { data, error } = await supabase.functions.invoke("image-hash", { body: { url } });
+    if (error) throw new Error(error.message);
+    if (data?.status !== "success") {
+      return {
+        summary: `Image hash failed: ${data?.reason ?? "unknown"}`,
+        details: data ?? { url },
+        tags: ["image", "phash", "dhash", "error"],
+      };
+    }
+    const r = data.result as { phash: string; dhash: string; width: number; height: number; format: string; bytes: number };
     return {
-      summary: `pHash: ${hash}`,
-      details: { source: url, phash: hash, dhash: hash.split("").reverse().join(""), note: "Demo — perceptual hashing on actual image bytes requires file upload + WASM image decoder." },
-      tags: ["image", "phash", "demo"],
+      summary: `pHash: ${r.phash.slice(0, 16)}... | ${r.width}x${r.height} ${r.format}`,
+      details: { url, ...r },
+      tags: ["image", "phash", "dhash"],
     };
   },
 };
