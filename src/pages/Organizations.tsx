@@ -349,38 +349,27 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
 }
 
 /* ── Invite Member Form ── */
-function InviteMemberForm({ orgId, userId }: { orgId: string; userId?: string }) {
+function InviteMemberForm({ orgId }: { orgId: string; userId?: string }) {
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("investigator");
+  const [role, setRole] = useState<"admin" | "investigator" | "viewer">("investigator");
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
-      // Look up user by email via profiles (simplified - in production use an edge function)
-      // For now, we add by user ID concept - in a real app this would send an invite email
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("name", email)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      if (!profile) throw new Error("User not found. They must have an account first.");
-
-      const { error } = await supabase
-        .from("organization_members")
-        .insert({
-          organization_id: orgId,
-          user_id: profile.id,
-          role: role as any,
-          invited_by: userId,
-        } as any);
-      if (error) throw error;
+      const { data, error } = await supabase.functions.invoke("invite-member", {
+        body: { org_id: orgId, email, role },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.status === "not_configured") {
+        throw new Error(data.reason || "Email service not configured");
+      }
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org-members", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["org-invitations", orgId] });
       setEmail("");
-      toast({ title: "Member added", description: "The user has been added to the organization." });
+      toast({ title: "Invitation sent", description: `An invite email has been sent to ${email}.` });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -389,16 +378,17 @@ function InviteMemberForm({ orgId, userId }: { orgId: string; userId?: string })
     <GlassPanel className="p-4" neonLine="left">
       <div className="flex items-end gap-3">
         <div className="flex-1">
-          <label className="text-xs font-medium mb-1 block">Add Member (by display name)</label>
+          <label className="text-xs font-medium mb-1 block">Invite by Email</label>
           <Input
-            placeholder="User's display name..."
+            type="email"
+            placeholder="teammate@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="w-[140px]">
           <label className="text-xs font-medium mb-1 block">Role</label>
-          <Select value={role} onValueChange={setRole}>
+          <Select value={role} onValueChange={(v) => setRole(v as "admin" | "investigator" | "viewer")}>
             <SelectTrigger className="h-10">
               <SelectValue />
             </SelectTrigger>
@@ -415,10 +405,77 @@ function InviteMemberForm({ orgId, userId }: { orgId: string; userId?: string })
           className="gap-2"
         >
           <UserPlus className="h-4 w-4" />
-          {inviteMutation.isPending ? "Adding..." : "Add"}
+          {inviteMutation.isPending ? "Sending..." : "Invite"}
         </Button>
       </div>
     </GlassPanel>
+  );
+}
+
+/* ── Invitations Tab ── */
+function InvitationsList({ orgId }: { orgId: string }) {
+  const queryClient = useQueryClient();
+  const { data: invitations = [], isLoading } = useQuery({
+    queryKey: ["org-invitations", orgId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organization_invitations")
+        .select("*")
+        .eq("organization_id", orgId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const revoke = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("organization_invitations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-invitations", orgId] });
+      toast({ title: "Invitation revoked" });
+    },
+  });
+
+  if (isLoading) return <p className="text-xs text-muted-foreground">Loading...</p>;
+  if (invitations.length === 0)
+    return <p className="text-xs text-muted-foreground">No invitations yet.</p>;
+
+  const statusOf = (i: { accepted_at: string | null; expires_at: string }) => {
+    if (i.accepted_at) return { label: "Accepted", tone: "default" as const };
+    if (new Date(i.expires_at).getTime() < Date.now()) return { label: "Expired", tone: "outline" as const };
+    return { label: "Pending", tone: "secondary" as const };
+  };
+
+  return (
+    <div className="space-y-2">
+      {invitations.map((i) => {
+        const s = statusOf(i);
+        return (
+          <GlassPanel key={i.id} className="p-3 flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{i.email}</p>
+              <p className="font-mono text-[10px] text-muted-foreground">
+                {i.role} · expires {new Date(i.expires_at).toLocaleDateString()}
+              </p>
+            </div>
+            <Badge variant={s.tone}>{s.label}</Badge>
+            {!i.accepted_at && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive"
+                onClick={() => revoke.mutate(i.id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </GlassPanel>
+        );
+      })}
+    </div>
   );
 }
 
