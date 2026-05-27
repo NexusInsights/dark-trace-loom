@@ -11,7 +11,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { runIdentityResolution } from "@/lib/identityResolutionEngine";
 import { computeEntityScores } from "@/lib/scoringEngine";
 import { runBreachScan } from "@/lib/breachEngine";
-import { reconstructTimeline } from "@/lib/timelineEngine";
 import { toast } from "sonner";
 import {
   Fingerprint, Loader2, Network, Mail, Globe, AtSign, Server, Phone, User,
@@ -128,7 +127,6 @@ export default function IdentityResolutionPage() {
   const [running, setRunning] = useState(false);
   const [scoring, setScoring] = useState(false);
   const [scanningBreaches, setScanningBreaches] = useState(false);
-  const [rebuildingTimeline, setRebuildingTimeline] = useState(false);
   const [progress, setProgress] = useState("");
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
@@ -256,21 +254,6 @@ export default function IdentityResolutionPage() {
     }
   };
 
-  const handleReconstructTimeline = async () => {
-    if (!user) return;
-    setRebuildingTimeline(true);
-    try {
-      const result = await reconstructTimeline(user.id, setProgress);
-      qc.invalidateQueries({ queryKey: ["entity_timeline"] });
-      toast.success(`Created ${result.eventsCreated} timeline events across ${result.entitiesProcessed} entities`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Timeline reconstruction failed");
-    } finally {
-      setRebuildingTimeline(false);
-      setProgress("");
-    }
-  };
-
   const typeStats = useMemo(() => {
     const stats = new Map<string, number>();
     for (const e of entities) {
@@ -310,13 +293,6 @@ export default function IdentityResolutionPage() {
             <><Loader2 className="h-3.5 w-3.5 animate-spin" />SCANNING...</>
           ) : (
             <><AlertTriangle className="h-3.5 w-3.5" />BREACH SCAN</>
-          )}
-        </Button>
-        <Button variant="outline" size="sm" className="gap-2" disabled={rebuildingTimeline || !entities.length} onClick={handleReconstructTimeline}>
-          {rebuildingTimeline ? (
-            <><Loader2 className="h-3.5 w-3.5 animate-spin" />REBUILDING...</>
-          ) : (
-            <><Clock className="h-3.5 w-3.5" />TIMELINE</>
           )}
         </Button>
         <Button
@@ -359,7 +335,7 @@ export default function IdentityResolutionPage() {
         >
           {computingSimilarity ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />ANALYZING...</> : <><GitCompare className="h-3.5 w-3.5" />SIMILARITY SCORE</>}
         </Button>
-        {(running || scoring || scanningBreaches || rebuildingTimeline || clustering || computingSimilarity) && (progress || clusterProgress || similarityProgress) && (
+        {(running || scoring || scanningBreaches || clustering || computingSimilarity) && (progress || clusterProgress || similarityProgress) && (
           <span className="font-mono text-[10px] text-primary">{progress || clusterProgress || similarityProgress}</span>
         )}
         {entities.length > 0 && (

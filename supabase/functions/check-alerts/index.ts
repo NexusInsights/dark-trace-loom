@@ -196,14 +196,42 @@ async function checkAlert(alert: any, supabase: any): Promise<AlertCheckResult> 
     }
 
     case "breach_detection": {
-      // Deferred until breach-lookup change-detector lands (Pass 2).
-      // Lottery-based fake alert removed; honest no-op until real diffing is wired.
-      return {
-        triggered: false,
-        title: "",
-        message: "",
-        metadata: { status: "deferred_until_breach_lookup_lands" },
-      };
+      // Read-side change detector: surfaces breach_records rows persisted by
+      // breach-lookup since the last alert check. Does not re-scan.
+      const caseId = alert.subjects?.case_id;
+      if (!caseId) return { triggered: false, title: "", message: "" };
+
+      const { data: caseEntities } = await supabase
+        .from("identity_entities")
+        .select("entity_value")
+        .eq("source_case_id", caseId)
+        .in("entity_type", ["email", "username", "phone", "domain"]);
+
+      const identifiers = (caseEntities ?? []).map((e: any) => e.entity_value).filter(Boolean);
+      if (identifiers.length === 0) return { triggered: false, title: "", message: "" };
+
+      const since = alert.last_checked || alert.created_at;
+      const { data: newBreaches } = await supabase
+        .from("breach_records")
+        .select("id, breach_name, breach_source, severity, identifier")
+        .eq("user_id", alert.user_id)
+        .in("identifier", identifiers)
+        .gt("created_at", since);
+
+      if (newBreaches && newBreaches.length > 0) {
+        const breachNames = Array.from(
+          new Set(newBreaches.map((b: any) => b.breach_name ?? b.breach_source).filter(Boolean))
+        );
+        const hasCritical = newBreaches.some((b: any) => b.severity === "critical");
+        return {
+          triggered: true,
+          title: `New breach exposure for "${subjectName}"`,
+          message: `${newBreaches.length} new breach record(s) detected.`,
+          severity: hasCritical ? "critical" : "warning",
+          metadata: { breach_count: newBreaches.length, breach_names: breachNames },
+        };
+      }
+      return { triggered: false, title: "", message: "" };
     }
 
     case "mention_monitoring": {
