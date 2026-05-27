@@ -17,3 +17,15 @@ verify_jwt = false
 
 [functions.breach-lookup]
 verify_jwt = false
+
+[functions.wigle-lookup]
+verify_jwt = false
+
+[functions.image-hash]
+verify_jwt = false
+
+[functions.invite-member]
+verify_jwt = false
+
+[functions.accept-invite]
+verify_jwt = false
