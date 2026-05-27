@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { executeAgentRun, AGENT_TEMPLATES, type AgentRunState } from "@/lib/agentEngine";
+import { executeAgentRun, type AgentRunState } from "@/lib/agentEngine";
 import type { Json } from "@/integrations/supabase/types";
 
 // ─── Agents ───
@@ -121,25 +121,3 @@ export function useRunAgent() {
   return { startRun, runState, clearRunState: () => setRunState(null) };
 }
 
-// Seed default agents if none exist
-export function useSeedAgents() {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Must be signed in");
-      const { data: existing } = await supabase.from("agents").select("id").limit(1);
-      if (existing && existing.length > 0) return;
-
-      const inserts = AGENT_TEMPLATES.map((t) => ({
-        name: t.name,
-        description: t.description,
-        owner_id: user.id,
-        tool_sequence: t.toolSequence,
-      }));
-      const { error } = await supabase.from("agents").insert(inserts);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["agents"] }),
-  });
-}
