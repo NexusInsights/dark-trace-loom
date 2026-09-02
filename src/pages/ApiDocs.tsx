@@ -37,15 +37,8 @@ const methodColor: Record<string, string> = {
   DELETE: "text-destructive",
 };
 
-function generateApiKey(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const prefix = "osint_";
-  let key = prefix;
-  for (let i = 0; i < 40; i++) {
-    key += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return key;
-}
+// API keys are generated server-side with a CSPRNG in the `api-keys` edge function.
+
 
 export default function ApiDocsPage() {
   const { user } = useAuth();
@@ -88,16 +81,14 @@ export default function ApiDocsPage() {
 
   const createKey = useMutation({
     mutationFn: async (label: string) => {
-      const key = generateApiKey();
-      const { error } = await supabase.from("api_keys").insert({
-        user_id: user!.id,
-        key,
-        label: label || "Default",
-        plan,
+      const { data, error } = await supabase.functions.invoke("api-keys", {
+        body: { label: label || "Default", plan },
       });
       if (error) throw error;
-      return key;
+      if (data?.error) throw new Error(data.error);
+      return data.key as string;
     },
+
     onSuccess: (key) => {
       qc.invalidateQueries({ queryKey: ["api-keys"] });
       setNewLabel("");

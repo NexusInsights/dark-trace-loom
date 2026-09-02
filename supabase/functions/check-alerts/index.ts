@@ -51,7 +51,7 @@ serve(async (req) => {
         if (now.getTime() - lastChecked.getTime() < intervalMs) continue;
       }
 
-      // Simulate alert checking based on type
+      // Real change-detection based on alert type
       const result = await checkAlert(alert, supabase);
 
       // Update last_checked
