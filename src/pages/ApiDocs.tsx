@@ -81,16 +81,14 @@ export default function ApiDocsPage() {
 
   const createKey = useMutation({
     mutationFn: async (label: string) => {
-      const key = generateApiKey();
-      const { error } = await supabase.from("api_keys").insert({
-        user_id: user!.id,
-        key,
-        label: label || "Default",
-        plan,
+      const { data, error } = await supabase.functions.invoke("api-keys", {
+        body: { label: label || "Default", plan },
       });
       if (error) throw error;
-      return key;
+      if (data?.error) throw new Error(data.error);
+      return data.key as string;
     },
+
     onSuccess: (key) => {
       qc.invalidateQueries({ queryKey: ["api-keys"] });
       setNewLabel("");
