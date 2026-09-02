@@ -32,8 +32,9 @@ export default function AuthPage() {
   const handleGoogle = async () => {
     setOauthLoading(true);
     try {
+      sessionStorage.setItem("postAuthRedirect", "/dashboard");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/dashboard",
+        redirect_uri: window.location.origin + "/auth/callback",
       });
       if (result.error) throw result.error;
       // If redirected, browser handles it. Otherwise tokens are set.
@@ -43,6 +44,7 @@ export default function AuthPage() {
       setOauthLoading(false);
     }
   };
+
 
   const handleForgotPassword = async () => {
     const parsed = magicLinkSchema.safeParse({ email });
