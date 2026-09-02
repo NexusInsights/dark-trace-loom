@@ -37,15 +37,8 @@ const methodColor: Record<string, string> = {
   DELETE: "text-destructive",
 };
 
-function generateApiKey(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const prefix = "osint_";
-  let key = prefix;
-  for (let i = 0; i < 40; i++) {
-    key += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return key;
-}
+// API keys are generated server-side with a CSPRNG in the `api-keys` edge function.
+
 
 export default function ApiDocsPage() {
   const { user } = useAuth();
