@@ -18,8 +18,9 @@ import { toast } from "sonner";
 import {
   User, AtSign, Mail, Globe, Phone, Server, Link2, Shield, TrendingUp,
   Clock, Network, Fingerprint, ChevronRight, AlertTriangle, Activity,
-  ArrowLeft, Share2, GitCompare, Loader2, Play, Monitor, MapPin,
+  ArrowLeft, Share2, GitCompare, Loader2, Play, Monitor, MapPin, Download,
 } from "lucide-react";
+import { downloadCsv, sanitizeFilename, toCsv } from "@/lib/csv";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -193,6 +194,47 @@ export default function PersonaProfile() {
 
   const riskColor = profile.riskScore >= 60 ? "text-destructive" : profile.riskScore >= 30 ? "text-yellow-500" : "text-green-400";
 
+  const identifierRows = useMemo(() => [
+    ...profile.identifiers.map((i: any) => ({
+      source: "discovered_identifier",
+      type: i.identifier_type,
+      value: i.identifier_value,
+      confidence: i.confidence_score,
+      method: i.source ?? "",
+    })),
+    ...profile.usernames.map((u: any) => ({
+      source: "username_candidate",
+      type: "username",
+      value: u.candidate_username,
+      confidence: u.confidence_score,
+      method: u.generation_method ?? "",
+    })),
+    ...profile.emails.map((e: any) => ({
+      source: "email_candidate",
+      type: "email",
+      value: e.candidate_email,
+      confidence: e.confidence_score,
+      method: e.generation_method ?? "",
+    })),
+  ], [profile.identifiers, profile.usernames, profile.emails]);
+
+  function exportIdentifiers() {
+    if (identifierRows.length === 0) {
+      toast.error("Nothing to export");
+      return;
+    }
+    const csv = toCsv(identifierRows, [
+      { header: "Source", value: (r) => r.source },
+      { header: "Type", value: (r) => r.type },
+      { header: "Value", value: (r) => r.value },
+      { header: "Confidence", value: (r) => (r.confidence == null ? "" : Number(r.confidence).toFixed(3)) },
+      { header: "Method", value: (r) => r.method },
+    ]);
+    const base = sanitizeFilename(activePersona?.persona_label ?? "persona", "persona");
+    downloadCsv(`${base}-identifiers-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    toast.success(`Exported ${identifierRows.length} identifiers`);
+  }
+
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in space-y-6">
       <div>
@@ -300,9 +342,20 @@ export default function PersonaProfile() {
                 {/* Identifiers Tab */}
                 <TabsContent value="identifiers">
                   <GlassPanel className="p-4">
-                    <h3 className="font-mono text-xs tracking-widest text-primary mb-3 flex items-center gap-2">
-                      <Fingerprint className="h-3.5 w-3.5" /> ALL IDENTIFIERS
-                    </h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-mono text-xs tracking-widest text-primary flex items-center gap-2">
+                        <Fingerprint className="h-3.5 w-3.5" /> ALL IDENTIFIERS
+                      </h3>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 font-mono text-[10px]"
+                        onClick={exportIdentifiers}
+                        disabled={identifierRows.length === 0}
+                      >
+                        <Download className="h-3 w-3 mr-1.5" /> EXPORT CSV ({identifierRows.length})
+                      </Button>
+                    </div>
 
                     {/* Persona identifiers */}
                     {profile.identifiers.length > 0 && (

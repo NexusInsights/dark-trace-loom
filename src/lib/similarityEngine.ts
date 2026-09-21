@@ -14,7 +14,7 @@ function levenshtein(a: string, b: string): number {
   return dp[m][n];
 }
 
-function normalizedSimilarity(a: string, b: string): number {
+export function normalizedSimilarity(a: string, b: string): number {
   if (!a || !b) return 0;
   const al = a.toLowerCase().trim();
   const bl = b.toLowerCase().trim();
@@ -24,7 +24,7 @@ function normalizedSimilarity(a: string, b: string): number {
 }
 
 // Jaccard similarity for sets
-function jaccard(a: Set<string>, b: Set<string>): number {
+export function jaccard(a: Set<string>, b: Set<string>): number {
   if (a.size === 0 && b.size === 0) return 0;
   let intersection = 0;
   for (const v of a) if (b.has(v)) intersection++;
@@ -110,16 +110,17 @@ export async function runBehavioralSimilarity(
   }
 
   function metadataSimilarity(a: any, b: any): number {
-    const ma = a.metadata as Record<string, any> | null;
-    const mb = b.metadata as Record<string, any> | null;
-    if (!ma || !mb) return 0;
+    const ma = (a.metadata ?? null) as Record<string, any> | null;
+    const mb = (b.metadata ?? null) as Record<string, any> | null;
 
     let matches = 0, total = 0;
-    const allKeys = new Set([...Object.keys(ma), ...Object.keys(mb)]);
-    for (const key of allKeys) {
-      total++;
-      if (ma[key] !== undefined && mb[key] !== undefined) {
-        if (String(ma[key]).toLowerCase() === String(mb[key]).toLowerCase()) matches++;
+    if (ma && mb) {
+      const allKeys = new Set([...Object.keys(ma), ...Object.keys(mb)]);
+      for (const key of allKeys) {
+        total++;
+        if (ma[key] !== undefined && mb[key] !== undefined) {
+          if (String(ma[key]).toLowerCase() === String(mb[key]).toLowerCase()) matches++;
+        }
       }
     }
     // Also factor in shared cases and tools

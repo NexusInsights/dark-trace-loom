@@ -10,6 +10,20 @@ function norm(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+const DOMAIN_PATTERN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/;
+
+/** Reduce user-supplied input such as "https://Corp.com/careers" or "@corp.com." to "corp.com". */
+export function normalizeDomain(input: string): string | null {
+  let d = input.trim().toLowerCase();
+  d = d.replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
+  d = d.split(/[/?#]/)[0];
+  d = d.slice(d.lastIndexOf("@") + 1);
+  d = d.split(":")[0];
+  d = d.replace(/^\.+|\.+$/g, "");
+  if (!d || d.length > 253 || !DOMAIN_PATTERN.test(d)) return null;
+  return d;
+}
+
 export function generateEmailCandidates(
   firstName?: string,
   lastName?: string,
@@ -29,21 +43,30 @@ export function generateEmailCandidates(
   const f = firstName ? norm(firstName) : "";
   const l = lastName ? norm(lastName) : "";
 
-  const allDomains = [
-    ...(companyDomains ?? []).map((d) => ({ domain: d.toLowerCase().trim(), isCompany: true })),
-    ...(knownDomains ?? []).map((d) => ({ domain: d.toLowerCase().trim(), isCompany: false })),
-  ];
+  const allDomains: { domain: string; isCompany: boolean }[] = [];
+  const seenDomains = new Set<string>();
+  for (const [list, isCompany] of [
+    [companyDomains ?? [], true],
+    [knownDomains ?? [], false],
+  ] as const) {
+    for (const raw of list) {
+      const domain = normalizeDomain(raw);
+      if (!domain || seenDomains.has(domain)) continue;
+      seenDomains.add(domain);
+      allDomains.push({ domain, isCompany });
+    }
+  }
 
   // Add common free providers as fallback
   const freeProviders = ["gmail.com", "yahoo.com", "outlook.com", "protonmail.com", "hotmail.com", "icloud.com"];
   for (const fp of freeProviders) {
-    if (!allDomains.some((d) => d.domain === fp)) {
+    if (!seenDomains.has(fp)) {
+      seenDomains.add(fp);
       allDomains.push({ domain: fp, isCompany: false });
     }
   }
 
   for (const { domain, isCompany } of allDomains) {
-    if (!domain || domain.length < 3) continue;
     const boost = isCompany ? 0.15 : 0;
 
     if (f && l) {
