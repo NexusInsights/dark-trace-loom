@@ -1693,17 +1693,11 @@ function connectedSecret(name: string): string {
   if (!value) throw new Error(`Provider access required: configure ${name} in this project's backend secrets.`);
   return value;
 }
-async function connectedRequest(url: string, init: RequestInit, maxBytes = 2 * 1024 * 1024) {
-  const r = await fetch(url, { ...init, redirect: "error", signal: AbortSignal.timeout(30000) });
-  if (!r.ok && r.status !== 404)
-    throw new Error(
-      `${new URL(url).hostname} returned HTTP ${r.status}. Check provider access, quota, and input; no retry was made.`,
-    );
-  if (r.status === 404) {
-    await r.body?.cancel();
-    return { status: 404, data: null };
+async function connectedReadBody(r: Response, maxBytes: number): Promise<string> {
+  if (Number(r.headers.get("content-length")) > maxBytes) {
+    await r.body?.cancel().catch(() => {});
+    throw new Error("Provider response exceeds the size limit.");
   }
-  if (Number(r.headers.get("content-length")) > maxBytes) throw new Error("Provider response exceeds the size limit.");
   const reader = r.body?.getReader();
   if (!reader) throw new Error("Provider returned an empty response.");
   let total = 0;
@@ -1726,11 +1720,83 @@ async function connectedRequest(url: string, init: RequestInit, maxBytes = 2 * 1
     bytes.set(chunk, offset);
     offset += chunk.length;
   }
+  return new TextDecoder().decode(bytes);
+}
+// Only predefined diagnostics can escape the error boundary. Never return a raw
+// provider message, arbitrary code, requested URL, action URL, headers or secrets.
+function connectedErrorDiagnostic(host: string, status: number, data: unknown): string | null {
+  const body = data && typeof data === "object" && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  const nested =
+    body.error && typeof body.error === "object" && !Array.isArray(body.error)
+      ? (body.error as Record<string, unknown>)
+      : {};
+  const code = typeof body.code === "string" ? body.code : typeof nested.code === "string" ? nested.code : "";
+  const message =
+    typeof body.error === "string" ? body.error : typeof nested.message === "string" ? nested.message : "";
+  if (host === "api.firecrawl.dev") {
+    const known: Record<string, string> = {
+      UNSUPPORTED_SITE:
+        "unsupported_site: Firecrawl does not serve this site through its configured scrape/data providers.",
+      THIRD_PARTY_DATA_NOT_ENABLED:
+        "provider_not_enabled: The required third-party data provider is not enabled for this organization.",
+      THIRD_PARTY_DATA_ENRICHMENT_NOT_ENABLED:
+        "enrichment_not_enabled: The requested profile/company enrichment is disabled or has no configured provider that serves it.",
+      THIRD_PARTY_DATA_TERMS_REQUIRED:
+        "terms_required: An organization administrator must review and accept the required provider terms. No terms were accepted and no retry was made.",
+      THIRD_PARTY_DATA_UNSUPPORTED_URL: "unsupported_url: The provider does not serve this URL type or sub-page.",
+      THIRD_PARTY_DATA_UNSUPPORTED_OPTION:
+        "unsupported_option: The request contains an option the provider cannot honor.",
+      SCRAPE_SITE_RESTRICTION_BLOCKED:
+        "source_access_restricted: The provider reported a restriction on automated access to the source content.",
+      SCRAPE_MEDIA_ACCESS_DENIED: "source_access_denied: The provider reported denied access to the requested media.",
+      SAFE_MODE_BLOCKED: "provider_policy_blocked: The configured provider safety policy blocked this request.",
+      unsafe_domain_blocked: "domain_policy_blocked: The configured provider domain policy blocked this request.",
+      SCRAPE_PROMPT_INJECTION_DETECTED:
+        "page_injection_blocked: The provider rejected detected prompt injection in page content.",
+      AGENT_INDEX_ONLY: "account_access_restricted: The provider reported restricted access for this account.",
+    };
+    if (Object.hasOwn(known, code)) return known[code];
+    if (status === 403 && /^We apologize for the inconvenience but we do not support this site\./i.test(message))
+      return known.UNSUPPORTED_SITE;
+    if (status === 402 && /^(?:Payment Required:\s*)?Insufficient credits\b/i.test(message))
+      return "insufficient_credits: Firecrawl reported insufficient credits for this request. No plan or billing change was made.";
+    if (status === 403 && /^Forbidden$/i.test(message.trim()))
+      return "provider_access_denied: Firecrawl denied endpoint or feature access; the exact account restriction is not verified.";
+  }
+  if (status === 401)
+    return "authentication_rejected: The provider rejected authentication. Key validity or the exact account restriction has not been independently verified.";
+  if (status === 402)
+    return "payment_or_credit_requirement: The provider rejected the request with a billing or credit requirement. No purchase or retry was made.";
+  if (status === 429)
+    return "rate_limited: The provider rejected the request due to its rate or quota limit. No automatic retry was made.";
+  return null;
+}
+async function connectedRequest(url: string, init: RequestInit, maxBytes = 2 * 1024 * 1024) {
+  const r = await fetch(url, { ...init, redirect: "error", signal: AbortSignal.timeout(30000) });
+  const host = new URL(url).hostname;
+  if (!r.ok && r.status !== 404) {
+    let errorData: unknown = null;
+    let diagnosticUnreadable = false;
+    try {
+      errorData = JSON.parse(await connectedReadBody(r, Math.min(maxBytes, 16 * 1024)));
+    } catch {
+      diagnosticUnreadable = true;
+    }
+    const diagnostic = connectedErrorDiagnostic(host, r.status, errorData);
+    throw new Error(
+      `${host} returned HTTP ${r.status}. ${diagnostic || "No recognized safe provider diagnostic was supplied; the precise cause is unverified."}${diagnosticUnreadable ? " Error diagnostic was unavailable, invalid JSON, or exceeded the 16 KiB limit." : ""} No automatic retry was made.`,
+    );
+  }
+  if (r.status === 404) {
+    await r.body?.cancel();
+    return { status: 404, data: null };
+  }
   let data: unknown;
   try {
-    data = JSON.parse(new TextDecoder().decode(bytes));
-  } catch {
-    throw new Error(`${new URL(url).hostname} returned invalid JSON.`);
+    data = JSON.parse(await connectedReadBody(r, maxBytes));
+  } catch (e) {
+    if (e instanceof Error && /size limit|empty response/.test(e.message)) throw e;
+    throw new Error(`${host} returned invalid JSON.`);
   }
   return { status: r.status, data };
 }
