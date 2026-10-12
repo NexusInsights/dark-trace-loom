@@ -541,6 +541,7 @@ async function pdlPersonEnrich(p: Record<string, string>) {
   const data = await pdlGet("/person/enrich", q);
   const d = data?.data || {};
   return {
+    ...d,
     likelihood: data?.likelihood,
     full_name: d.full_name,
     job_title: d.job_title,
@@ -556,9 +557,9 @@ async function pdlPersonEnrich(p: Record<string, string>) {
     mobile_phone: d.mobile_phone,
     phone_numbers: d.phone_numbers,
     industry: d.industry,
-    skills: d.skills?.slice(0, 25),
-    experience: (d.experience || []).slice(0, 10),
-    education: (d.education || []).slice(0, 5),
+    skills: d.skills,
+    experience: d.experience,
+    education: d.education,
     raw: d,
   };
 }
@@ -611,15 +612,7 @@ async function pdlPersonSearch(p: Record<string, unknown>) {
     size,
     has_more: Boolean(data.scroll_token),
     source: `${PDL_BASE}/person/search`,
-    matches: (data?.data || []).map((d: Record<string, unknown>) => ({
-      full_name: d.full_name,
-      job_title: d.job_title,
-      job_company_name: d.job_company_name,
-      location_name: d.location_name,
-      linkedin_url: d.linkedin_url,
-      work_email: d.work_email,
-      industry: d.industry,
-    })),
+    matches: Array.isArray(data?.data) ? data.data : [],
   };
 }
 async function pdlCompanyEnrich(p: Record<string, string>) {
