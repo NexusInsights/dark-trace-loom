@@ -28,22 +28,35 @@ async function ipGeo(ip: string) {
   const d = await r.json();
   if (d.status !== "success") throw new Error(d.message || "lookup failed");
   return {
-    ip: d.query, country: d.country, country_code: d.countryCode,
-    region: d.regionName, city: d.city, zip: d.zip,
-    latitude: d.lat, longitude: d.lon, timezone: d.timezone,
-    isp: d.isp, org: d.org, asn: d.as, reverse: d.reverse,
-    proxy: !!d.proxy, hosting: !!d.hosting, mobile: !!d.mobile,
+    ip: d.query,
+    country: d.country,
+    country_code: d.countryCode,
+    region: d.regionName,
+    city: d.city,
+    zip: d.zip,
+    latitude: d.lat,
+    longitude: d.lon,
+    timezone: d.timezone,
+    isp: d.isp,
+    org: d.org,
+    asn: d.as,
+    reverse: d.reverse,
+    proxy: !!d.proxy,
+    hosting: !!d.hosting,
+    mobile: !!d.mobile,
   };
 }
 
 async function dnsQuery(domain: string) {
   const types = ["A", "AAAA", "MX", "TXT", "NS", "CNAME", "SOA"];
   const out: Record<string, string[]> = {};
-  await Promise.all(types.map(async (t) => {
-    const r = await safeFetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${t}`);
-    const d = await r.json();
-    out[t.toLowerCase()] = (d.Answer || []).map((a: { data: string }) => a.data);
-  }));
+  await Promise.all(
+    types.map(async (t) => {
+      const r = await safeFetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${t}`);
+      const d = await r.json();
+      out[t.toLowerCase()] = (d.Answer || []).map((a: { data: string }) => a.data);
+    }),
+  );
   return { domain, ...out };
 }
 
@@ -107,22 +120,29 @@ async function asnLookup(asn: string) {
 }
 
 async function cveLookup(cve: string) {
-  const r = await safeFetch(`https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${encodeURIComponent(cve.toUpperCase())}`);
+  const r = await safeFetch(
+    `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${encodeURIComponent(cve.toUpperCase())}`,
+  );
   if (!r.ok) throw new Error(`NVD ${r.status}`);
   const d = await r.json();
   const item = d.vulnerabilities?.[0]?.cve;
   if (!item) throw new Error("CVE not found");
-  const m = item.metrics?.cvssMetricV31?.[0]?.cvssData || item.metrics?.cvssMetricV30?.[0]?.cvssData || item.metrics?.cvssMetricV2?.[0]?.cvssData;
+  const m =
+    item.metrics?.cvssMetricV31?.[0]?.cvssData ||
+    item.metrics?.cvssMetricV30?.[0]?.cvssData ||
+    item.metrics?.cvssMetricV2?.[0]?.cvssData;
   return {
     cve: item.id,
     published: item.published,
     last_modified: item.lastModified,
     description: item.descriptions?.find((x: { lang: string }) => x.lang === "en")?.value,
     cvss_score: m?.baseScore,
-    severity: m?.baseSeverity || (item.metrics?.cvssMetricV31?.[0]?.baseSeverity),
+    severity: m?.baseSeverity || item.metrics?.cvssMetricV31?.[0]?.baseSeverity,
     vector: m?.vectorString,
     references: (item.references || []).slice(0, 10).map((x: { url: string }) => x.url),
-    weaknesses: (item.weaknesses || []).flatMap((w: { description: { value: string }[] }) => w.description.map((x) => x.value)),
+    weaknesses: (item.weaknesses || []).flatMap((w: { description: { value: string }[] }) =>
+      w.description.map((x) => x.value),
+    ),
   };
 }
 
@@ -131,11 +151,15 @@ async function githubRecon(user: string) {
   if (u.status === 404) throw new Error("User not found");
   if (!u.ok) throw new Error(`github ${u.status}`);
   const profile = await u.json();
-  const reposRes = await safeFetch(`https://api.github.com/users/${encodeURIComponent(user)}/repos?per_page=100&sort=updated`);
+  const reposRes = await safeFetch(
+    `https://api.github.com/users/${encodeURIComponent(user)}/repos?per_page=100&sort=updated`,
+  );
   const repos = reposRes.ok ? await reposRes.json() : [];
   const langs: Record<string, number> = {};
   for (const r of repos) if (r.language) langs[r.language] = (langs[r.language] || 0) + 1;
-  const eventsRes = await safeFetch(`https://api.github.com/users/${encodeURIComponent(user)}/events/public?per_page=30`);
+  const eventsRes = await safeFetch(
+    `https://api.github.com/users/${encodeURIComponent(user)}/events/public?per_page=30`,
+  );
   const events = eventsRes.ok ? await eventsRes.json() : [];
   const emails = new Set<string>();
   for (const e of events) {
@@ -143,28 +167,54 @@ async function githubRecon(user: string) {
     for (const x of c) if (x?.author?.email) emails.add(x.author.email);
   }
   return {
-    username: profile.login, name: profile.name, bio: profile.bio,
-    company: profile.company, blog: profile.blog, location: profile.location,
-    public_email: profile.email, twitter: profile.twitter_username,
-    public_repos: profile.public_repos, followers: profile.followers, following: profile.following,
-    created_at: profile.created_at, avatar: profile.avatar_url,
-    top_languages: Object.entries(langs).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => ({ language: k, repo_count: v })),
-    recent_repos: repos.slice(0, 10).map((r: { name: string; description: string; stargazers_count: number; html_url: string; updated_at: string }) => ({
-      name: r.name, description: r.description, stars: r.stargazers_count, url: r.html_url, updated: r.updated_at,
-    })),
+    username: profile.login,
+    name: profile.name,
+    bio: profile.bio,
+    company: profile.company,
+    blog: profile.blog,
+    location: profile.location,
+    public_email: profile.email,
+    twitter: profile.twitter_username,
+    public_repos: profile.public_repos,
+    followers: profile.followers,
+    following: profile.following,
+    created_at: profile.created_at,
+    avatar: profile.avatar_url,
+    top_languages: Object.entries(langs)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([k, v]) => ({ language: k, repo_count: v })),
+    recent_repos: repos
+      .slice(0, 10)
+      .map(
+        (r: { name: string; description: string; stargazers_count: number; html_url: string; updated_at: string }) => ({
+          name: r.name,
+          description: r.description,
+          stars: r.stargazers_count,
+          url: r.html_url,
+          updated: r.updated_at,
+        }),
+      ),
     commit_emails: [...emails],
   };
 }
 
 async function reverseGeo(lat: string, lng: string) {
-  const r = await safeFetch(`https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&format=json&addressdetails=1`, {
-    headers: { "User-Agent": "lovable-osint/1.0" },
-  });
+  const r = await safeFetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&format=json&addressdetails=1`,
+    {
+      headers: { "User-Agent": "lovable-osint/1.0" },
+    },
+  );
   if (!r.ok) throw new Error(`nominatim ${r.status}`);
   const d = await r.json();
   return {
-    lat, lng, display_name: d.display_name,
-    address: d.address, osm_type: d.osm_type, place_id: d.place_id,
+    lat,
+    lng,
+    display_name: d.display_name,
+    address: d.address,
+    osm_type: d.osm_type,
+    place_id: d.place_id,
   };
 }
 
@@ -192,13 +242,16 @@ async function btcWallet(addr: string) {
   const funded = d.chain_stats.funded_txo_sum;
   const spent = d.chain_stats.spent_txo_sum;
   return {
-    address: d.address, chain: "btc",
+    address: d.address,
+    chain: "btc",
     balance_btc: ((funded - spent) / 1e8).toFixed(8),
     total_received_btc: (funded / 1e8).toFixed(8),
     total_sent_btc: (spent / 1e8).toFixed(8),
     tx_count: d.chain_stats.tx_count,
     recent_txs: txs.slice(0, 10).map((t: { txid: string; status: { block_time?: number }; fee: number }) => ({
-      txid: t.txid, time: t.status.block_time ? new Date(t.status.block_time * 1000).toISOString() : null, fee: t.fee,
+      txid: t.txid,
+      time: t.status.block_time ? new Date(t.status.block_time * 1000).toISOString() : null,
+      fee: t.fee,
     })),
   };
 }
@@ -209,12 +262,19 @@ async function ethWallet(addr: string) {
   const d = await r.json();
   if (d.error) throw new Error(d.error.message);
   return {
-    address: d.address, chain: "eth",
-    balance_eth: d.ETH?.balance, balance_usd: d.ETH?.totalIn,
+    address: d.address,
+    chain: "eth",
+    balance_eth: d.ETH?.balance,
+    balance_usd: d.ETH?.totalIn,
     tx_count: d.countTxs,
-    tokens: (d.tokens || []).slice(0, 25).map((t: { tokenInfo: { symbol: string; name: string; address: string }; balance: number }) => ({
-      symbol: t.tokenInfo.symbol, name: t.tokenInfo.name, balance: t.balance, address: t.tokenInfo.address,
-    })),
+    tokens: (d.tokens || [])
+      .slice(0, 25)
+      .map((t: { tokenInfo: { symbol: string; name: string; address: string }; balance: number }) => ({
+        symbol: t.tokenInfo.symbol,
+        name: t.tokenInfo.name,
+        balance: t.balance,
+        address: t.tokenInfo.address,
+      })),
   };
 }
 
@@ -229,10 +289,17 @@ async function urlReputation(url: string) {
   }
   if (d.query_status !== "ok") throw new Error(d.query_status);
   return {
-    url: d.url, listed: true, threat: d.threat, status: d.url_status,
-    tags: d.tags, date_added: d.date_added, host: d.host,
+    url: d.url,
+    listed: true,
+    threat: d.threat,
+    status: d.url_status,
+    tags: d.tags,
+    date_added: d.date_added,
+    host: d.host,
     payloads: (d.payloads || []).slice(0, 5).map((p: { filename: string; file_type: string; signature: string }) => ({
-      filename: p.filename, type: p.file_type, signature: p.signature,
+      filename: p.filename,
+      type: p.file_type,
+      signature: p.signature,
     })),
     sources_checked: ["URLhaus (abuse.ch)"],
   };
@@ -240,22 +307,30 @@ async function urlReputation(url: string) {
 
 async function sslInspect(host: string) {
   // Use SSL-Labs free assess API (cached)
-  const r = await safeFetch(`https://api.ssllabs.com/api/v3/analyze?host=${encodeURIComponent(host)}&fromCache=on&maxAge=24`);
+  const r = await safeFetch(
+    `https://api.ssllabs.com/api/v3/analyze?host=${encodeURIComponent(host)}&fromCache=on&maxAge=24`,
+  );
   if (!r.ok) throw new Error(`ssllabs ${r.status}`);
   const d = await r.json();
   if (d.status === "ERROR") throw new Error(d.statusMessage || "ssllabs error");
   const ep = d.endpoints?.[0];
   const cert = ep?.details?.cert || ep?.details?.certs?.[0];
   return {
-    host: d.host, status: d.status, grade: ep?.grade,
+    host: d.host,
+    status: d.status,
+    grade: ep?.grade,
     ip: ep?.ipAddress,
-    cert: cert ? {
-      subject: cert.subject, issuer: cert.issuerSubject || cert.issuerLabel,
-      not_before: cert.notBefore ? new Date(cert.notBefore).toISOString() : null,
-      not_after: cert.notAfter ? new Date(cert.notAfter).toISOString() : null,
-      sig_alg: cert.sigAlg, key: cert.keyAlg ? `${cert.keyAlg}-${cert.keySize}` : null,
-      san: cert.altNames || cert.commonNames,
-    } : null,
+    cert: cert
+      ? {
+          subject: cert.subject,
+          issuer: cert.issuerSubject || cert.issuerLabel,
+          not_before: cert.notBefore ? new Date(cert.notBefore).toISOString() : null,
+          not_after: cert.notAfter ? new Date(cert.notAfter).toISOString() : null,
+          sig_alg: cert.sigAlg,
+          key: cert.keyAlg ? `${cert.keyAlg}-${cert.keySize}` : null,
+          san: cert.altNames || cert.commonNames,
+        }
+      : null,
     note: d.status !== "READY" ? "Scan still in progress; retry in 30-60s for full data." : null,
   };
 }
@@ -263,28 +338,89 @@ async function sslInspect(host: string) {
 async function usernameSearch(username: string) {
   const checks: { platform: string; url: string; check: (r: Response) => Promise<boolean> }[] = [
     { platform: "GitHub", url: `https://api.github.com/users/${username}`, check: async (r) => r.status === 200 },
-    { platform: "Reddit", url: `https://www.reddit.com/user/${username}/about.json`, check: async (r) => { const j = await r.json().catch(()=>null); return !!j?.data?.id; } },
-    { platform: "GitLab", url: `https://gitlab.com/api/v4/users?username=${username}`, check: async (r) => { const j = await r.json().catch(()=>[]); return Array.isArray(j) && j.length > 0; } },
+    {
+      platform: "Reddit",
+      url: `https://www.reddit.com/user/${username}/about.json`,
+      check: async (r) => {
+        const j = await r.json().catch(() => null);
+        return !!j?.data?.id;
+      },
+    },
+    {
+      platform: "GitLab",
+      url: `https://gitlab.com/api/v4/users?username=${username}`,
+      check: async (r) => {
+        const j = await r.json().catch(() => []);
+        return Array.isArray(j) && j.length > 0;
+      },
+    },
     { platform: "Medium", url: `https://medium.com/@${username}`, check: async (r) => r.status === 200 },
-    { platform: "Dev.to", url: `https://dev.to/api/users/by_username?url=${username}`, check: async (r) => r.status === 200 },
-    { platform: "Keybase", url: `https://keybase.io/_/api/1.0/user/lookup.json?usernames=${username}`, check: async (r) => { const j = await r.json().catch(()=>null); return j?.them?.[0] != null; } },
-    { platform: "HackerNews", url: `https://hacker-news.firebaseio.com/v0/user/${username}.json`, check: async (r) => { const t = await r.text(); return t !== "null" && t.length > 4; } },
+    {
+      platform: "Dev.to",
+      url: `https://dev.to/api/users/by_username?url=${username}`,
+      check: async (r) => r.status === 200,
+    },
+    {
+      platform: "Keybase",
+      url: `https://keybase.io/_/api/1.0/user/lookup.json?usernames=${username}`,
+      check: async (r) => {
+        const j = await r.json().catch(() => null);
+        return j?.them?.[0] != null;
+      },
+    },
+    {
+      platform: "HackerNews",
+      url: `https://hacker-news.firebaseio.com/v0/user/${username}.json`,
+      check: async (r) => {
+        const t = await r.text();
+        return t !== "null" && t.length > 4;
+      },
+    },
     { platform: "Pinterest", url: `https://www.pinterest.com/${username}/`, check: async (r) => r.status === 200 },
-    { platform: "Steam", url: `https://steamcommunity.com/id/${username}/`, check: async (r) => { const t = await r.text(); return r.status === 200 && !t.includes("The specified profile could not be found"); } },
+    {
+      platform: "Steam",
+      url: `https://steamcommunity.com/id/${username}/`,
+      check: async (r) => {
+        const t = await r.text();
+        return r.status === 200 && !t.includes("The specified profile could not be found");
+      },
+    },
     { platform: "Twitch", url: `https://www.twitch.tv/${username}`, check: async (r) => r.status === 200 },
-    { platform: "Telegram", url: `https://t.me/${username}`, check: async (r) => { const t = await r.text(); return r.status === 200 && t.includes("tgme_page_title"); } },
+    {
+      platform: "Telegram",
+      url: `https://t.me/${username}`,
+      check: async (r) => {
+        const t = await r.text();
+        return r.status === 200 && t.includes("tgme_page_title");
+      },
+    },
     { platform: "Instagram", url: `https://www.instagram.com/${username}/`, check: async (r) => r.status === 200 },
-    { platform: "TikTok", url: `https://www.tiktok.com/@${username}`, check: async (r) => { const t = await r.text(); return r.status === 200 && !t.includes("Couldn't find this account"); } },
+    {
+      platform: "TikTok",
+      url: `https://www.tiktok.com/@${username}`,
+      check: async (r) => {
+        const t = await r.text();
+        return r.status === 200 && !t.includes("Couldn't find this account");
+      },
+    },
     { platform: "Vimeo", url: `https://vimeo.com/${username}`, check: async (r) => r.status === 200 },
     { platform: "SoundCloud", url: `https://soundcloud.com/${username}`, check: async (r) => r.status === 200 },
   ];
-  const results = await Promise.all(checks.map(async (c) => {
-    try {
-      const r = await safeFetch(c.url, { headers: { "User-Agent": "Mozilla/5.0 lovable-osint" } }, 8000);
-      const found = await c.check(r);
-      return { platform: c.platform, found, url: found ? c.url.replace(/api\.|\/api\/.*|\?.*|_\/.*|\.json$/g, "") : null };
-    } catch { return { platform: c.platform, found: false, url: null }; }
-  }));
+  const results = await Promise.all(
+    checks.map(async (c) => {
+      try {
+        const r = await safeFetch(c.url, { headers: { "User-Agent": "Mozilla/5.0 lovable-osint" } }, 8000);
+        const found = await c.check(r);
+        return {
+          platform: c.platform,
+          found,
+          url: found ? c.url.replace(/api\.|\/api\/.*|\?.*|_\/.*|\.json$/g, "") : null,
+        };
+      } catch {
+        return { platform: c.platform, found: false, url: null };
+      }
+    }),
+  );
   const found = results.filter((x) => x.found);
   return { username, total_checked: results.length, total_found: found.length, results };
 }
@@ -310,11 +446,18 @@ async function darkWebSearch(keyword: string) {
     headers: { "User-Agent": "Mozilla/5.0 lovable-osint" },
   });
   const html = await r.text();
-  const items = [...html.matchAll(/<li class="result"[^>]*>[\s\S]*?<a href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<p>([\s\S]*?)<\/p>/g)];
+  const items = [
+    ...html.matchAll(
+      /<li class="result"[^>]*>[\s\S]*?<a href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<p>([\s\S]*?)<\/p>/g,
+    ),
+  ];
   const results = items.slice(0, 15).map((m) => ({
     onion_url: decodeURIComponent(m[1].replace(/^.*redirect_url=/, "")),
     title: m[2].replace(/<[^>]+>/g, "").trim(),
-    snippet: m[3].replace(/<[^>]+>/g, "").trim().slice(0, 240),
+    snippet: m[3]
+      .replace(/<[^>]+>/g, "")
+      .trim()
+      .slice(0, 240),
   }));
   return { keyword, total: results.length, results, source: "Ahmia (Tor index)" };
 }
@@ -348,14 +491,20 @@ async function phoneLookup(phone: string) {
       const root = c.idd?.root?.replace("+", "");
       const sufs = c.idd?.suffixes || [""];
       for (const s of sufs) {
-        if ((root + s) === cc || root === cc) { country = { name: c.name.common, code: c.cca2, timezones: c.timezones }; break; }
+        if (root + s === cc || root === cc) {
+          country = { name: c.name.common, code: c.cca2, timezones: c.timezones };
+          break;
+        }
       }
       if (country) break;
     }
   }
   return {
-    phone, normalized: cleaned, country_code: cc ? `+${cc}` : null,
-    country: country?.name || null, country_iso: country?.code || null,
+    phone,
+    normalized: cleaned,
+    country_code: cc ? `+${cc}` : null,
+    country: country?.name || null,
+    country_iso: country?.code || null,
     timezones: country?.timezones || [],
     note: "Carrier/line type lookup requires a paid provider (Twilio Lookup, NumVerify). Country resolution uses public callingCode data.",
   };
@@ -371,7 +520,7 @@ function pdlKey(): string {
 async function pdlGet(path: string, query: Record<string, string>) {
   const qs = new URLSearchParams(query).toString();
   const r = await fetch(`${PDL_BASE}${path}?${qs}`, {
-    headers: { "X-Api-Key": pdlKey(), "Accept": "application/json" },
+    headers: { "X-Api-Key": pdlKey(), Accept: "application/json" },
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(`PDL ${r.status}: ${data?.error?.message || JSON.stringify(data).slice(0, 300)}`);
@@ -417,7 +566,9 @@ async function pdlPersonSearch(p: Record<string, unknown>) {
   // Build an Elasticsearch bool query from simple form fields
   const must: Array<Record<string, unknown>> = [];
   const addTerm = (field: string, val: unknown) => {
-    const v = String(val ?? "").trim().toLowerCase();
+    const v = String(val ?? "")
+      .trim()
+      .toLowerCase();
     if (v) must.push({ term: { [field]: v } });
   };
   const addMatch = (field: string, val: unknown) => {
@@ -435,29 +586,38 @@ async function pdlPersonSearch(p: Record<string, unknown>) {
   addTerm("school_name", p.school);
 
   if (must.length === 0) {
-    throw new Error("Provide at least one filter (name, company, title, role, location, country, industry, skill, or school).");
+    throw new Error(
+      "Provide at least one filter (name, company, title, role, location, country, industry, skill, or school).",
+    );
   }
 
   const size = Math.min(Math.max(Number(p.size) || 5, 1), 25);
-  const page = Math.max(Number(p.page) || 1, 1);
-  const from = Math.min((page - 1) * size, 9975);
+  const scrollToken = String(p.scroll_token ?? "").trim();
+  if (p.page && Number(p.page) !== 1 && !scrollToken)
+    throw new Error("PDL uses continuation tokens; provide scroll_token instead of a page number.");
+  const requestBody = { query: { bool: { must } }, size, ...(scrollToken ? { scroll_token: scrollToken } : {}) };
   const r = await fetch(`${PDL_BASE}/person/search`, {
     method: "POST",
-    headers: { "X-Api-Key": pdlKey(), "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({ query: { bool: { must } }, size, from }),
+    headers: { "X-Api-Key": pdlKey(), "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(requestBody),
+    signal: AbortSignal.timeout(20000),
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(`PDL ${r.status}: ${data?.error?.message || JSON.stringify(data).slice(0, 300)}`);
   return {
     total: data?.total,
     returned: data?.data?.length || 0,
-    page,
+    scroll_token: data.scroll_token ?? null,
     size,
-    from,
-    total_pages: data?.total ? Math.ceil(data.total / size) : undefined,
+    has_more: Boolean(data.scroll_token),
+    source: `${PDL_BASE}/person/search`,
     matches: (data?.data || []).map((d: Record<string, unknown>) => ({
-      full_name: d.full_name, job_title: d.job_title, job_company_name: d.job_company_name,
-      location_name: d.location_name, linkedin_url: d.linkedin_url, work_email: d.work_email,
+      full_name: d.full_name,
+      job_title: d.job_title,
+      job_company_name: d.job_company_name,
+      location_name: d.location_name,
+      linkedin_url: d.linkedin_url,
+      work_email: d.work_email,
       industry: d.industry,
     })),
   };
@@ -495,28 +655,50 @@ Deno.serve(async (req) => {
     if (!action) return json({ error: "action required" }, 400);
     const p = params || {};
     switch (action) {
-      case "ip-geo": return json(await ipGeo(p.ip));
-      case "dns-query": return json(await dnsQuery(p.domain));
-      case "subdomain-enum": return json(await subdomainEnum(p.domain));
-      case "whois": return json(await whois(p.domain));
-      case "asn-lookup": return json(await asnLookup(p.asn));
-      case "cve-lookup": return json(await cveLookup(p.cve));
-      case "github-recon": return json(await githubRecon(p.user));
-      case "reverse-geo": return json(await reverseGeo(p.lat, p.lng));
-      case "url-unshorten": return json(await urlUnshorten(p.url));
-      case "btc-wallet": return json(await btcWallet(p.address));
-      case "eth-wallet": return json(await ethWallet(p.address));
-      case "url-reputation": return json(await urlReputation(p.url));
-      case "ssl-inspect": return json(await sslInspect(p.host));
-      case "username-search": return json(await usernameSearch(p.username));
-      case "paste-search": return json(await pasteSearch(p.keyword));
-      case "darkweb-search": return json(await darkWebSearch(p.keyword));
-      case "breach-lookup": return json(await breachLookup(p.query));
-      case "phone-lookup": return json(await phoneLookup(p.phone));
-      case "pdl-person-enrich": return json(await pdlPersonEnrich(p));
-      case "pdl-person-search": return json(await pdlPersonSearch(p));
-      case "pdl-company-enrich": return json(await pdlCompanyEnrich(p));
-      default: return json({ error: `unknown action: ${action}` }, 400);
+      case "ip-geo":
+        return json(await ipGeo(p.ip));
+      case "dns-query":
+        return json(await dnsQuery(p.domain));
+      case "subdomain-enum":
+        return json(await subdomainEnum(p.domain));
+      case "whois":
+        return json(await whois(p.domain));
+      case "asn-lookup":
+        return json(await asnLookup(p.asn));
+      case "cve-lookup":
+        return json(await cveLookup(p.cve));
+      case "github-recon":
+        return json(await githubRecon(p.user));
+      case "reverse-geo":
+        return json(await reverseGeo(p.lat, p.lng));
+      case "url-unshorten":
+        return json(await urlUnshorten(p.url));
+      case "btc-wallet":
+        return json(await btcWallet(p.address));
+      case "eth-wallet":
+        return json(await ethWallet(p.address));
+      case "url-reputation":
+        return json(await urlReputation(p.url));
+      case "ssl-inspect":
+        return json(await sslInspect(p.host));
+      case "username-search":
+        return json(await usernameSearch(p.username));
+      case "paste-search":
+        return json(await pasteSearch(p.keyword));
+      case "darkweb-search":
+        return json(await darkWebSearch(p.keyword));
+      case "breach-lookup":
+        return json(await breachLookup(p.query));
+      case "phone-lookup":
+        return json(await phoneLookup(p.phone));
+      case "pdl-person-enrich":
+        return json(await pdlPersonEnrich(p));
+      case "pdl-person-search":
+        return json(await pdlPersonSearch(p));
+      case "pdl-company-enrich":
+        return json(await pdlCompanyEnrich(p));
+      default:
+        return json({ error: `unknown action: ${action}` }, 400);
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
