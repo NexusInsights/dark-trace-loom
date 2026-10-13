@@ -1683,6 +1683,14 @@ const CONNECTED_REQUIRED_SECRETS: Record<string, string[]> = {
   "social-media-scanner": ["FIRECRAWL_API_KEY"],
   "telegram-monitor": ["FIRECRAWL_API_KEY"],
 };
+// A key establishes authentication material, not free included usage. These
+// server-only opt-ins may be set only after the actual account allowance and
+// lack of automatic overage/recharge have been independently verified.
+const CONNECTED_FREE_ALLOWANCE_FLAGS: Record<string, string> = {
+  LOVABLE_API_KEY: "MARKETPLACE_LOVABLE_FREE_ALLOWANCE_VERIFIED",
+  FIRECRAWL_API_KEY: "MARKETPLACE_FIRECRAWL_FREE_ALLOWANCE_VERIFIED",
+  HIBP_API_KEY: "MARKETPLACE_HIBP_FREE_ALLOWANCE_VERIFIED",
+};
 function connectedInput(p: ConnectedParams, key: string, max = 20000): string {
   const v = p[key];
   if (typeof v !== "string" || !v.trim() || v.length > max) throw new Error(`Provide ${key} (1-${max} characters).`);
@@ -1691,6 +1699,11 @@ function connectedInput(p: ConnectedParams, key: string, max = 20000): string {
 function connectedSecret(name: string): string {
   const value = Deno.env.get(name);
   if (!value) throw new Error(`Provider access required: configure ${name} in this project's backend secrets.`);
+  const allowanceFlag = CONNECTED_FREE_ALLOWANCE_FLAGS[name];
+  if (!allowanceFlag || Deno.env.get(allowanceFlag) !== "true")
+    throw new Error(
+      `Provider execution is blocked by the zero-new-spend requirement: verify included free access and set ${allowanceFlag || "the applicable server allowance flag"} only after account and overage checks. Credential presence does not establish allowance. No provider request was sent.`,
+    );
   return value;
 }
 async function connectedReadBody(r: Response, maxBytes: number): Promise<string> {
@@ -3363,6 +3376,22 @@ const marketplacePublicSlugs = [
   "insider-tracker",
   "satellite-search",
 ];
+// Unknown provider allowances fail closed. These flags require independently verified
+// included access; adding a credential alone cannot authorize a billable request.
+const marketplaceAllowanceFlags: Record<string, string> = {
+  ...CONNECTED_FREE_ALLOWANCE_FLAGS,
+  SHODAN_API_KEY: "MARKETPLACE_SHODAN_FREE_ALLOWANCE_VERIFIED",
+  TWILIO_API_KEY: "MARKETPLACE_TWILIO_FREE_ALLOWANCE_VERIFIED",
+  TWILIO_API_SECRET: "MARKETPLACE_TWILIO_FREE_ALLOWANCE_VERIFIED",
+  CARSXE_API_KEY: "MARKETPLACE_CARSXE_FREE_ALLOWANCE_VERIFIED",
+  COURTLISTENER_API_TOKEN: "MARKETPLACE_COURTLISTENER_FREE_ALLOWANCE_VERIFIED",
+  X_API_BEARER_TOKEN: "MARKETPLACE_X_FREE_ALLOWANCE_VERIFIED",
+  DISCORD_BOT_TOKEN: "MARKETPLACE_DISCORD_FREE_ALLOWANCE_VERIFIED",
+  VIRUSTOTAL_API_KEY: "MARKETPLACE_VIRUSTOTAL_FREE_ALLOWANCE_VERIFIED",
+  DARKOWL_PUBLIC_KEY: "MARKETPLACE_DARKOWL_FREE_ALLOWANCE_VERIFIED",
+  DARKOWL_PRIVATE_KEY: "MARKETPLACE_DARKOWL_FREE_ALLOWANCE_VERIFIED",
+  AISSTREAM_API_KEY: "MARKETPLACE_AISSTREAM_FREE_ALLOWANCE_VERIFIED",
+};
 function marketplaceStatus() {
   const requirements: Record<string, readonly string[]> = {
     ...Object.fromEntries(marketplacePublicSlugs.map((slug) => [slug, []])),
@@ -3372,22 +3401,42 @@ function marketplaceStatus() {
     "streetview-compare": [],
     "telegram-monitor": [],
   };
-  const tools: Record<string, { configured: boolean; missing_secrets: string[]; provider: string; scope: string }> = {};
+  const tools: Record<
+    string,
+    {
+      configured: boolean;
+      missing_secrets: string[];
+      provider: string;
+      scope: string;
+      allowance_verified: boolean;
+      blocked_reason: string | null;
+    }
+  > = {};
   for (const [slug, names] of Object.entries(requirements)) {
     const missing = names.filter((name) => !Deno.env.get(name));
+    const unverified = [...new Set(names.map((name) => marketplaceAllowanceFlags[name]).filter(Boolean))].filter(
+      (flag) => Deno.env.get(flag) !== "true",
+    );
+    const blocked = unverified.length
+      ? "Verified included provider access is required under the zero-new-spend setting. Credential presence does not establish a free allowance. No provider request will be sent."
+      : null;
     tools[slug] = {
-      configured: missing.length === 0,
+      configured: missing.length === 0 && !blocked,
       missing_secrets: missing,
       provider: "Documented external provider",
       scope:
-        "Credential presence is not verification of account entitlement or complete listing coverage. See runner scope and actual execution result.",
+        blocked ||
+        "Provider access and complete listing coverage are verified only by actual execution. See runner scope and sourced result.",
+      allowance_verified: unverified.length === 0,
+      blocked_reason: blocked,
     };
   }
   return {
     tools,
     checked_at: new Date().toISOString(),
     status_meaning:
-      "Configured means required backend secrets are present; provider access and data coverage are verified only by a successful run.",
+      "Configured means required backend setup and verified included-access checks pass. Provider response and data coverage still require a successful sourced run.",
+    new_provider_spend_allowed: false,
   };
 }
 async function marketplaceRun(req: Request, params: unknown) {
@@ -3406,7 +3455,8 @@ async function marketplaceRun(req: Request, params: unknown) {
     );
   if (!status.configured)
     throw new MarketplaceHttpError(
-      `Provider access required: configure ${status.missing_secrets.join(", ")} in this project's backend secrets. No provider request was made.`,
+      status.blocked_reason ||
+        `Provider access required: configure ${status.missing_secrets.join(", ")} in this project's backend secrets. No provider request was made.`,
       424,
     );
   await marketplacePermission(user, tool);
