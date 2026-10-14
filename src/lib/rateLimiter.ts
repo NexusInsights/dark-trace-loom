@@ -21,12 +21,12 @@ export function checkRateLimit(toolId: string): { allowed: boolean; retryAfterMs
     buckets.set(toolId, bucket);
   }
 
-  // Refill tokens
+  // Refill whole intervals only; the leftover carries into the next call.
   const elapsed = now - bucket.lastRefill;
-  const refill = Math.floor(elapsed / REFILL_INTERVAL) * REFILL_RATE;
-  if (refill > 0) {
-    bucket.tokens = Math.min(MAX_TOKENS, bucket.tokens + refill);
-    bucket.lastRefill = now;
+  const intervals = Math.floor(elapsed / REFILL_INTERVAL);
+  if (intervals > 0) {
+    bucket.tokens = Math.min(MAX_TOKENS, bucket.tokens + intervals * REFILL_RATE);
+    bucket.lastRefill += intervals * REFILL_INTERVAL;
   }
 
   if (bucket.tokens >= 1) {
@@ -34,7 +34,7 @@ export function checkRateLimit(toolId: string): { allowed: boolean; retryAfterMs
     return { allowed: true, retryAfterMs: 0 };
   }
 
-  const retryAfterMs = Math.ceil((1 / REFILL_RATE) * REFILL_INTERVAL);
+  const retryAfterMs = REFILL_INTERVAL - ((now - bucket.lastRefill) % REFILL_INTERVAL);
   return { allowed: false, retryAfterMs };
 }
 
