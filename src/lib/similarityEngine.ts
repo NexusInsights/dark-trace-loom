@@ -109,9 +109,9 @@ export async function runBehavioralSimilarity(
     return magA > 0 && magB > 0 ? dot / (Math.sqrt(magA) * Math.sqrt(magB)) : 0;
   }
 
-  function metadataSimilarity(a: any, b: any): number {
-    const ma = a.metadata as Record<string, any> | null;
-    const mb = b.metadata as Record<string, any> | null;
+  function metadataSimilarity(a: { id: string; metadata: unknown }, b: { id: string; metadata: unknown }): number {
+    const ma = a.metadata as Record<string, unknown> | null;
+    const mb = b.metadata as Record<string, unknown> | null;
     if (!ma || !mb) return 0;
 
     let matches = 0, total = 0;

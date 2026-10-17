@@ -1,3 +1,4 @@
+import { jsonValue } from "@/lib/jsonValue";
 import { ToolDefinition } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -31,10 +32,8 @@ async function savePdlLookup(
       user_id: auth.user.id,
       lookup_type,
       label: label.slice(0, 200),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      inputs: inputs as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      result: result as any,
+      inputs: jsonValue(inputs),
+      result: jsonValue(result),
     }]);
   } catch {
     /* non-fatal */

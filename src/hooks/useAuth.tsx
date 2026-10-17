@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           entity_type: "auth",
           entity_id: session.user.id,
         });
-      } catch {}
+      } catch { /* A missing preview session is handled by the following auth state check. */ }
     }
     await supabase.auth.signOut();
   };

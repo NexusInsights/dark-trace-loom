@@ -215,38 +215,38 @@ export default function PersonaIntelDashboard() {
 
     // High-risk personas: personas with identifiers matching high-score entities
     const highScoreEntityValues = new Set(
-      scores.filter((s: any) => Number(s.score) >= 60).map((s: any) => {
-        const ent = entities.find((e: any) => e.id === s.entity_id);
+      scores.filter((s) => Number(s.score) >= 60).map((s) => {
+        const ent = entities.find((e) => e.id === s.entity_id);
         return ent?.entity_value?.toLowerCase();
       }).filter(Boolean)
     );
 
-    const highRiskPersonas = personas.filter((p: any) => {
-      const pIds = identifiers.filter((i: any) => i.persona_id === p.id);
-      return pIds.some((i: any) => highScoreEntityValues.has(i.identifier_value?.toLowerCase()));
+    const highRiskPersonas = personas.filter((p) => {
+      const pIds = identifiers.filter((i) => i.persona_id === p.id);
+      return pIds.some((i) => highScoreEntityValues.has(i.identifier_value?.toLowerCase()));
     });
 
     // Recent discoveries (last 7 days)
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-    const recentPersonas = personas.filter((p: any) => p.created_at > weekAgo);
+    const recentPersonas = personas.filter((p) => p.created_at > weekAgo);
 
     // Type distribution
     const typeCounts: Record<string, number> = {};
-    identifiers.forEach((i: any) => {
+    identifiers.forEach((i) => {
       typeCounts[i.identifier_type] = (typeCounts[i.identifier_type] || 0) + 1;
     });
     const typeDistribution = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
 
     // Cluster sizes
-    const clusterSizes = clusters.map((c: any) => ({
+    const clusterSizes = clusters.map((c) => ({
       name: c.cluster_label?.slice(0, 12) || c.id.slice(0, 8),
-      members: clusterMembers.filter((m: any) => m.cluster_id === c.id).length,
+      members: clusterMembers.filter((m) => m.cluster_id === c.id).length,
       score: Number(c.cluster_score),
     }));
 
     // Platform distribution
     const platCounts: Record<string, number> = {};
-    platformAccounts.forEach((a: any) => {
+    platformAccounts.forEach((a) => {
       platCounts[a.platform_category] = (platCounts[a.platform_category] || 0) + 1;
     });
     const platformDistribution = Object.entries(platCounts).map(([name, value]) => ({ name: name.replace(/_/g, " "), value }));
@@ -287,7 +287,7 @@ export default function PersonaIntelDashboard() {
     // Connect personas to entities & clusters
     const personaEntityMap = new Map<string, string[]>();
     for (const id of identifiers) {
-      const ent = entities.find((e: any) => e.entity_value?.toLowerCase() === id.identifier_value?.toLowerCase());
+      const ent = entities.find((e) => e.entity_value?.toLowerCase() === id.identifier_value?.toLowerCase());
       if (ent) {
         const eNodeId = `e-${ent.id}`;
         if (!nodeIds.has(eNodeId) && nodes.length < 80) {
@@ -299,7 +299,7 @@ export default function PersonaIntelDashboard() {
         }
 
         // Check if entity is in a cluster
-        const membership = clusterMembers.find((m: any) => m.entity_id === ent.id);
+        const membership = clusterMembers.find((m) => m.entity_id === ent.id);
         if (membership && nodeIds.has(`c-${membership.cluster_id}`)) {
           edges.push({ source: eNodeId, target: `c-${membership.cluster_id}`, label: "member" });
         }
@@ -404,7 +404,7 @@ export default function PersonaIntelDashboard() {
             <ScrollArea className="h-[160px]">
               {metrics?.highRiskPersonas.length ? (
                 <div className="space-y-2">
-                  {metrics.highRiskPersonas.map((p: any) => (
+                  {metrics.highRiskPersonas.map((p) => (
                     <div
                       key={p.id}
                       className="flex items-center gap-3 p-2.5 rounded bg-destructive/5 border border-destructive/20 cursor-pointer hover:bg-destructive/10 transition-colors"
@@ -435,8 +435,8 @@ export default function PersonaIntelDashboard() {
             <ScrollArea className="h-[160px]">
               {metrics?.recentPersonas.length ? (
                 <div className="space-y-2">
-                  {metrics.recentPersonas.map((p: any) => {
-                    const idCount = data?.identifiers.filter((i: any) => i.persona_id === p.id).length ?? 0;
+                  {metrics.recentPersonas.map((p) => {
+                    const idCount = data?.identifiers.filter((i) => i.persona_id === p.id).length ?? 0;
                     return (
                       <div
                         key={p.id}
@@ -530,7 +530,7 @@ export default function PersonaIntelDashboard() {
           <ScrollArea className="h-[240px]">
             {data?.crossLinks.length ? (
               <div className="space-y-2">
-                {data.crossLinks.map((link: any) => {
+                {data.crossLinks.map((link) => {
                   const sevColor = link.severity === "critical" ? "text-destructive" : link.severity === "high" ? "text-yellow-500" : "text-muted-foreground";
                   return (
                     <div key={link.id} className="p-2.5 rounded bg-muted/30 border border-border/30">
@@ -561,8 +561,8 @@ export default function PersonaIntelDashboard() {
         </h3>
         {data?.personaEvents.length ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {data.personaEvents.slice(0, 12).map((ev: any) => {
-              const persona = data.personas.find((p: any) => p.id === ev.persona_id);
+            {data.personaEvents.slice(0, 12).map((ev) => {
+              const persona = data.personas.find((p) => p.id === ev.persona_id);
               return (
                 <div key={ev.id} className="flex items-start gap-2.5 p-2.5 rounded bg-muted/20 border border-border/20">
                   <Activity className="h-3 w-3 text-primary mt-0.5 shrink-0" />

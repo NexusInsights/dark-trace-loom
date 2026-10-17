@@ -1,3 +1,4 @@
+import type { Json } from "@/integrations/supabase/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -55,11 +56,11 @@ export function useCreatePipeline() {
       schedule: string;
       tool_sequence: string[];
       target_case_id?: string | null;
-      input_params?: Record<string, unknown>;
+      input_params?: Record<string, Json>;
     }) => {
       const { data, error } = await supabase
         .from("pipelines")
-        .insert([{ ...pipeline, user_id: user!.id }] as any)
+        .insert([{ ...pipeline, user_id: user!.id }])
         .select()
         .single();
       if (error) throw error;

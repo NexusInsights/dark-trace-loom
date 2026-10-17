@@ -1,3 +1,4 @@
+import type { Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
 interface TimelineEvent {
@@ -5,7 +6,7 @@ interface TimelineEvent {
   event_label: string;
   event_timestamp: string;
   source: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, Json>;
 }
 
 export async function buildPersonaTimeline(

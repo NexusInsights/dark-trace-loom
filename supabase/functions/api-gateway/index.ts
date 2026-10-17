@@ -393,8 +393,8 @@ Deno.serve(async (req) => {
       const { data: entities } = await entQuery.limit(200);
 
       // Get links
-      const entityIds = (entities ?? []).map((e: any) => e.id);
-      let edges: any[] = [];
+      const entityIds = (entities ?? []).map((e) => e.id);
+      let edges: { id: string; source_entity_id: string; target_entity_id: string; relationship_type: string; confidence_score: number }[] = [];
       if (entityIds.length > 0) {
         const { data: links } = await supabase
           .from("identity_entity_links")
@@ -406,7 +406,7 @@ Deno.serve(async (req) => {
       }
 
       // Get scores
-      let scoreMap: Record<string, number> = {};
+      const scoreMap: Record<string, number> = {};
       if (entityIds.length > 0) {
         const { data: scores } = await supabase
           .from("entity_scores")
@@ -416,7 +416,7 @@ Deno.serve(async (req) => {
         for (const s of scores ?? []) scoreMap[s.entity_id] = Number(s.score);
       }
 
-      const nodes = (entities ?? []).map((e: any) => ({
+      const nodes = (entities ?? []).map((e) => ({
         id: e.id,
         type: e.entity_type,
         value: e.entity_value,

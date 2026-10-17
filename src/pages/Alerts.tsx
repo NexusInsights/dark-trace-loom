@@ -365,7 +365,7 @@ function CreateAlertDialog({
         subject_id: subjectId || null,
         alert_type: alertType,
         frequency,
-      } as any);
+      });
       if (error) throw error;
       await auditLog("tool_execution", "alert", undefined, { alert_type: alertType, frequency });
     },

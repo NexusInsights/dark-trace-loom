@@ -2063,7 +2063,7 @@ function secrets(tool: string): Record<string, string> {
 function input(p: Params, name: string, max = 500): string {
   if (typeof p[name] !== "string") throw new Error(`${name} is required.`);
   const value = (p[name] as string).trim();
-  if (!value || value.length > max || /[\u0000-\u001f\u007f]/.test(value))
+  if (!value || value.length > max || Array.from(value).some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127))
     throw new Error(`${name} must contain 1–${max} printable characters.`);
   return value;
 }
