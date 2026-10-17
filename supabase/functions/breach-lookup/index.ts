@@ -29,7 +29,7 @@ function detectField(identifier: string): "email" | "username" | "phone" | "ip" 
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) return "email";
   if (/^\+?\d[\d\s\-()]{6,}$/.test(identifier)) return "phone";
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(identifier)) return "ip";
-  if (/^[a-zA-Z0-9_.\-]{2,64}$/.test(identifier)) return "username";
+  if (/^[a-zA-Z0-9_.-]{2,64}$/.test(identifier)) return "username";
   return "name";
 }
 
@@ -144,7 +144,7 @@ serve(async (req) => {
       }
 
       if (r.status === "exposure" && r.source === "HIBP") {
-        for (const b of (r as { breaches: any[] }).breaches) {
+        for (const b of (r as { breaches: { Name?: string; BreachDate?: string; DataClasses?: string[]; IsSensitive?: boolean }[] }).breaches) {
           const { data, error } = await admin.from("breach_records").insert({
             user_id: userId,
             status: "exposure",
@@ -164,7 +164,7 @@ serve(async (req) => {
           if (!error && data) persisted.push(data.id);
         }
       } else if (r.status === "exposure" && r.source === "DeHashed") {
-        for (const e of (r as { entries: any[] }).entries) {
+        for (const e of (r as { entries: Record<string, unknown>[] }).entries) {
           const { data, error } = await admin.from("breach_records").insert({
             user_id: userId,
             status: "exposure",

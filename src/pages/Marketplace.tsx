@@ -348,7 +348,7 @@ function ToolGrid({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!accessible) return;
-                    isInstalled ? onUninstall(t.id) : onInstall(t.id);
+                    if (isInstalled) onUninstall(t.id); else onInstall(t.id);
                   }}
                   disabled={!accessible && !isInstalled}
                 >

@@ -182,9 +182,9 @@ export default function PipelinesPage() {
           <span className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
             Pipelines ({pipelines.length})
           </span>
-          {(pipelines as any[]).map((p) => {
+          {(pipelines).map((p) => {
             const isRunning = runningPipelineId === p.id;
-            const runs = (allRuns as any[]).filter((r) => r.pipeline_id === p.id);
+            const runs = (allRuns).filter((r) => r.pipeline_id === p.id);
             const lastRun = runs[0];
 
             return (
@@ -272,10 +272,10 @@ export default function PipelinesPage() {
             Recent Runs ({allRuns.length})
           </span>
           <div className="space-y-2">
-            {(allRuns as any[]).slice(0, 20).map((run) => {
+            {(allRuns).slice(0, 20).map((run) => {
               const cfg = STATUS_CONFIG[run.status] ?? STATUS_CONFIG.pending;
               const Icon = cfg.icon;
-              const pipeline = (pipelines as any[]).find((p) => p.id === run.pipeline_id);
+              const pipeline = (pipelines).find((p) => p.id === run.pipeline_id);
               return (
                 <GlassPanel key={run.id} className="p-3">
                   <div className="flex items-center gap-3 text-xs">

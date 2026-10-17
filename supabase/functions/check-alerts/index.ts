@@ -117,7 +117,17 @@ interface AlertCheckResult {
   metadata?: Record<string, unknown>;
 }
 
-async function checkAlert(alert: any, supabase: any): Promise<AlertCheckResult> {
+interface MonitoredAlert {
+  id: string;
+  user_id: string;
+  created_at: string;
+  last_checked?: string | null;
+  frequency: string;
+  alert_type: string;
+  subjects?: { name?: string; case_id?: string } | null;
+}
+
+async function checkAlert(alert: MonitoredAlert, supabase: ReturnType<typeof createClient>): Promise<AlertCheckResult> {
   const subjectName = alert.subjects?.name || "Unknown subject";
 
   switch (alert.alert_type) {
@@ -207,7 +217,7 @@ async function checkAlert(alert: any, supabase: any): Promise<AlertCheckResult> 
         .eq("source_case_id", caseId)
         .in("entity_type", ["email", "username", "phone", "domain"]);
 
-      const identifiers = (caseEntities ?? []).map((e: any) => e.entity_value).filter(Boolean);
+      const identifiers = (caseEntities ?? []).map((e) => e.entity_value).filter(Boolean);
       if (identifiers.length === 0) return { triggered: false, title: "", message: "" };
 
       const since = alert.last_checked || alert.created_at;
@@ -220,9 +230,9 @@ async function checkAlert(alert: any, supabase: any): Promise<AlertCheckResult> 
 
       if (newBreaches && newBreaches.length > 0) {
         const breachNames = Array.from(
-          new Set(newBreaches.map((b: any) => b.breach_name ?? b.breach_source).filter(Boolean))
+          new Set(newBreaches.map((b) => b.breach_name ?? b.breach_source).filter(Boolean))
         );
-        const hasCritical = newBreaches.some((b: any) => b.severity === "critical");
+        const hasCritical = newBreaches.some((b) => b.severity === "critical");
         return {
           triggered: true,
           title: `New breach exposure for "${subjectName}"`,

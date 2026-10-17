@@ -147,12 +147,12 @@ export default function SocialGraphPage() {
       ? rawEdges
       : filterEdgeType === "infrastructure"
         ? [] // infra edges are synthetic
-        : rawEdges.filter((e: any) => e.relationship_type === filterEdgeType);
+        : rawEdges.filter((e) => e.relationship_type === filterEdgeType);
 
     const nodeIds = new Set<string>();
     const edgeList: GEdge[] = [];
 
-    for (const e of filteredEdges as any[]) {
+    for (const e of filteredEdges) {
       nodeIds.add(e.source_entity_id);
       nodeIds.add(e.target_entity_id);
       edgeList.push({
@@ -167,7 +167,7 @@ export default function SocialGraphPage() {
     // Group infra links by type+value to create shared infra nodes
     const infraGroups = new Map<string, { type: string; value: string; entityIds: string[] }>();
     const activeInfra = (filterEdgeType === "all" || filterEdgeType === "infrastructure") ? infraLinks : [];
-    for (const link of activeInfra as any[]) {
+    for (const link of activeInfra) {
       const key = `${link.infrastructure_type}:${link.value}`;
       if (!infraGroups.has(key)) {
         infraGroups.set(key, { type: link.infrastructure_type, value: link.value, entityIds: [] });
@@ -262,7 +262,7 @@ export default function SocialGraphPage() {
 
   const edgeTypeStats = useMemo(() => {
     const stats = new Map<string, number>();
-    for (const e of rawEdges as any[]) {
+    for (const e of rawEdges) {
       stats.set(e.relationship_type, (stats.get(e.relationship_type) ?? 0) + 1);
     }
     return stats;
@@ -271,7 +271,7 @@ export default function SocialGraphPage() {
   // Selected node details
   const selectedEntity = selectedNode ? entities.find((e) => e.id === selectedNode) : null;
   const selectedEdges = selectedNode
-    ? (rawEdges as any[]).filter((e) => e.source_entity_id === selectedNode || e.target_entity_id === selectedNode)
+    ? (rawEdges).filter((e) => e.source_entity_id === selectedNode || e.target_entity_id === selectedNode)
     : [];
 
   return (
@@ -525,14 +525,14 @@ export default function SocialGraphPage() {
 
                     {/* Infra links for this entity */}
                     {(() => {
-                      const entityInfra = (infraLinks as any[]).filter((l) => l.entity_id === selectedNode);
+                      const entityInfra = (infraLinks).filter((l) => l.entity_id === selectedNode);
                       if (!entityInfra.length) return null;
                       return (
                         <div className="space-y-1.5">
                           <span className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
                             Infrastructure ({entityInfra.length})
                           </span>
-                          {entityInfra.map((l: any) => (
+                          {entityInfra.map((l) => (
                             <div key={l.id} className="p-2 rounded bg-secondary/50 text-[10px] font-mono">
                               <div className="flex items-center gap-1.5">
                                 <HardDrive className="h-3 w-3 text-primary" />
@@ -570,7 +570,7 @@ export default function SocialGraphPage() {
                     Relationships ({selectedEdges.length})
                   </span>
                   <div className="space-y-1.5 max-h-[350px] overflow-auto">
-                    {selectedEdges.map((edge: any) => {
+                    {selectedEdges.map((edge) => {
                       const isSource = edge.source_entity_id === selectedNode;
                       const other = isSource ? edge.target : edge.source;
                       if (!other) return null;
@@ -611,7 +611,7 @@ export default function SocialGraphPage() {
             All Relationships ({rawEdges.length})
           </span>
           <div className="space-y-2 max-h-[400px] overflow-auto">
-            {(rawEdges as any[]).slice(0, 100).map((edge) => {
+            {(rawEdges).slice(0, 100).map((edge) => {
               const srcType = edge.source?.entity_type ?? "unknown";
               const tgtType = edge.target?.entity_type ?? "unknown";
               const SrcIcon = TYPE_ICONS[srcType] ?? Globe;

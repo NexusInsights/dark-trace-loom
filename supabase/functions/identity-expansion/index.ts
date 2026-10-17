@@ -14,14 +14,14 @@ interface ExpansionRequest {
 }
 
 async function log(
-  supabase: any,
+  supabase: ReturnType<typeof createClient>,
   userId: string,
   entityId: string,
   triggerValue: string,
   triggerType: string,
   step: string,
   status: string,
-  result: any = {},
+  result: unknown = {},
   error?: string
 ) {
   await supabase.from("expansion_logs").insert({
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const results: Record<string, any> = {};
+    const results: Record<string, unknown> = {};
 
     // Step 1: Persona Discovery — create/find persona and generate identifiers
     await log(supabase, user_id, entity_id, entity_value, entity_type, "persona_discovery", "running");
@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
 
       if (entity_type === "username" || entity_type === "email") {
         // Username permutations
-        const parts = entity_value.replace(/@.*/, "").split(/[._\-]/);
+        const parts = entity_value.replace(/@.*/, "").split(/[._-]/);
         const base = entity_value.replace(/@.*/, "").toLowerCase();
         const variations: string[] = [];
 
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
         // Email permutations
         const [local, domain] = entity_value.split("@");
         if (local && domain) {
-          const parts = local.split(/[._\-]/);
+          const parts = local.split(/[._-]/);
           const emailVariations: string[] = [];
           if (parts.length >= 2) {
             const [a, b] = parts;

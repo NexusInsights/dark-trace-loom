@@ -1,3 +1,4 @@
+import { textRecords } from "@/lib/jsonValue";
 import { useState } from "react";
 import { GlassPanel, AnalysisPanel } from "@/components/intel";
 import { Button } from "@/components/ui/button";
@@ -126,11 +127,11 @@ export function CaseAnalysis({ caseId }: { caseId: string }) {
         </GlassPanel>
       )}
 
-      {reports.map((report: any) => {
+      {reports.map((report) => {
         const isExpanded = expandedReport === report.id;
-        const findings = (report.key_findings as any[]) ?? [];
-        const patterns = (report.suspicious_patterns as any[]) ?? [];
-        const rels = (report.key_relationships as any[]) ?? [];
+        const findings = textRecords(report.key_findings);
+        const patterns = textRecords(report.suspicious_patterns);
+        const rels = textRecords(report.key_relationships);
 
         return (
           <GlassPanel key={report.id} className="overflow-hidden">
@@ -184,7 +185,7 @@ export function CaseAnalysis({ caseId }: { caseId: string }) {
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {findings.map((f: any, i: number) => (
+                      {findings.map((f, i: number) => (
                         <div key={i} className={`rounded-md px-3 py-2 ${SEVERITY_BG[f.severity] ?? "bg-muted/30"}`}>
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`font-mono text-[9px] font-bold tracking-wider ${SEVERITY_COLORS[f.severity] ?? ""}`}>
@@ -209,7 +210,7 @@ export function CaseAnalysis({ caseId }: { caseId: string }) {
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {patterns.map((p: any, i: number) => (
+                      {patterns.map((p, i: number) => (
                         <div key={i} className={`rounded-md px-3 py-2 ${SEVERITY_BG[p.risk_level] ?? "bg-muted/30"}`}>
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`font-mono text-[9px] font-bold tracking-wider ${SEVERITY_COLORS[p.risk_level] ?? ""}`}>
@@ -234,7 +235,7 @@ export function CaseAnalysis({ caseId }: { caseId: string }) {
                       </span>
                     </div>
                     <div className="space-y-1.5">
-                      {rels.map((r: any, i: number) => (
+                      {rels.map((r, i: number) => (
                         <div key={i} className="bg-muted/20 rounded-md px-3 py-2">
                           <div className="flex items-center gap-2 text-xs">
                             <span className="font-semibold text-foreground">{r.from_entity}</span>

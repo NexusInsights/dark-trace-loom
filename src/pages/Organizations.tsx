@@ -195,7 +195,7 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
     mutationFn: async ({ memberId, role }: { memberId: string; role: "admin" | "investigator" | "viewer" }) => {
       const { error } = await supabase
         .from("organization_members")
-        .update({ role: role as any })
+        .update({ role: role })
         .eq("id", memberId);
       if (error) throw error;
     },
@@ -605,7 +605,7 @@ function CreateOrgDialog({
           user_id: userId,
           role: "owner" as const,
           invited_by: userId,
-        } as any);
+        });
       if (memberError) throw memberError;
     },
     onSuccess: () => {

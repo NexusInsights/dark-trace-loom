@@ -114,8 +114,8 @@ function CreateCourseForm({ onDone }: { onDone: () => void }) {
       qc.invalidateQueries({ queryKey: ["courses"] });
       toast.success("Course published");
       onDone();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Training request failed");
     } finally {
       setSaving(false);
     }

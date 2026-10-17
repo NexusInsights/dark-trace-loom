@@ -118,7 +118,7 @@ export async function computeEntityScores(
     const batch = scores.slice(i, i + batchSize);
     await supabase
       .from("entity_scores")
-      .upsert(batch as any, { onConflict: "entity_id,user_id" });
+      .upsert(batch, { onConflict: "entity_id,user_id" });
   }
 
   onProgress?.("Complete!");

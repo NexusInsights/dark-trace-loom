@@ -145,9 +145,9 @@ export default function IdentityResolutionPage() {
   const { data: expansionLogs = [] } = useExpansionLogs(selectedEntityId);
 
   const scoreMap = useMemo(() => {
-    const m = new Map<string, { score: number; reasons: any[] }>();
-    for (const s of scores as any[]) {
-      m.set(s.entity_id, { score: s.score, reasons: s.score_reasons ?? [] });
+    const m = new Map<string, { score: number; reasons: unknown[] }>();
+    for (const s of scores) {
+      m.set(s.entity_id, { score: s.score, reasons: Array.isArray(s.score_reasons) ? s.score_reasons : [] });
     }
     return m;
   }, [scores]);
@@ -558,7 +558,7 @@ export default function IdentityResolutionPage() {
             Identity Links ({links.length})
           </span>
           <div className="space-y-2 max-h-[400px] overflow-auto">
-            {links.map((l: any) => {
+            {links.map((l) => {
               const srcType = l.source?.entity_type ?? "unknown";
               const tgtType = l.target?.entity_type ?? "unknown";
               const SrcIcon = TYPE_ICONS[srcType] ?? Globe;
@@ -686,7 +686,7 @@ export default function IdentityResolutionPage() {
                 <p className="text-xs text-muted-foreground mt-2">No observations recorded yet.</p>
               ) : (
                 <div className="space-y-1.5 mt-2 max-h-[200px] overflow-auto">
-                  {observations.map((obs: any) => (
+                  {observations.map((obs) => (
                     <div key={obs.id} className="flex items-center gap-3 text-xs font-mono p-2 rounded bg-secondary/50">
                       <span className="text-foreground font-semibold truncate max-w-[200px]">
                         {obs.case?.title ?? obs.case_id?.slice(0, 8) ?? "—"}
@@ -710,7 +710,7 @@ export default function IdentityResolutionPage() {
                   Breach Exposure ({entityBreaches.length})
                 </span>
                 <div className="space-y-1.5 mt-2 max-h-[200px] overflow-auto">
-                  {(entityBreaches as any[]).map((breach) => {
+                  {(entityBreaches).map((breach) => {
                     const sevColor = breach.severity === "critical" ? "text-destructive"
                       : breach.severity === "high" ? "text-yellow-400" : "text-muted-foreground";
                     return (
@@ -756,7 +756,7 @@ export default function IdentityResolutionPage() {
                 <div className="relative mt-2 max-h-[250px] overflow-auto">
                   <div className="absolute left-[5px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-accent/30 to-transparent" />
                   <div className="space-y-2">
-                    {(entityTimeline as any[]).map((evt, i) => {
+                    {(entityTimeline).map((evt, i) => {
                       const date = new Date(evt.event_timestamp);
                       const label = evt.event_type?.replace(/_/g, " ") ?? "event";
                       return (
@@ -792,7 +792,7 @@ export default function IdentityResolutionPage() {
                   Expansion History ({expansionLogs.length})
                 </span>
                 <div className="space-y-1 mt-2 max-h-[180px] overflow-auto">
-                  {expansionLogs.map((log: any) => {
+                  {expansionLogs.map((log) => {
                     const statusColor = log.status === "completed" ? "text-green-400" : log.status === "failed" ? "text-destructive" : "text-yellow-400";
                     return (
                       <div key={log.id} className="flex items-center gap-2 font-mono text-[10px] p-1.5 rounded bg-muted/30">
@@ -878,7 +878,7 @@ export default function IdentityResolutionPage() {
               <h4 className="font-mono text-[10px] tracking-widest text-muted-foreground mb-2">CLUSTER MEMBERS ({clusterMembers.length})</h4>
               <div className="space-y-1.5">
                 {clusterMembers.map((m) => {
-                  const entity = m.entity as any;
+                  const entity = m.entity;
                   const Icon = TYPE_ICONS[entity?.entity_type] ?? User;
                   return (
                     <div key={m.id} className="flex items-center gap-2 font-mono text-xs p-1.5 rounded bg-muted/30">
@@ -903,7 +903,7 @@ export default function IdentityResolutionPage() {
             <GitCompare className="h-3.5 w-3.5" /> BEHAVIORAL SIMILARITY ({similarityScores.length} pairs)
           </h3>
           <div className="space-y-2 max-h-80 overflow-y-auto">
-            {similarityScores.map((s: any) => {
+            {similarityScores.map((s) => {
               const entityA = entities.find((e) => e.id === s.entity_a);
               const entityB = entities.find((e) => e.id === s.entity_b);
               const pct = Math.round(Number(s.similarity_score) * 100);

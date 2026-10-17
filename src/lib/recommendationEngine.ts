@@ -1,3 +1,4 @@
+import type { Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
 interface RecommendationRule {
@@ -85,7 +86,7 @@ export async function generateSuggestions(
     recommended_tool: string;
     tool_description: string;
     confidence_score: number;
-    metadata: Record<string, unknown>;
+    metadata: Record<string, Json>;
   }[] = [];
 
   for (const trigger of triggers) {
@@ -136,7 +137,7 @@ export async function generateSuggestions(
     const batch = deduped.slice(i, i + batchSize);
     const { data, error } = await supabase
       .from("investigation_suggestions")
-      .upsert(batch as any, { onConflict: "case_id,trigger_value,recommended_tool" })
+      .upsert(batch, { onConflict: "case_id,trigger_value,recommended_tool" })
       .select("id");
     if (!error && data) created += data.length;
   }

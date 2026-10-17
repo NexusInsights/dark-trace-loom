@@ -50,9 +50,9 @@ function usePersonaProfile(personaId: string | null) {
   const matchedEntities = useMemo(() => {
     if (!identifiers.length && !usernames.length && !emails.length) return [];
     const values = new Set<string>();
-    identifiers.forEach((i: any) => values.add(i.identifier_value?.toLowerCase()));
-    usernames.forEach((u: any) => values.add(u.candidate_username?.toLowerCase()));
-    emails.forEach((e: any) => values.add(e.candidate_email?.toLowerCase()));
+    identifiers.forEach((i) => values.add(i.identifier_value?.toLowerCase()));
+    usernames.forEach((u) => values.add(u.candidate_username?.toLowerCase()));
+    emails.forEach((e) => values.add(e.candidate_email?.toLowerCase()));
     return allEntities.filter((e) => values.has(e.entity_value?.toLowerCase()));
   }, [identifiers, usernames, emails, allEntities]);
 
@@ -60,8 +60,8 @@ function usePersonaProfile(personaId: string | null) {
 
   // Scores for matched entities
   const scores = useMemo(() => {
-    const map = new Map<string, any>();
-    for (const s of allScores as any[]) {
+    const map = new Map<string, (typeof allScores)[number]>();
+    for (const s of allScores) {
       if (entityIds.has(s.entity_id)) map.set(s.entity_id, s);
     }
     return map;
@@ -77,7 +77,7 @@ function usePersonaProfile(personaId: string | null) {
 
   // Clusters containing matched entities
   const relatedClusters = useMemo(() => {
-    return allClusters.filter((c: any) => {
+    return allClusters.filter((c) => {
       // We'll check cluster members separately
       return true;
     });
@@ -85,7 +85,7 @@ function usePersonaProfile(personaId: string | null) {
 
   // Similarity pairs involving matched entities
   const relatedSimilarity = useMemo(() => {
-    return similarityScores.filter((s: any) =>
+    return similarityScores.filter((s) =>
       entityIds.has(s.entity_a) || entityIds.has(s.entity_b)
     );
   }, [similarityScores, entityIds]);
@@ -154,7 +154,7 @@ function usePersonaProfile(personaId: string | null) {
   // Linked investigations (cases from observations)
   const linkedCaseIds = useMemo(() => {
     const ids = new Set<string>();
-    observations.forEach((o: any) => { if (o.case_id) ids.add(o.case_id); });
+    observations.forEach((o) => { if (o.case_id) ids.add(o.case_id); });
     return [...ids];
   }, [observations]);
 
@@ -184,7 +184,7 @@ export default function PersonaProfile() {
   const { data: personas = [] } = usePersonas();
   const [selectedId, setSelectedId] = useState<string | null>(personaId);
 
-  const activePersona = personas.find((p: any) => p.id === selectedId);
+  const activePersona = personas.find((p) => p.id === selectedId);
   const profile = usePersonaProfile(selectedId);
   const { data: personaEvents = [] } = usePersonaEvents(selectedId);
   const { mutate: buildTimeline, isPending: buildingTimeline, progress: timelineProgress } = useBuildPersonaTimeline();
@@ -210,7 +210,7 @@ export default function PersonaProfile() {
             <h3 className="font-mono text-[10px] tracking-widest text-primary mb-3">SELECT PERSONA</h3>
             <ScrollArea className="h-[calc(100vh-280px)]">
               <div className="space-y-1.5">
-                {personas.map((p: any) => (
+                {personas.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => setSelectedId(p.id)}
@@ -309,7 +309,7 @@ export default function PersonaProfile() {
                       <div className="mb-4">
                         <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">DISCOVERED IDENTIFIERS</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {profile.identifiers.map((id: any) => {
+                          {profile.identifiers.map((id) => {
                             const Icon = TYPE_ICONS[id.identifier_type] ?? User;
                             return (
                               <div key={id.id} className="flex items-center gap-2 p-2 rounded bg-muted/30 border border-border/30">
@@ -329,7 +329,7 @@ export default function PersonaProfile() {
                       <div className="mb-4">
                         <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">USERNAME CANDIDATES ({profile.usernames.length})</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
-                          {profile.usernames.slice(0, 30).map((u: any) => (
+                          {profile.usernames.slice(0, 30).map((u) => (
                             <div key={u.id} className="flex items-center gap-1.5 p-1.5 rounded bg-muted/20 border border-border/20">
                               <AtSign className="h-3 w-3 text-muted-foreground shrink-0" />
                               <span className="font-mono text-[10px] truncate flex-1">{u.candidate_username}</span>
@@ -345,7 +345,7 @@ export default function PersonaProfile() {
                       <div>
                         <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">EMAIL CANDIDATES ({profile.emails.length})</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                          {profile.emails.slice(0, 20).map((e: any) => (
+                          {profile.emails.slice(0, 20).map((e) => (
                             <div key={e.id} className="flex items-center gap-1.5 p-1.5 rounded bg-muted/20 border border-border/20">
                               <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
                               <span className="font-mono text-[10px] truncate flex-1">{e.candidate_email}</span>
@@ -361,7 +361,7 @@ export default function PersonaProfile() {
                       <div className="mt-4 border-t border-border/50 pt-3">
                         <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">MATCHED GLOBAL ENTITIES ({profile.matchedEntities.length})</h4>
                         <div className="space-y-1">
-                          {profile.matchedEntities.map((e: any) => {
+                          {profile.matchedEntities.map((e) => {
                             const Icon = TYPE_ICONS[e.entity_type] ?? User;
                             const s = profile.scores.get(e.id);
                             return (
@@ -413,14 +413,14 @@ export default function PersonaProfile() {
                     {platformAccounts.length > 0 ? (
                       <div className="space-y-4">
                         {["social_media", "developer", "forums", "email_services", "domains", "other"].map((cat) => {
-                          const catAccounts = platformAccounts.filter((a: any) => a.platform_category === cat);
+                          const catAccounts = platformAccounts.filter((a) => a.platform_category === cat);
                           if (catAccounts.length === 0) return null;
                           const catLabel = cat.replace(/_/g, " ").toUpperCase();
                           return (
                             <div key={cat}>
                               <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">{catLabel}</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                {catAccounts.map((a: any) => (
+                                {catAccounts.map((a) => (
                                   <div key={a.id} className="flex items-center gap-3 p-2.5 rounded bg-muted/30 border border-border/30">
                                     <Monitor className="h-3.5 w-3.5 text-primary shrink-0" />
                                     <div className="flex-1 min-w-0">
@@ -462,8 +462,8 @@ export default function PersonaProfile() {
                     </h3>
                     {profile.infraLinks.length > 0 ? (
                       <div className="space-y-2">
-                        {profile.infraLinks.map((il: any) => {
-                          const entity = profile.matchedEntities.find((e: any) => e.id === il.entity_id);
+                        {profile.infraLinks.map((il) => {
+                          const entity = profile.matchedEntities.find((e) => e.id === il.entity_id);
                           return (
                             <div key={il.id} className="flex items-center gap-3 p-3 rounded bg-muted/30 border border-border/30">
                               <Server className="h-4 w-4 text-primary shrink-0" />
@@ -509,7 +509,7 @@ export default function PersonaProfile() {
                       <ScrollArea className="h-[500px]">
                         <div className="relative pl-6 space-y-0">
                           <div className="absolute left-2 top-0 bottom-0 w-px bg-border" />
-                          {personaEvents.map((ev: any) => {
+                          {personaEvents.map((ev) => {
                             const typeColor =
                               ev.event_type === "breach_exposure" ? "bg-destructive" :
                               ev.event_type === "investigation_sighting" ? "bg-yellow-500" :
@@ -570,8 +570,8 @@ export default function PersonaProfile() {
                     </h3>
                     {profile.breaches.length > 0 ? (
                       <div className="space-y-2">
-                        {profile.breaches.map((b: any) => {
-                          const entity = profile.matchedEntities.find((e: any) => e.id === b.entity_id);
+                        {profile.breaches.map((b) => {
+                          const entity = profile.matchedEntities.find((e) => e.id === b.entity_id);
                           const sevColor = b.severity === "critical" ? "text-destructive" : b.severity === "high" ? "text-yellow-500" : "text-muted-foreground";
                           return (
                             <div key={b.id} className="p-3 rounded bg-muted/30 border border-border/30">
@@ -611,8 +611,8 @@ export default function PersonaProfile() {
                     </h3>
                     {profile.linkedCases.length > 0 ? (
                       <div className="space-y-2">
-                        {profile.linkedCases.map((c: any) => {
-                          const obsCount = profile.observations.filter((o: any) => o.case_id === c.id).length;
+                        {profile.linkedCases.map((c) => {
+                          const obsCount = profile.observations.filter((o) => o.case_id === c.id).length;
                           return (
                             <div key={c.id} className="flex items-center gap-3 p-3 rounded bg-muted/30 border border-border/30">
                               <Shield className="h-4 w-4 text-primary shrink-0" />
@@ -641,9 +641,9 @@ export default function PersonaProfile() {
                     </h3>
                     {profile.relatedSimilarity.length > 0 ? (
                       <div className="space-y-2">
-                        {profile.relatedSimilarity.map((s: any) => {
-                          const eA = profile.matchedEntities.find((e: any) => e.id === s.entity_a);
-                          const eB = profile.matchedEntities.find((e: any) => e.id === s.entity_b);
+                        {profile.relatedSimilarity.map((s) => {
+                          const eA = profile.matchedEntities.find((e) => e.id === s.entity_a);
+                          const eB = profile.matchedEntities.find((e) => e.id === s.entity_b);
                           const pct = Math.round(Number(s.similarity_score) * 100);
                           const barColor = pct >= 70 ? "bg-destructive" : pct >= 40 ? "bg-yellow-500" : "bg-primary";
                           return (
