@@ -75,19 +75,19 @@ Description: ${caseData.description ?? "None"}
 Created: ${caseData.created_at}
 
 SUBJECTS (${subjects.length}):
-${subjects.map((s: any) => `- ${s.name} (${s.type})${s.notes ? `: ${s.notes}` : ""}`).join("\n") || "None"}
+${subjects.map((s) => `- ${s.name} (${s.type})${s.notes ? `: ${s.notes}` : ""}`).join("\n") || "None"}
 
 ARTIFACTS (${artifacts.length}):
-${artifacts.map((a: any) => `- [${a.artifact_type}] ${(a.data ?? "").substring(0, 500)}`).join("\n") || "None"}
+${artifacts.map((a) => `- [${a.artifact_type}] ${(a.data ?? "").substring(0, 500)}`).join("\n") || "None"}
 
 TIMELINE EVENTS (${events.length}):
-${events.map((e: any) => `- [${e.timestamp ?? "no date"}] ${e.event_type}: ${e.description ?? ""}`).join("\n") || "None"}
+${events.map((e) => `- [${e.timestamp ?? "no date"}] ${e.event_type}: ${e.description ?? ""}`).join("\n") || "None"}
 
 ENTITIES (${entities.length}):
-${entities.map((e: any) => `- ${e.label} (${e.entity_type})`).join("\n") || "None"}
+${entities.map((e) => `- ${e.label} (${e.entity_type})`).join("\n") || "None"}
 
 RELATIONSHIPS (${relationships.length}):
-${relationships.map((r: any) => `- ${r.source_id} → ${r.relationship_type} → ${r.target_id} (confidence: ${r.confidence})`).join("\n") || "None"}
+${relationships.map((r) => `- ${r.source_id} → ${r.relationship_type} → ${r.target_id} (confidence: ${r.confidence})`).join("\n") || "None"}
 `.trim();
 
     const systemPrompt = `You are an expert OSINT intelligence analyst. Analyze the following investigation data and produce a structured analysis report.

@@ -464,7 +464,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground font-mono py-4 text-center">No scored entities — run scoring engine</p>
           ) : (
             <div className="space-y-1 mt-1">
-              {(scores as any[]).slice(0, 10).map((s, i) => {
+              {(scores).slice(0, 10).map((s, i) => {
                 const score = Number(s.score);
                 const color = score > 60 ? "text-destructive" : score > 30 ? "text-yellow-400" : "text-green-400";
                 const barColor = score > 60 ? "bg-destructive" : score > 30 ? "bg-yellow-400" : "bg-green-400";

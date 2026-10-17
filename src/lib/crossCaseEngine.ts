@@ -1,3 +1,4 @@
+import type { Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DiscoveryResult {
@@ -45,7 +46,7 @@ export async function runCrossCaseDiscovery(
     link_reason: string;
     user_id: string;
     severity: string;
-    metadata: Record<string, unknown>;
+    metadata: Record<string, Json>;
   }[] = [];
 
   for (const [entityId, caseIds] of entityCases.entries()) {
@@ -91,7 +92,7 @@ export async function runCrossCaseDiscovery(
     const batch = links.slice(i, i + batchSize);
     const { data, error } = await supabase
       .from("cross_case_links")
-      .insert(batch as any)
+      .insert(batch)
       .select("id");
     if (!error && data) created += data.length;
   }

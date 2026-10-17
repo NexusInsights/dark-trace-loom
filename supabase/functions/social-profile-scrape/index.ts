@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
       ...alternateUrls(target).map((u, i) => ({ url: u, stealth: true, label: `mirror#${i + 1}` })),
     ];
 
-    let scraped: { ok: boolean; status: number; data: any } | null = null;
+    let scraped: Awaited<ReturnType<typeof firecrawlScrape>> | null = null;
     let usedAttempt = "";
     const errorTrail: { label: string; status: number; msg: string }[] = [];
 
@@ -240,7 +240,7 @@ Respond with JSON only, no prose.`;
 
     const aiJson = await aiRes.json();
     const content = aiJson.choices?.[0]?.message?.content || "{}";
-    let intel: any = {};
+    let intel: unknown = {};
     try { intel = JSON.parse(content); } catch { intel = { raw: content }; }
 
     return new Response(

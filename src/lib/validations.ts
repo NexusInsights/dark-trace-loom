@@ -115,7 +115,7 @@ export const usernamePermutationSchema = z.object({
   firstName: z.string().trim().max(100, "First name too long").optional().default(""),
   lastName: z.string().trim().max(100, "Last name too long").optional().default(""),
   knownUsername: z.string().trim().max(100, "Username too long")
-    .refine((v) => !v || /^[a-zA-Z0-9._\-]*$/.test(v), "Invalid characters")
+    .refine((v) => !v || /^[a-zA-Z0-9._-]*$/.test(v), "Invalid characters")
     .optional().default(""),
 }).refine(
   (data) => [data.firstName, data.lastName, data.knownUsername].some((v) => v && v.trim().length > 0),

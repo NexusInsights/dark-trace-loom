@@ -1,3 +1,4 @@
+import type { Json } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
 interface InfraMiningResult {
@@ -49,14 +50,14 @@ export async function runInfrastructureMining(
     value: string;
     confidence_score: number;
     source_tool: string | null;
-    metadata: Record<string, unknown>;
+    metadata: Record<string, Json>;
   }[] = [];
 
   const seen = new Set<string>();
 
   function addLink(
     entityId: string, infraType: string, value: string,
-    confidence: number, tool: string | null, meta: Record<string, unknown> = {}
+    confidence: number, tool: string | null, meta: Record<string, Json> = {}
   ) {
     const key = `${entityId}:${infraType}:${value}`;
     if (seen.has(key)) return;
@@ -166,7 +167,7 @@ export async function runInfrastructureMining(
     const batch = links.slice(i, i + batchSize);
     const { data, error } = await supabase
       .from("infrastructure_links")
-      .upsert(batch as any, { onConflict: "entity_id,infrastructure_type,value" })
+      .upsert(batch, { onConflict: "entity_id,infrastructure_type,value" })
       .select("id");
     if (!error && data) linksCreated += data.length;
   }

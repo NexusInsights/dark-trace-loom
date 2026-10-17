@@ -1,3 +1,4 @@
+import { jsonValue } from "@/lib/jsonValue";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PipelineConfig {
@@ -149,7 +150,7 @@ export async function executePipeline(
       .update({
         status: "completed",
         completed_at: new Date().toISOString(),
-        results: results as any,
+        results: jsonValue(results),
         artifacts_created: artifactsCreated,
         entities_linked: entitiesLinked,
       })

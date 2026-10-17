@@ -99,7 +99,7 @@ function EvidenceLogViewer({ artifactId }: { artifactId: string }) {
         <p className="text-[10px] text-muted-foreground font-mono">No log entries</p>
       ) : (
         <div className="space-y-1.5 max-h-[200px] overflow-auto">
-          {logs.map((log: any) => (
+          {logs.map((log) => (
             <div key={log.id} className="bg-background/40 border border-border/30 rounded px-2.5 py-1.5">
               <div className="flex items-center justify-between">
                 <span className={`font-mono text-[10px] font-medium ${
@@ -145,7 +145,7 @@ function NewCaseWithTemplates({
     },
   });
 
-  const applyTemplate = (tpl: any) => {
+  const applyTemplate = (tpl) => {
     setSelectedTemplate(tpl.id);
     setValues((v) => ({
       ...v,
@@ -180,7 +180,7 @@ function NewCaseWithTemplates({
             <span className="font-mono text-[10px] tracking-widest text-muted-foreground">TEMPLATES</span>
           </div>
           <div className="space-y-1 max-h-[160px] overflow-auto">
-            {templates.map((tpl: any) => (
+            {templates.map((tpl) => (
               <button
                 key={tpl.id}
                 type="button"
@@ -286,7 +286,7 @@ export default function InvestigationsPage() {
   };
 
   const handleAcknowledgeLink = async (linkId: string) => {
-    await supabase.from("cross_case_links").update({ acknowledged: true } as any).eq("id", linkId);
+    await supabase.from("cross_case_links").update({ acknowledged: true }).eq("id", linkId);
     qc.invalidateQueries({ queryKey: ["cross_case_links"] });
     qc.invalidateQueries({ queryKey: ["cross_case_stats"] });
   };
@@ -306,7 +306,7 @@ export default function InvestigationsPage() {
   };
 
   const handleDismissSuggestion = async (id: string) => {
-    await supabase.from("investigation_suggestions").update({ dismissed: true } as any).eq("id", id);
+    await supabase.from("investigation_suggestions").update({ dismissed: true }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["investigation_suggestions"] });
   };
 
@@ -453,7 +453,7 @@ export default function InvestigationsPage() {
                   </span>
                 </div>
                 <div className="space-y-1.5 max-h-[150px] overflow-auto">
-                  {(crossCaseLinks as any[]).map((link) => (
+                  {(crossCaseLinks).map((link) => (
                     <div key={link.id} className="flex items-center gap-2 text-[10px] font-mono bg-background/50 rounded px-2.5 py-1.5">
                       <Link2 className="h-3 w-3 text-destructive shrink-0" />
                       <span className="text-foreground truncate flex-1">
@@ -502,7 +502,7 @@ export default function InvestigationsPage() {
                 </p>
               ) : (
                 <div className="space-y-1.5 max-h-[200px] overflow-auto">
-                  {(suggestions as any[]).map((s) => (
+                  {(suggestions).map((s) => (
                     <div key={s.id} className="flex items-center gap-2 text-[10px] font-mono bg-background/50 rounded px-2.5 py-1.5">
                       <Sparkles className="h-3 w-3 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">

@@ -167,7 +167,7 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
       });
       break;
 
-    case "timeline":
+    case "timeline": {
       lines.push(`## Event Timeline (${data.events.length} events)`);
       lines.push("");
       if (data.events.length === 0) {
@@ -188,6 +188,7 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
       });
       break;
 
+    }
     case "subject-profile":
       lines.push(`## Subject Profiles (${data.subjects.length})`);
       lines.push("");
