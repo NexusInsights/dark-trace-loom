@@ -12,6 +12,7 @@ const mainNav = [
   { title: "Home", url: "/", icon: Home },
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Tool Suite", url: "/tools", icon: Wrench },
+  { title: "Intelligence Lab", url: "/intelligence", icon: Fingerprint },
   { title: "Marketplace", url: "/marketplace", icon: Store },
   { title: "PDL History", url: "/pdl-history", icon: Database },
   { title: "Agents", url: "/agents", icon: Bot },

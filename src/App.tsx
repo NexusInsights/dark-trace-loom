@@ -15,6 +15,7 @@ import PdlHistory from "./pages/PdlHistory";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import ToolSuite from "./pages/ToolSuite";
+import IntelligenceLab from "./pages/IntelligenceLab";
 import Marketplace from "./pages/Marketplace";
 import Organizations from "./pages/Organizations";
 import ActivityLogs from "./pages/ActivityLogs";
@@ -71,6 +72,7 @@ const App = () => (
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/tools" element={<ToolSuite />} />
+                <Route path="/intelligence" element={<ErrorBoundary><IntelligenceLab /></ErrorBoundary>} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/pdl-history" element={<PdlHistory />} />
                 <Route path="/organizations" element={<Organizations />} />

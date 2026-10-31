@@ -29,3 +29,7 @@ verify_jwt = false
 
 [functions.accept-invite]
 verify_jwt = false
+
+[functions.intelligence-tools]
+# The handler verifies the user with Supabase Auth before checking tool access.
+verify_jwt = false
