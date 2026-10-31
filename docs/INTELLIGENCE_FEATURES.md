@@ -109,6 +109,7 @@ Run:
 npm run test
 npm run test:intelligence-worker
 npm run test:intelligence-client
+npm run test:intelligence-sql
 npm run lint
 npx tsc --noEmit -p tsconfig.app.json
 npm run build
@@ -120,5 +121,20 @@ training orchestration and prediction. These tests make no live personal lookups
 Real-provider and deployed Edge/database verification require the configured
 deployment and an authorized real request. A build or a passing fixture test
 does not establish that those live services work.
+
+The SQL suite applies the exact new migration, its owning prerequisite table
+DDL, and the existing role/updated-at helpers to an in-memory PostgreSQL engine
+provided by pinned `@electric-sql/pglite` 0.5.14 (Apache-2.0). It exercises actual
+function execution and database role ACLs for admission, five-request free
+limits, pending reservation release/expiry, active/expired subscriptions,
+administrator denials, idempotent accounting and cross-user settlement denial.
+Only the Supabase auth schema/claim interface is a local test fixture; it does
+not verify real JWT issuance or a deployed Supabase project.
+
+PGlite has one exclusive database connection. The real advisory-lock function
+executes, but this suite does not establish lock contention behavior across
+independent PostgreSQL connections. It does not alter or replace lock functions,
+and no test connects to the remote application database. Primary `npm test`
+includes this SQL suite so the existing CI workflow runs it.
 
 Explicit HTTP onion URLs keep their requested protocol and port in the isolated browser; Chromium's opportunistic HTTPS upgrade is disabled for these Tor jobs. A server-directed upgrade to HTTPS on the same onion hostname remains allowed, while other origins and HTTPS-to-HTTP downgrades are blocked. The final installed-Chrome test fetched the official Tor Project onion through the existing local Tor SOCKS service; this verifies that route at the test time, not future onion availability.

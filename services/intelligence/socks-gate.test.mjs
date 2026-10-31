@@ -58,6 +58,9 @@ async function upstreamFixture({ method = 0, replyStatus = 0 } = {}) {
 async function clientFixture(url, { timeout = 3000 } = {}) {
   const parsed = new URL(url);
   const socket = createConnection({ host: parsed.hostname, port: Number(parsed.port) });
+  // Register before connection setup so callers can await an actual peer-side
+  // close event even when a rejection closes this socket before the assertion.
+  const closed = new Promise(resolve => socket.once('close', resolve));
   let buffer = Buffer.alloc(0);
   let pending;
   let failed;
@@ -73,7 +76,7 @@ async function clientFixture(url, { timeout = 3000 } = {}) {
   socket.once('end', () => { if (pending) fail(new Error('Fixture connection ended')); });
   socket.setTimeout(timeout, () => socket.destroy(new Error('Fixture client timed out')));
   await new Promise((resolve, reject) => { socket.once('connect', resolve); socket.once('error', reject); });
-  return { socket,
+  return { socket, closed,
     read(length) {
       if (buffer.length >= length) { const value = buffer.subarray(0, length); buffer = buffer.subarray(length); return Promise.resolve(value); }
       if (failed) return Promise.reject(failed);
@@ -188,7 +191,18 @@ test('the seventeenth concurrent client is rejected and close releases pending h
   assert.deepEqual([...(await rejected.read(2))], [5, 255]);
   assert.equal(upstream.connections, 0);
   await gate.close();
-  for (const client of clients) assert.equal(client.socket.destroyed || client.socket.readableEnded, true);
+  let peerCloseTimeout;
+  try {
+    // gate.close() owns the listening/server sockets. The independent remote
+    // fixture sockets observe their FIN/close on a later event-loop turn.
+    await Promise.race([
+      Promise.all(clients.map(client => client.closed)),
+      new Promise((_, reject) => {
+        peerCloseTimeout = setTimeout(() => reject(new Error('The scoped SOCKS gate did not close every peer connection within 2 seconds.')), 2000);
+      }),
+    ]);
+  } finally { clearTimeout(peerCloseTimeout); }
+  for (const client of clients) assert.equal(client.socket.destroyed, true);
 });
 
 test('configuration errors are rejected before opening a listening or upstream socket', async () => {

@@ -9,11 +9,12 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "npm run test:app && npm run test:intelligence-worker && npm run test:intelligence-client",
+    "test": "npm run test:app && npm run test:intelligence-worker && npm run test:intelligence-client && npm run test:intelligence-sql",
     "test:app": "vitest run",
     "test:watch": "vitest",
     "test:intelligence-worker": "node --test services/intelligence/service.test.mjs services/intelligence/socks-gate.test.mjs",
     "test:intelligence-client": "node --test src/features/intelligence/browser-client.test.mjs src/features/intelligence/classifier.test.mjs",
+    "test:intelligence-sql": "node --test test/intelligence-migration.test.mjs",
     "intelligence:worker": "node services/intelligence/worker.mjs"
   },
   "dependencies": {
@@ -78,6 +79,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.14",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
