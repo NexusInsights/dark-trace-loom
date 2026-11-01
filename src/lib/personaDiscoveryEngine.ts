@@ -1,225 +1,68 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
+import { lookupProfiles } from "./profileLookup";
+import type { ProfileSearchResult } from "./publicProfiles";
+import type { Json } from "@/integrations/supabase/types";
+import { edgeFunctionError } from "./edgeFunctionError";
+import { normalizePdlResult } from "./pdlResults";
 
-export interface PersonaInput {
-  name?: string;
-  username?: string;
-  email?: string;
-  domain?: string;
-  phone?: string;
-}
+export interface PersonaInput { name?: string; username?: string; email?: string; domain?: string; phone?: string; enrich?: boolean; personaId?: string; searchProfiles?: boolean; }
 
-interface GeneratedIdentifier {
-  type: string;
-  value: string;
-  confidence: number;
-  source: string;
-}
-
-function generateUsernameVariations(base: string): GeneratedIdentifier[] {
-  const clean = base.replace(/[^a-zA-Z0-9_.-]/g, "").toLowerCase();
-  if (clean.length < 2) return [];
-  const results: GeneratedIdentifier[] = [];
-  const variations = [
-    clean,
-    clean.replace(/[._-]/g, ""),
-    clean.replace(/[._-]/g, "_"),
-    clean.replace(/[._-]/g, "."),
-    `${clean}_`,
-    `_${clean}`,
-    `${clean}1`,
-    `${clean}123`,
-    `the${clean}`,
-    `real${clean}`,
-    `official${clean}`,
-    `${clean}official`,
-  ];
+export async function runPersonaDiscovery(userId: string, input: PersonaInput, onProgress?: (step: string) => void): Promise<{ personaId: string; identifiersGenerated: number; lookup: ProfileSearchResult | null }> {
+  const sanitized = Object.fromEntries(Object.entries(input).filter(([key]) => !["enrich","personaId"].includes(key)).map(([key, value]) => [key, typeof value === "string" ? value.trim() : ""]).filter(([,value]) => value)) as Pick<PersonaInput,"name"|"username"|"email"|"domain"|"phone">;
+  if (!Object.values(sanitized).length) throw new Error("Provide at least one identifier");
+  let lookup: ProfileSearchResult | null = null;
+  if (sanitized.username && input.searchProfiles !== false) {
+    onProgress?.("Checking GitHub, GitLab, DEV Community, Hacker News and Keybase account records...");
+    lookup = await lookupProfiles(sanitized.username.replace(/^@/, ""));
+    if (lookup.checks.every(check => check.status === "unavailable")) throw new Error("All profile providers were unavailable. No account existence was established. Try again later.");
+  }
+  if (input.enrich) {
+    if (!sanitized.email && !sanitized.phone && !sanitized.name) throw new Error("Provider enrichment requires an email, phone or full name");
+    onProgress?.("Requesting an actual People Data Labs match with the configured provider account...");
+    const { data: providerData, error } = await supabase.functions.invoke("osint-tools", { body: { action: "pdl-person-enrich", params: sanitized } });
+    if (error) throw await edgeFunctionError(error);
+    const data = providerData ? normalizePdlResult(providerData) : null;
+    if (data?.error) throw new Error(String(data.error));
+    if (!data?.raw?.id) throw new Error("The enrichment provider did not return an identifiable person record");
+    lookup ||= { username: sanitized.username || "", retrievedAt: new Date().toISOString(), profiles: [], checks: [] };
+    lookup.enrichment = data;
+    const sourceUrl = "https://api.peopledatalabs.com/v5/person/enrich";
+    for (const [platform,key] of [["LinkedIn","linkedin_url"],["Twitter","twitter_url"],["Facebook","facebook_url"],["GitHub","github_url"]]) {
+      if (typeof data[key] !== "string" || !data[key]) continue;
+      let url: URL;
+      try { url = new URL(data[key].startsWith("http") ? data[key] : `https://${data[key]}`); } catch { continue; }
+      if (!["https:","http:"].includes(url.protocol)) continue;
+      lookup.profiles.push({ platform, username: decodeURIComponent(url.pathname.split("/").filter(Boolean).at(-1) || ""), profileUrl: url.href, sourceUrl, retrievedAt: lookup.retrievedAt, displayName: data.full_name, location: data.location_name, email: data.work_email, phone: data.mobile_phone, evidenceKind: "provider_match" });
+    }
+  }
+  onProgress?.("Saving inputs and retrieved evidence...");
+  if (input.personaId && !/^[0-9a-f-]{36}$/i.test(input.personaId)) throw new Error("Invalid persona ID");
+  const query = input.personaId ? supabase.from("personas").select("id").eq("id",input.personaId).eq("user_id",userId).single() : supabase.from("personas").insert({ user_id: userId, persona_label: sanitized.name || sanitized.username || sanitized.email || sanitized.phone || sanitized.domain || "Persona" }).select("id").single();
+  const { data: persona, error } = await checkedDatabase(query);
+  if (error || !persona) throw new Error(`Failed to create persona: ${error?.message || "No record returned"}`);
+  const identifiers = Object.entries(sanitized).map(([type,value]) => ({ identifier_type: type, identifier_value: value!, source: "input", confidence_score: 1 }));
+  for (const profile of lookup?.profiles || []) {
+    const source = `live:${profile.platform}:${profile.sourceUrl}`;
+    identifiers.push({ identifier_type: "social_profile", identifier_value: profile.profileUrl, source, confidence_score: 1 });
+    identifiers.push({ identifier_type: "username", identifier_value: profile.username, source, confidence_score: 1 });
+    if (profile.email) identifiers.push({ identifier_type: "email", identifier_value: profile.email, source, confidence_score: 1 });
+    if (profile.phone) identifiers.push({ identifier_type: "phone", identifier_value: profile.phone, source, confidence_score: 1 });
+  }
+  if (lookup?.enrichment) {
+    const data = lookup.enrichment;
+    for (const [type,values] of [["email",[data.work_email, ...(Array.isArray(data.personal_emails) ? data.personal_emails : [])]], ["phone",[data.mobile_phone, ...(Array.isArray(data.phone_numbers) ? data.phone_numbers : [])]]] as const) {
+      for (const value of values) if (typeof value === "string" && value.trim()) identifiers.push({ identifier_type: type, identifier_value: value, source: "live:People Data Labs:https://api.peopledatalabs.com/v5/person/enrich", confidence_score: 1 });
+    }
+  }
   const seen = new Set<string>();
-  for (const v of variations) {
-    if (v.length >= 2 && !seen.has(v)) {
-      seen.add(v);
-      results.push({ type: "username", value: v, confidence: v === clean ? 1.0 : 0.6, source: "username_variation" });
-    }
+  const rows = identifiers.filter(i => { const k = `${i.identifier_type}:${i.identifier_value}`; if (seen.has(k)) return false; seen.add(k); return true; }).map(i => ({ ...i, persona_id: persona.id, user_id: userId }));
+  const saved = await checkedDatabase(supabase.from("persona_identifiers").upsert(rows,{onConflict:"persona_id,identifier_type,identifier_value"}));
+  if (saved.error) throw new Error(`Persona was created, but its identifiers could not be saved: ${saved.error.message}`);
+  if (lookup) {
+    const result = await checkedDatabase(supabase.from("tool_results").insert({ user_id: userId, tool_name: "public-profile-search", result_data: { ...lookup, persona_id: persona.id, inputs: sanitized } as unknown as Json }));
+    if (result.error) throw new Error(`Identifiers saved, but lookup provenance could not be saved: ${result.error.message}`);
   }
-  return results;
-}
-
-function generateEmailPermutations(name?: string, username?: string, domain?: string, email?: string): GeneratedIdentifier[] {
-  const results: GeneratedIdentifier[] = [];
-  const domains = ["gmail.com", "yahoo.com", "outlook.com", "protonmail.com", "hotmail.com"];
-  if (domain) domains.unshift(domain);
-
-  const locals: string[] = [];
-  if (email) {
-    const [local] = email.split("@");
-    if (local) locals.push(local.toLowerCase());
-  }
-  if (username) locals.push(username.toLowerCase().replace(/[^a-z0-9._-]/g, ""));
-  if (name) {
-    const parts = name.toLowerCase().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) {
-      locals.push(`${parts[0]}.${parts[parts.length - 1]}`);
-      locals.push(`${parts[0]}${parts[parts.length - 1]}`);
-      locals.push(`${parts[0][0]}${parts[parts.length - 1]}`);
-      locals.push(`${parts[parts.length - 1]}${parts[0][0]}`);
-    } else if (parts.length === 1) {
-      locals.push(parts[0]);
-    }
-  }
-
-  const seen = new Set<string>();
-  if (email) seen.add(email.toLowerCase());
-
-  for (const local of [...new Set(locals)]) {
-    if (local.length < 2) continue;
-    for (const d of domains) {
-      const addr = `${local}@${d}`;
-      if (!seen.has(addr)) {
-        seen.add(addr);
-        results.push({ type: "email", value: addr, confidence: 0.5, source: "email_permutation" });
-      }
-    }
-  }
-  return results;
-}
-
-function generateSocialHandles(username?: string, name?: string): GeneratedIdentifier[] {
-  const results: GeneratedIdentifier[] = [];
-  const platforms = ["twitter.com", "instagram.com", "github.com", "linkedin.com", "facebook.com"];
-  const handles: string[] = [];
-
-  if (username) handles.push(username.toLowerCase().replace(/[^a-z0-9_.-]/g, ""));
-  if (name) {
-    const parts = name.toLowerCase().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) {
-      handles.push(`${parts[0]}${parts[parts.length - 1]}`);
-      handles.push(`${parts[0]}.${parts[parts.length - 1]}`);
-    }
-  }
-
-  const seen = new Set<string>();
-  for (const h of [...new Set(handles)]) {
-    if (h.length < 2) continue;
-    for (const p of platforms) {
-      const url = `https://${p}/${h}`;
-      if (!seen.has(url)) {
-        seen.add(url);
-        results.push({ type: "social_profile", value: url, confidence: 0.45, source: "social_handle_guess" });
-      }
-    }
-  }
-  return results;
-}
-
-function generateDomainGuesses(name?: string, username?: string, domain?: string): GeneratedIdentifier[] {
-  const results: GeneratedIdentifier[] = [];
-  const tlds = [".com", ".net", ".org", ".io", ".dev"];
-  const bases: string[] = [];
-
-  if (domain) {
-    results.push({ type: "domain", value: domain.toLowerCase(), confidence: 1.0, source: "input" });
-  }
-  if (username) bases.push(username.toLowerCase().replace(/[^a-z0-9]/g, ""));
-  if (name) {
-    const parts = name.toLowerCase().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) bases.push(`${parts[0]}${parts[parts.length - 1]}`);
-    else if (parts.length === 1) bases.push(parts[0]);
-  }
-
-  const seen = new Set<string>(domain ? [domain.toLowerCase()] : []);
-  for (const b of [...new Set(bases)]) {
-    if (b.length < 3) continue;
-    for (const tld of tlds) {
-      const d = b + tld;
-      if (!seen.has(d)) {
-        seen.add(d);
-        results.push({ type: "domain", value: d, confidence: 0.35, source: "domain_guess" });
-      }
-    }
-  }
-  return results;
-}
-
-export async function runPersonaDiscovery(
-  userId: string,
-  input: PersonaInput,
-  onProgress?: (step: string) => void
-): Promise<{ personaId: string; identifiersGenerated: number }> {
-  // Sanitize inputs
-  const sanitized: PersonaInput = {
-    name: input.name?.trim().slice(0, 200),
-    username: input.username?.trim().slice(0, 100).replace(/[^a-zA-Z0-9._\-@]/g, ""),
-    email: input.email?.trim().slice(0, 255).toLowerCase(),
-    domain: input.domain?.trim().slice(0, 253).toLowerCase(),
-    phone: input.phone?.trim().slice(0, 30).replace(/[^+\d\s()-]/g, ""),
-  };
-
-  const label = sanitized.name || sanitized.username || sanitized.email?.split("@")[0] || "Unknown";
-  onProgress?.("Creating persona record...");
-
-  const { data: persona, error: pErr } = await supabase
-    .from("personas")
-    .insert({ user_id: userId, persona_label: label })
-    .select("id")
-    .single();
-
-  if (pErr || !persona) throw new Error(`Failed to create persona: ${pErr?.message}`);
-
-  onProgress?.("Generating identifier variations...");
-
-  const allIds: GeneratedIdentifier[] = [];
-
-  // Seed inputs as high-confidence
-  if (sanitized.username) allIds.push({ type: "username", value: sanitized.username.toLowerCase(), confidence: 1.0, source: "input" });
-  if (sanitized.email) allIds.push({ type: "email", value: sanitized.email.toLowerCase(), confidence: 1.0, source: "input" });
-  if (sanitized.phone) allIds.push({ type: "phone", value: sanitized.phone, confidence: 1.0, source: "input" });
-  if (sanitized.name) allIds.push({ type: "name", value: sanitized.name, confidence: 1.0, source: "input" });
-
-  allIds.push(...generateUsernameVariations(sanitized.username || sanitized.name || ""));
-  allIds.push(...generateEmailPermutations(sanitized.name, sanitized.username, sanitized.domain, sanitized.email));
-  allIds.push(...generateSocialHandles(sanitized.username, sanitized.name));
-  allIds.push(...generateDomainGuesses(sanitized.name, sanitized.username, sanitized.domain));
-
-  // Deduplicate & cap at 500
-  const seen = new Set<string>();
-  const unique = allIds.filter((id) => {
-    const key = `${id.type}:${id.value}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, 500);
-
-  onProgress?.(`Saving ${unique.length} identifiers...`);
-
-  const batchSize = 50;
-  let total = 0;
-  for (let i = 0; i < unique.length; i += batchSize) {
-    const batch = unique.slice(i, i + batchSize).map((id) => ({
-      persona_id: persona.id,
-      user_id: userId,
-      identifier_type: id.type,
-      identifier_value: id.value,
-      confidence_score: id.confidence,
-      source: id.source,
-    }));
-    const { data } = await supabase.from("persona_identifiers").upsert(batch, { ignoreDuplicates: true }).select("id");
-    if (data) total += data.length;
-  }
-
-  // Cross-reference with existing identity entities
-  onProgress?.("Cross-referencing with known entities...");
-  const inputValues = unique.filter((u) => u.confidence >= 0.8).map((u) => u.value);
-  if (inputValues.length > 0) {
-    const { data: matches } = await supabase
-      .from("identity_entities")
-      .select("id, entity_type, entity_value")
-      .eq("user_id", userId)
-      .in("entity_value", inputValues.slice(0, 100));
-
-    if (matches?.length) {
-      onProgress?.(`Found ${matches.length} existing entity matches`);
-    }
-  }
-
-  onProgress?.("Complete!");
-  return { personaId: persona.id, identifiersGenerated: total };
+  onProgress?.(lookup ? `${lookup.profiles.length} confirmed account records; ${lookup.checks.filter(c => c.status === "unavailable").length} unavailable providers. Shared usernames do not prove shared ownership.` : "Inputs saved. Name, email and phone ownership require a configured enrichment provider; no inferred contacts were generated.");
+  return { personaId: persona.id, identifiersGenerated: rows.length, lookup };
 }

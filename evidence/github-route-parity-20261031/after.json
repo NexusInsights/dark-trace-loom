@@ -1,0 +1,335 @@
+{
+  "scope": "Actual manual osint-tools and osint-dispatch handlers plus safeFetch in Node VM. Auth/SDK/transport are synthetic; no sockets, SQL/RLS, credentials, person queries, owner access or live acceptance.",
+  "sourceFiles": [
+    {
+      "path": "supabase/functions/_shared/safeFetch.ts",
+      "sha256": "b3a5ed1389c2fd8007c872b1d9c2fdded8e0bcd9c30dca9e5b99d2dd0ec1ebf8"
+    },
+    {
+      "path": "supabase/functions/osint-tools/index.ts",
+      "sha256": "a29c1a9ab36fc50d30d497a51d5c738718ef215d5813578c63d0adaad6333d00"
+    },
+    {
+      "path": "supabase/functions/osint-dispatch/index.ts",
+      "sha256": "6ff3ad7c1e5044e4b79508e3e66355aca7179a34a741aaa17181e6d85a19ab0b"
+    }
+  ],
+  "passed": 10,
+  "total": 10,
+  "checks": [
+    {
+      "scenario": "repos-429",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories HTTP 429"
+            }
+          ]
+        },
+        "dispatch": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories HTTP 429"
+            }
+          ],
+          "reason": "GitHub repositories HTTP 429"
+        }
+      },
+      "savedStatuses": [
+        "partial"
+      ],
+      "syntheticProviderCalls": 5
+    },
+    {
+      "scenario": "repos-503",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories HTTP 503"
+            }
+          ]
+        },
+        "dispatch": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories HTTP 503"
+            }
+          ],
+          "reason": "GitHub repositories HTTP 503"
+        }
+      },
+      "savedStatuses": [
+        "partial"
+      ],
+      "syntheticProviderCalls": 5
+    },
+    {
+      "scenario": "repos-network",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories request failed or returned invalid JSON"
+            }
+          ]
+        },
+        "dispatch": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories request failed or returned invalid JSON"
+            }
+          ],
+          "reason": "GitHub repositories request failed or returned invalid JSON"
+        }
+      },
+      "savedStatuses": [
+        "partial"
+      ],
+      "syntheticProviderCalls": 5
+    },
+    {
+      "scenario": "repos-object",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories returned an invalid list"
+            }
+          ]
+        },
+        "dispatch": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories returned an invalid list"
+            }
+          ],
+          "reason": "GitHub repositories returned an invalid list"
+        }
+      },
+      "savedStatuses": [
+        "partial"
+      ],
+      "syntheticProviderCalls": 5
+    },
+    {
+      "scenario": "repos-json",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories request failed or returned invalid JSON"
+            }
+          ]
+        },
+        "dispatch": {
+          "status": "partial",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": null,
+          "sourceErrors": [
+            {
+              "source": "GitHub repositories",
+              "status": "error",
+              "reason": "GitHub repositories request failed or returned invalid JSON"
+            }
+          ],
+          "reason": "GitHub repositories request failed or returned invalid JSON"
+        }
+      },
+      "savedStatuses": [
+        "partial"
+      ],
+      "syntheticProviderCalls": 5
+    },
+    {
+      "scenario": "repos-empty",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "success",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": [],
+          "sourceErrors": []
+        },
+        "dispatch": {
+          "status": "success",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": [],
+          "sourceErrors": []
+        }
+      },
+      "savedStatuses": [
+        "success"
+      ],
+      "syntheticProviderCalls": 5
+    },
+    {
+      "scenario": "repos-positive",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "success",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": [
+            {
+              "name": "synthetic-repository",
+              "description": null,
+              "stars": 0,
+              "url": "https://example.invalid/repo",
+              "updated": "2026-01-01T00:00:00Z"
+            }
+          ],
+          "sourceErrors": []
+        },
+        "dispatch": {
+          "status": "success",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": [
+            {
+              "name": "synthetic-repository",
+              "description": null,
+              "language": "TypeScript",
+              "stargazers_count": 0,
+              "html_url": "https://example.invalid/repo",
+              "updated_at": "2026-01-01T00:00:00Z"
+            }
+          ],
+          "sourceErrors": []
+        }
+      },
+      "savedStatuses": [
+        "success"
+      ],
+      "syntheticProviderCalls": 5
+    },
+    {
+      "scenario": "profile-404",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "error",
+          "http": 500,
+          "reason": "User not found"
+        },
+        "dispatch": {
+          "status": "error",
+          "http": 200,
+          "reason": "GitHub user not found"
+        }
+      },
+      "savedStatuses": [
+        "error"
+      ],
+      "syntheticProviderCalls": 2
+    },
+    {
+      "scenario": "profile-malformed",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "error",
+          "http": 500,
+          "reason": "GitHub returned an invalid profile"
+        },
+        "dispatch": {
+          "status": "error",
+          "http": 200,
+          "reason": "GitHub returned an invalid profile"
+        }
+      },
+      "savedStatuses": [
+        "error"
+      ],
+      "syntheticProviderCalls": 2
+    },
+    {
+      "scenario": "user-input-alias",
+      "passed": true,
+      "observations": {
+        "manual": {
+          "status": "success",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": [],
+          "sourceErrors": []
+        },
+        "dispatch": {
+          "status": "success",
+          "http": 200,
+          "profile": "synthetic-handle",
+          "repos": [],
+          "sourceErrors": []
+        }
+      },
+      "savedStatuses": [
+        "success"
+      ],
+      "syntheticProviderCalls": 5
+    }
+  ]
+}

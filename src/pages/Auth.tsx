@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+import { authReturnUrl, beginGoogleOAuth, googleOAuthConfiguration } from "@/lib/oauthConfig";
 import { Button } from "@/components/ui/button";
 import { GlassPanel } from "@/components/intel";
 import { toast } from "sonner";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, magicLinkSchema } from "@/lib/validations";
 import { Mail, KeyRound, Loader2, Chrome } from "lucide-react";
@@ -13,11 +13,16 @@ type Mode = "login" | "signup" | "magic";
 
 export default function AuthPage() {
   const { user, loading } = useAuth();
-  const [mode, setMode] = useState<Mode>("login");
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<Mode>(() => {
+    const requestedMode = searchParams.get("mode");
+    return requestedMode === "signup" || requestedMode === "magic" ? requestedMode : "login";
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const googleOAuth = googleOAuthConfiguration(import.meta.env.VITE_GOOGLE_OAUTH_ENABLED);
 
   if (loading) {
     return (
@@ -32,12 +37,8 @@ export default function AuthPage() {
   const handleGoogle = async () => {
     setOauthLoading(true);
     try {
-      sessionStorage.setItem("postAuthRedirect", "/dashboard");
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/auth/callback",
-      });
-      if (result.error) throw result.error;
-      // If redirected, browser handles it. Otherwise tokens are set.
+      const url = await beginGoogleOAuth(supabase.auth, import.meta.env.VITE_SUPABASE_URL, window.location.origin, import.meta.env.VITE_GOOGLE_OAUTH_ENABLED);
+      window.location.assign(url);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
@@ -55,7 +56,7 @@ export default function AuthPage() {
     setSubmitting(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-        redirectTo: window.location.origin + "/reset-password",
+        redirectTo: authReturnUrl(window.location.origin, "/reset-password"),
       });
       if (error) throw error;
       toast.success("Password reset link sent. Check your inbox.");
@@ -79,7 +80,7 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email: validation.data.email,
           password: validation.data.password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: authReturnUrl(window.location.origin, "/") },
         });
         if (error) throw error;
         toast.success("Check your email to confirm your account.");
@@ -109,7 +110,7 @@ export default function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: validation.data.email,
-        options: { emailRedirectTo: window.location.origin + "/dashboard" },
+        options: { emailRedirectTo: authReturnUrl(window.location.origin, "/dashboard") },
       });
       if (error) throw error;
       toast.success("Magic link sent! Check your inbox.");
@@ -137,7 +138,7 @@ export default function AuthPage() {
             variant="outline"
             className="w-full"
             onClick={handleGoogle}
-            disabled={oauthLoading}
+            disabled={oauthLoading || submitting || !googleOAuth.enabled}
           >
             {oauthLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -147,6 +148,11 @@ export default function AuthPage() {
               </span>
             )}
           </Button>
+          {!googleOAuth.enabled && (
+            <p className="text-xs text-center text-muted-foreground">
+              {googleOAuth.reason}
+            </p>
+          )}
 
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />

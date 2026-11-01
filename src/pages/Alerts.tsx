@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,10 +26,10 @@ const ALERT_TYPES = [
 ];
 
 const FREQUENCIES = [
-  { value: "realtime", label: "Real-time (5 min)" },
-  { value: "hourly", label: "Hourly" },
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
+  { value: "realtime", label: "5 minute preference (scheduler unverified)" },
+  { value: "hourly", label: "Hourly preference (scheduler unverified)" },
+  { value: "daily", label: "Daily preference (scheduler unverified)" },
+  { value: "weekly", label: "Weekly preference (scheduler unverified)" },
 ];
 
 const SEVERITY_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; tag: string }> = {
@@ -70,10 +71,10 @@ export default function AlertsPage() {
   const { data: alerts = [], isLoading: alertsLoading } = useQuery({
     queryKey: ["alerts"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("alerts")
         .select("*, subjects(name, type, case_id)")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data as unknown as Alert[];
     },
@@ -83,11 +84,11 @@ export default function AlertsPage() {
   const { data: notifications = [], isLoading: notifsLoading } = useQuery({
     queryKey: ["alert-notifications"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("alert_notifications")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(100));
       if (error) throw error;
       return data as unknown as Notification[];
     },
@@ -96,7 +97,7 @@ export default function AlertsPage() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
-      const { error } = await supabase.from("alerts").update({ enabled }).eq("id", id);
+      const { error } = await checkedDatabase(supabase.from("alerts").update({ enabled }).eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alerts"] }),
@@ -104,7 +105,7 @@ export default function AlertsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("alerts").delete().eq("id", id);
+      const { error } = await checkedDatabase(supabase.from("alerts").delete().eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -115,10 +116,10 @@ export default function AlertsPage() {
 
   const markReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("alert_notifications")
         .update({ read: true })
-        .eq("id", id);
+        .eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alert-notifications"] }),
@@ -126,11 +127,11 @@ export default function AlertsPage() {
 
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("alert_notifications")
         .update({ read: true })
         .eq("user_id", user!.id)
-        .eq("read", false);
+        .eq("read", false));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -150,7 +151,7 @@ export default function AlertsPage() {
           <span className="intel-tag intel-tag-amber mb-3 inline-block">MONITORING</span>
           <h1 className="text-2xl font-display font-bold tracking-tight">Alerts</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Subscribe to monitoring alerts for investigation subjects
+            Saved alert rules and recorded notifications. Background scheduling and fresh external-source monitoring have not been verified; a frequency label does not establish an active scheduled job.
           </p>
         </div>
         <CreateAlertDialog open={createOpen} onOpenChange={setCreateOpen} userId={user?.id} />
@@ -218,7 +219,7 @@ export default function AlertsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="text-sm font-semibold">{typeConfig?.label || alert.alert_type}</h4>
-                        <Badge variant="outline" className="text-[10px]">{alert.frequency}</Badge>
+                        <Badge variant="outline" className="text-[10px]">{alert.frequency} preference · scheduler unverified</Badge>
                         {alert.subjects && (
                           <span className="text-xs text-muted-foreground">
                             → {alert.subjects.name}
@@ -346,11 +347,11 @@ function CreateAlertDialog({
   const { data: subjects = [] } = useQuery({
     queryKey: ["all-subjects"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("subjects")
         .select("id, name, type, case_id")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(100));
       if (error) throw error;
       return data;
     },
@@ -360,12 +361,12 @@ function CreateAlertDialog({
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error("Not authenticated");
-      const { error } = await supabase.from("alerts").insert({
+      const { error } = await checkedDatabase(supabase.from("alerts").insert({
         user_id: userId,
         subject_id: subjectId || null,
         alert_type: alertType,
         frequency,
-      });
+      }));
       if (error) throw error;
       await auditLog("tool_execution", "alert", undefined, { alert_type: alertType, frequency });
     },

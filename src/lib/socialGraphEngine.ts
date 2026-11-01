@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MiningResult {
@@ -20,24 +21,24 @@ export async function runSocialGraphMining(
 ): Promise<MiningResult> {
   onProgress?.("Loading entities...");
 
-  const { data: entities } = await supabase
+  const { data: entities } = await checkedDatabase(supabase
     .from("identity_entities")
     .select("*")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
   if (!entities?.length) return { edgesCreated: 0, entitiesAnalyzed: 0 };
 
   onProgress?.(`Analyzing ${entities.length} entities...`);
 
-  const { data: observations } = await supabase
+  const { data: observations } = await checkedDatabase(supabase
     .from("entity_observations")
     .select("entity_id, case_id, source_tool")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
-  const { data: existingLinks } = await supabase
+  const { data: existingLinks } = await checkedDatabase(supabase
     .from("identity_entity_links")
     .select("source_entity_id, target_entity_id, relationship_type, confidence_score")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
   // Build lookup maps
   const entityMap = new Map(entities.map((e) => [e.id, e]));
@@ -109,7 +110,7 @@ export async function runSocialGraphMining(
     const emailDomain = email.entity_value.split("@")[1];
     for (const domain of domains) {
       if (emailDomain === domain.entity_value) {
-        addEdge(email.id, domain.id, "shared_infrastructure", 0.9, null, `${email.entity_value} uses domain ${domain.entity_value}`);
+        addEdge(email.id, domain.id, "email_uses_domain", 1, null, `${email.entity_value} uses domain ${domain.entity_value}; no mail server ownership inferred`);
       }
     }
   }
@@ -123,7 +124,7 @@ export async function runSocialGraphMining(
       if (ipCases && domainCases) {
         const shared = [...ipCases].filter((c) => domainCases.has(c));
         if (shared.length > 0) {
-          addEdge(ip.id, domain.id, "shared_infrastructure", 0.7, null, `IP and domain co-observed in ${shared.length} case(s)`);
+          addEdge(ip.id, domain.id, "co_appearance", 0.7, null, `IP and domain co-observed in ${shared.length} case(s); DNS/hosting association unverified`);
         }
       }
     }
@@ -153,8 +154,8 @@ export async function runSocialGraphMining(
   for (const link of existingLinks ?? []) {
     addEdge(
       link.source_entity_id, link.target_entity_id,
-      "communication", link.confidence_score,
-      null, `Linked via identity resolution (${link.relationship_type})`
+      "identity_link", link.confidence_score,
+      null, `Pattern association from identity resolution (${link.relationship_type}); no communication or shared ownership established`
     );
   }
 
@@ -164,10 +165,10 @@ export async function runSocialGraphMining(
   const batchSize = 50;
   for (let i = 0; i < edges.length; i += batchSize) {
     const batch = edges.slice(i, i + batchSize);
-    const { data, error } = await supabase
+    const { data, error } = await checkedDatabase(supabase
       .from("social_graph_edges")
       .upsert(batch, { onConflict: "user_id,source_entity_id,target_entity_id,relationship_type" })
-      .select("id");
+      .select("id"));
     if (!error && data) edgesCreated += data.length;
   }
 

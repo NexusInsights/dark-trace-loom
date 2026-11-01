@@ -1,0 +1,47 @@
+{
+  "scope": "Actual React ToolRunner, registry and executeTool with synthetic hooks, gateway and persistence. Rendered in jsdom; not signed-in real browser, real SQL/RLS, provider or production acceptance.",
+  "sourceFiles": [
+    {
+      "path": "src/components/tools/ToolRunner.tsx",
+      "sha256": "fce040ba7172e4a0cfcf4c1d566fecaef66ee6581bbb9b6217c428a3f3009518"
+    },
+    {
+      "path": "src/components/tools/extraTools.ts",
+      "sha256": "8ecd9b113b9cf7aae32d259ab16dea7312e9e8290999382ea36479aba412b159"
+    },
+    {
+      "path": "src/components/tools/executeTool.ts",
+      "sha256": "ae4d8cddceb257f771ca66dafebea338d7b703ee0ef24dd10ca86185ddcb2dbb"
+    },
+    {
+      "path": "src/lib/pipelineEngine.ts",
+      "sha256": "2bc9309614a43132b3ae8442e1bf1b64d12e36bf92fe8a3f30a6490059a58536"
+    }
+  ],
+  "observations": [
+    {
+      "status": "success",
+      "renderedStatus": "SUCCESS",
+      "savedStatus": "success",
+      "saveTable": "tool_results",
+      "createsArtifacts": false,
+      "accepted": true
+    },
+    {
+      "status": "partial",
+      "renderedStatus": "PARTIAL",
+      "savedStatus": "partial",
+      "saveTable": "tool_results",
+      "createsArtifacts": false,
+      "accepted": true
+    },
+    {
+      "status": "demo",
+      "renderedStatus": "DEMO",
+      "savedStatus": "demo",
+      "saveTable": "tool_results",
+      "createsArtifacts": false,
+      "accepted": true
+    }
+  ]
+}

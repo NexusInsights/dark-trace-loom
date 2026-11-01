@@ -23,6 +23,7 @@ const BodySchema = z.object({
 
 type DispatchOutcome =
   | { status: "success"; result: unknown }
+  | { status: "partial"; result: unknown; reason: string }
   | { status: "not_configured"; reason: string }
   | { status: "error"; reason: string }
   | { status: "unknown_tool"; reason: string };
@@ -75,11 +76,7 @@ async function subdomainEnum(params: Record<string, unknown>): Promise<DispatchO
 async function ipGeo(params: Record<string, unknown>): Promise<DispatchOutcome> {
   const ip = String(params.ip ?? params.target ?? "").trim();
   if (!ip) return { status: "error", reason: "missing 'ip' parameter" };
-  const r = await safeFetch(`http://ip-api.com/json/${encodeURIComponent(ip)}`, { allowHttp: true });
-  if (!r.ok) return { status: "error", reason: `ip-api HTTP ${r.status}` };
-  const d = await r.json();
-  if (d.status && d.status !== "success") return { status: "error", reason: d.message || "ip-api lookup failed" };
-  return { status: "success", result: d };
+  return { status: "not_configured", reason: "No approved commercial HTTPS IP geolocation provider is configured; no provider request was made" };
 }
 
 async function asnLookup(params: Record<string, unknown>): Promise<DispatchOutcome> {
@@ -91,24 +88,30 @@ async function asnLookup(params: Record<string, unknown>): Promise<DispatchOutco
 }
 
 async function sslInspect(params: Record<string, unknown>): Promise<DispatchOutcome> {
-  const domain = String(params.domain ?? params.target ?? "").trim();
+  const domain = String(params.domain ?? params.host ?? params.target ?? "").trim();
   if (!domain) return { status: "error", reason: "missing 'domain' parameter" };
   const r = await safeFetch(`https://api.ssllabs.com/api/v3/analyze?host=${encodeURIComponent(domain)}`);
   if (!r.ok) return { status: "error", reason: `SSL Labs HTTP ${r.status}` };
-  return { status: "success", result: await r.json() };
+  const result = await r.json();
+  if (!result || typeof result !== "object" || Array.isArray(result)) return { status: "error", reason: "SSL Labs returned an invalid response" };
+  if (result.status === "ERROR") return { status: "error", reason: "SSL Labs could not complete the assessment" };
+  if (result.status !== "READY" || !Array.isArray(result.endpoints) || !result.endpoints.length || !result.endpoints.every((endpoint: { grade?: unknown }) => typeof endpoint?.grade === "string" && endpoint.grade.length > 0))
+    return { status: "partial", result, reason: "SSL assessment is incomplete; no final grade is available" };
+  return { status: "success", result };
 }
 
 async function httpProbe(params: Record<string, unknown>): Promise<DispatchOutcome> {
   const url = String(params.url ?? params.target ?? "").trim();
   if (!url) return { status: "error", reason: "missing 'url' parameter" };
-  const r = await safeFetch(url, { allowHttp: true, method: "HEAD" });
+  const r = await safeFetch(url, { method: "HEAD" });
   const headers: Record<string, string> = {};
   r.headers.forEach((v, k) => { headers[k] = v; });
+  if (!r.ok) return { status: "error", reason: `HTTP probe returned HTTP ${r.status}` };
   return { status: "success", result: { url, status: r.status, headers } };
 }
 
 async function githubRecon(params: Record<string, unknown>): Promise<DispatchOutcome> {
-  const username = String(params.username ?? params.target ?? "").trim();
+  const username = String(params.username ?? params.user ?? params.target ?? "").trim();
   if (!username) return { status: "error", reason: "missing 'username' parameter" };
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
   const tok = env("GITHUB_TOKEN");
@@ -117,9 +120,24 @@ async function githubRecon(params: Record<string, unknown>): Promise<DispatchOut
   if (u.status === 404) return { status: "error", reason: "GitHub user not found" };
   if (!u.ok) return { status: "error", reason: `GitHub HTTP ${u.status}` };
   const user = await u.json();
-  const repoRes = await safeFetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100`, { headers });
-  const repos = repoRes.ok ? await repoRes.json() : [];
-  return { status: "success", result: { user, repos } };
+  if (!user || typeof user !== "object" || Array.isArray(user) || typeof user.login !== "string") return { status: "error", reason: "GitHub returned an invalid profile" };
+  let repos: unknown[] | null = null;
+  const sourceErrors: { source: string; status: "error"; reason: string }[] = [];
+  try {
+    const repoRes = await safeFetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100`, { headers });
+    if (!repoRes.ok) sourceErrors.push({ source: "GitHub repositories", status: "error", reason: `GitHub repositories HTTP ${repoRes.status}` });
+    else {
+      const data = await repoRes.json();
+      if (Array.isArray(data)) repos = data;
+      else sourceErrors.push({ source: "GitHub repositories", status: "error", reason: "GitHub repositories returned an invalid list" });
+    }
+  } catch {
+    sourceErrors.push({ source: "GitHub repositories", status: "error", reason: "GitHub repositories request failed or returned invalid JSON" });
+  }
+  const result = { user, repos, source_errors: sourceErrors };
+  return sourceErrors.length
+    ? { status: "partial", result, reason: sourceErrors[0].reason }
+    : { status: "success", result };
 }
 
 async function dtlProxy(toolPath: string, params: Record<string, unknown>): Promise<DispatchOutcome> {
@@ -220,7 +238,30 @@ async function dispatch(
   }
 }
 
+// Check both the legacy dispatcher ID and its current registry ID. A missing
+// permission row means allowed under the existing schema; read errors deny.
+const registryIds: Record<string, string> = {
+  domain_whois: "whois-history", dns_lookup: "dns-query", subdomain_enum: "subdomain-enum", subdomain_finder: "subdomain-enum",
+  ip_geolocation: "ip-geolocation", asn_lookup: "asn-lookup", ssl_inspection: "ssl-inspector", http_port_probe: "port-scanner",
+  github_recon: "github-recon", username_search: "username-search", social_profile_scrape: "social-scrape",
+  person_enrichment_pdl: "pdl-person-enrich", person_search_pdl: "pdl-person-search", breach_search: "breach-lookup",
+};
+
+async function authorizeDispatch(client: ReturnType<typeof createClient>, userId: string, tool: string, caseId: string | null): Promise<void> {
+  const toolIds = [tool, registryIds[tool], ...Object.keys(registryIds).filter(id => id !== tool && registryIds[id] === registryIds[tool])];
+  const permission = await client.from("tool_permissions").select("allowed").eq("user_id", userId).in("tool_id", toolIds);
+  if (permission.error || !Array.isArray(permission.data) || permission.data.some(row => typeof row.allowed !== "boolean")) throw new Error("Tool permissions could not be verified");
+  if (permission.data.some(row => row.allowed === false)) throw new Error("An administrator has disabled this tool");
+  // Match the existing isolated caller's owner-only write boundary. Broader
+  // collaboration grants require separate applied-policy acceptance.
+  if (caseId !== null) {
+    const owned = await client.from("cases").select("id,owner_id").eq("id", caseId).eq("owner_id", userId).maybeSingle();
+    if (owned.error || owned.data?.id !== caseId || owned.data?.owner_id !== userId) throw new Error("Case ownership could not be verified");
+  }
+}
+
 serve(async (req) => {
+  try {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
@@ -229,7 +270,6 @@ serve(async (req) => {
 
   const supabaseUrl = env("SUPABASE_URL");
   const anonKey = env("SUPABASE_ANON_KEY");
-  const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
 
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
@@ -239,29 +279,38 @@ serve(async (req) => {
   if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
   const userId = userData.user.id;
 
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
-
   let body: unknown;
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
   const parsed = BodySchema.safeParse(body);
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
 
   const { tool, params, case_id = null } = parsed.data;
+  if (!Object.hasOwn(registryIds, tool)) return json({ tool, status: "unknown_tool", reason: `Tool '${tool}' is not implemented` }, 422);
+  try { await authorizeDispatch(userClient, userId, tool, case_id); }
+  catch (error) { return json({ tool, status: "error", reason: error instanceof Error ? error.message : "Authorization failed" }, 403); }
   const outcome = await dispatch(tool, params, case_id ?? null, authHeader);
 
   // Persist every outcome — honest provenance.
   const payload =
-    outcome.status === "success"
-      ? { status: "success", result: outcome.result }
+    outcome.status === "success" || outcome.status === "partial"
+      ? { status: outcome.status, result: outcome.result, ...(outcome.status === "partial" ? { reason: outcome.reason } : {}) }
       : { status: outcome.status, reason: outcome.reason };
 
-  await admin.from("tool_results").insert({
+  // Recheck after asynchronous provider work; persist through the user's RLS
+  // client instead of an elevated writer. This does not prove atomic SQL/RLS.
+  try { await authorizeDispatch(userClient, userId, tool, case_id); }
+  catch (error) { return json({ tool, status: "error", reason: error instanceof Error ? error.message : "Authorization failed before save", saved: false }, 403); }
+  const saved = await userClient.from("tool_results").insert({
     tool_name: tool,
     case_id: case_id ?? null,
     user_id: userId,
     status: outcome.status,
     result_data: payload,
   });
+  if (saved.error) return json({ tool, status: "error", reason: "Result persistence failed", saved: false, computation: payload }, 500);
 
-  return json({ tool, ...payload });
+  return json({ tool, ...payload, saved: true });
+  } catch {
+    return json({ status: "error", reason: "Dispatch request could not be completed", saved: false }, 503);
+  }
 });

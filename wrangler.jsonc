@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dark-trace-loom",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-10-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "services": [
+    {
+      "binding": "MARKETPLACE_MONITOR",
+      "service": "insight-nexus-monitors"
+    }
+  ],
+  "vars": {
+    "SUPABASE_URL": "https://zisrsttmjeipkmllqubi.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inppc3JzdHRtamVpcGttbGxxdWJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTE0NzcsImV4cCI6MjA4ODU4NzQ3N30.qAqMuOMMPsgY4pX57oqDsqKBO1IbEnc-Wb2SAyWq1Tg"
+  }
+}

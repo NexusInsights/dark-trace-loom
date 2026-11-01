@@ -1,0 +1,908 @@
+{
+  "format_version": 1,
+  "provenance": "Static local deployment dependency manifest; source hashes/configuration names only. Not evidence of deployment, secret availability, provider entitlement or fully implemented tool scope.",
+  "destination_project_ref": "ocliymtdvtxfxczxgbjr",
+  "protected_project_refs": [
+    "zisrsttmjeipkmllqubi",
+    "dbdkvrkmeowdydizrsmn"
+  ],
+  "functions": [
+    {
+      "name": "accept-invite",
+      "entrypoint": "supabase/functions/accept-invite/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Verified user/email + exact invitation token; target atomic service-role-only RPC must exist",
+      "files": [
+        {
+          "path": "supabase/functions/accept-invite/index.ts",
+          "bytes": 5732,
+          "sha256": "1c54b450ec9650a146ef3fe401b185bda17c8398dd47b64df327da9dd35fbd3f"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "npm:@supabase/supabase-js@2.57.2"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "admin-users",
+      "entrypoint": "supabase/functions/admin-users/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Verified user plus administrator permission",
+      "files": [
+        {
+          "path": "supabase/functions/admin-users/index.ts",
+          "bytes": 7685,
+          "sha256": "71130a3d46af925087642b0143c838e8241dc1088dff096da6650e720c2a5675"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/x/zod@v3.22.4/mod.ts",
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "analyze-case",
+      "entrypoint": "supabase/functions/analyze-case/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Verified user plus case access; independent AI requires allowance/readiness",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/independentAi.ts",
+          "bytes": 8489,
+          "sha256": "153f96254be0bb18a9cc6212f97424329811750a9dc3e3c49f10a3faa0ada0b9"
+        },
+        {
+          "path": "supabase/functions/analyze-case/index.ts",
+          "bytes": 9773,
+          "sha256": "3b04805e0f3b26ffa68afceb8c15d8f29988724a00e59a1d53970517ee3386e0"
+        }
+      ],
+      "external_dependencies": [
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "configuration_names_only": [
+        "AI_API_KEY",
+        "AI_AUTH_MODE",
+        "AI_CHAT_COMPLETIONS_URL",
+        "AI_ENABLED",
+        "AI_MODEL",
+        "AI_ZERO_SPEND_VERIFIED",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "api-gateway",
+      "entrypoint": "supabase/functions/api-gateway/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Direct stored api_keys.key match with active/owner checks (plaintext schema preserved; not hash verification), separate from user bearer Auth",
+      "files": [
+        {
+          "path": "supabase/functions/api-gateway/index.ts",
+          "bytes": 18596,
+          "sha256": "1e3c02493bd063a83f0b7715c71b4a50894810c8e60b74c10a99ac223a5f4d86"
+        }
+      ],
+      "external_dependencies": [
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "api-keys",
+      "entrypoint": "supabase/functions/api-keys/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Verified user; original key ownership and administration",
+      "files": [
+        {
+          "path": "supabase/functions/api-keys/index.ts",
+          "bytes": 1965,
+          "sha256": "949d464bd948d23d81d64cee4fb7e5009a4832d2a8a15929be9af50758d6cc14"
+        }
+      ],
+      "external_dependencies": [
+        "npm:@supabase/supabase-js@2",
+        "npm:@supabase/supabase-js@2/cors"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "breach-lookup",
+      "entrypoint": "supabase/functions/breach-lookup/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Verified user; existing provider availability and entitlement",
+      "files": [
+        {
+          "path": "supabase/functions/breach-lookup/index.ts",
+          "bytes": 8442,
+          "sha256": "f9227d6ffdd8f1511ee95a448194ff5acf994437654c625976a03926c0271072"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "npm:@supabase/supabase-js@2.57.2",
+        "npm:zod@3.23.8"
+      ],
+      "configuration_names_only": [
+        "DEHASHED_API_KEY",
+        "DEHASHED_USERNAME",
+        "HIBP_API_KEY",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "check-alerts",
+      "entrypoint": "supabase/functions/check-alerts/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Verified user plus no-input check_owned_stored_alerts SQL wrapper; only postgres native cron invokes the internal engine; no separate HTTP scheduler/global writer",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/authenticateUser.ts",
+          "bytes": 5756,
+          "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+        },
+        {
+          "path": "supabase/functions/check-alerts/index.ts",
+          "bytes": 5519,
+          "sha256": "2915b3377e21d1c73b88a9901e7d5a97bc2915112ea1d53033ba739d8db53718"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "npm:@supabase/supabase-js@2.57.2"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "check-subscription",
+      "entrypoint": "supabase/functions/check-subscription/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Verified user/email; exact local override; unavailable Stripe preserves local data with pending billing verification",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/authenticateUser.ts",
+          "bytes": 5756,
+          "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+        },
+        {
+          "path": "supabase/functions/_shared/stripeSubscription.ts",
+          "bytes": 2275,
+          "sha256": "368bb7a22a9be73493dd1606674b5b4f96fee8d48d6a6c6f2906b50b9a72b67b"
+        },
+        {
+          "path": "supabase/functions/check-subscription/index.ts",
+          "bytes": 8059,
+          "sha256": "86841a10532355316cc0959478036756fe8485793119957ac978039c7f6dd0a8"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "https://esm.sh/stripe@18.5.0",
+        "npm:@supabase/supabase-js@2.57.2"
+      ],
+      "configuration_names_only": [
+        "STRIPE_SECRET_KEY",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "create-checkout",
+      "entrypoint": "supabase/functions/create-checkout/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Verified user plus reviewed product/return origin; migration must not create a purchase",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/authenticateUser.ts",
+          "bytes": 5756,
+          "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+        },
+        {
+          "path": "supabase/functions/_shared/billingConfiguration.ts",
+          "bytes": 1808,
+          "sha256": "e544b69584ab2d642babf39c0455b475cf155953d55ec6fcc1b2672f75465437"
+        },
+        {
+          "path": "supabase/functions/create-checkout/index.ts",
+          "bytes": 5341,
+          "sha256": "4aad541dd73e953e625cdc879f6017027e2cdf90651d8ff66ea70bf08df968c0"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "https://esm.sh/stripe@18.5.0",
+        "npm:@supabase/supabase-js@2.57.2"
+      ],
+      "configuration_names_only": [
+        "APP_ORIGIN",
+        "STRIPE_SECRET_KEY",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "customer-portal",
+      "entrypoint": "supabase/functions/customer-portal/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Verified user/customer plus reviewed return origin",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/authenticateUser.ts",
+          "bytes": 5756,
+          "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+        },
+        {
+          "path": "supabase/functions/_shared/billingConfiguration.ts",
+          "bytes": 1808,
+          "sha256": "e544b69584ab2d642babf39c0455b475cf155953d55ec6fcc1b2672f75465437"
+        },
+        {
+          "path": "supabase/functions/customer-portal/index.ts",
+          "bytes": 4034,
+          "sha256": "3619c8020483c1e81955c5cb184b962382159720737ec288e551c2c2bc8c8bb8"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "https://esm.sh/stripe@18.5.0",
+        "npm:@supabase/supabase-js@2.57.2"
+      ],
+      "configuration_names_only": [
+        "APP_ORIGIN",
+        "STRIPE_SECRET_KEY",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "identity-expansion",
+      "entrypoint": "supabase/functions/identity-expansion/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Verified user/case permissions and provider ownership",
+      "files": [
+        {
+          "path": "supabase/functions/identity-expansion/index.ts",
+          "bytes": 13439,
+          "sha256": "7173e79cf5d18cda452fffbb6fbd08bfdbe9223a420839281b4a5efbcbeb2094"
+        }
+      ],
+      "external_dependencies": [
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "image-hash",
+      "entrypoint": "supabase/functions/image-hash/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Shared remote session verification before image body/network/decode",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/authenticateUser.ts",
+          "bytes": 5756,
+          "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+        },
+        {
+          "path": "supabase/functions/_shared/safeFetch.ts",
+          "bytes": 4684,
+          "sha256": "f2a052d86331f88cc6fa1cd72c700a5c5233f565befb4ca1f8ce6490aab8351b"
+        },
+        {
+          "path": "supabase/functions/image-hash/index.ts",
+          "bytes": 5787,
+          "sha256": "9f3ec856141c5a6636345f7f99e57fb6d5b72c79f169073e343ea110d784d575"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "https://deno.land/x/imagescript@1.2.17/mod.ts",
+        "npm:zod@3.23.8"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "invite-member",
+      "entrypoint": "supabase/functions/invite-member/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Verified user/org-admin; recipient and approved actual mail provider",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/safeFetch.ts",
+          "bytes": 4684,
+          "sha256": "f2a052d86331f88cc6fa1cd72c700a5c5233f565befb4ca1f8ce6490aab8351b"
+        },
+        {
+          "path": "supabase/functions/invite-member/index.ts",
+          "bytes": 5372,
+          "sha256": "bc1d19a11fe9162cc3d2c123ddf21cd1d873b2831a139c86ca28bf5ac849ba21"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "npm:@supabase/supabase-js@2.57.2",
+        "npm:zod@3.23.8"
+      ],
+      "configuration_names_only": [
+        "APP_ORIGIN",
+        "RESEND_API_KEY",
+        "RESEND_FROM_EMAIL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "osint-dispatch",
+      "entrypoint": "supabase/functions/osint-dispatch/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Verified user and dispatch permission; preserve scan authorization/allowlists",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/safeFetch.ts",
+          "bytes": 4684,
+          "sha256": "f2a052d86331f88cc6fa1cd72c700a5c5233f565befb4ca1f8ce6490aab8351b"
+        },
+        {
+          "path": "supabase/functions/osint-dispatch/index.ts",
+          "bytes": 12195,
+          "sha256": "288d12fa7650a227668f3f3ca822f7deff33c2687b15a1c62c17ea67a74acdbc"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "npm:@supabase/supabase-js@2.57.2",
+        "npm:zod@3.23.8"
+      ],
+      "configuration_names_only": [
+        "DTL_API_KEY",
+        "GITHUB_TOKEN",
+        "PDL_API_KEY",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": [
+        {
+          "file": "supabase/functions/osint-dispatch/index.ts",
+          "kind": "dynamic_configuration_lookup"
+        }
+      ]
+    },
+    {
+      "name": "osint-tools",
+      "entrypoint": "supabase/functions/osint-tools/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Core verified session plus marketplace per-tool permission; provider budget/access guards",
+      "files": [
+        {
+          "path": "supabase/functions/osint-tools/index.ts",
+          "bytes": 136202,
+          "sha256": "8eab297d7e3dde36e372d56061c123c9cad9f8bdd71276d3405e57f8e2df3454"
+        }
+      ],
+      "external_dependencies": [],
+      "configuration_names_only": [
+        "AISSTREAM_API_KEY",
+        "AI_API_KEY",
+        "AI_AUTH_MODE",
+        "AI_CHAT_COMPLETIONS_URL",
+        "AI_ENABLED",
+        "AI_MODEL",
+        "AI_ZERO_SPEND_VERIFIED",
+        "CARSXE_API_KEY",
+        "COURTLISTENER_API_TOKEN",
+        "DARKOWL_PRIVATE_KEY",
+        "DARKOWL_PUBLIC_KEY",
+        "DISCORD_BOT_TOKEN",
+        "FIRECRAWL_API_KEY",
+        "HIBP_API_KEY",
+        "MAPILLARY_ACCESS_TOKEN",
+        "MARKETPLACE_AISSTREAM_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_CARSXE_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_COURTLISTENER_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_DARKOWL_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_DISCORD_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_FIRECRAWL_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_HIBP_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_SHODAN_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_TWILIO_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_VIRUSTOTAL_FREE_ALLOWANCE_VERIFIED",
+        "MARKETPLACE_X_FREE_ALLOWANCE_VERIFIED",
+        "PDL_API_KEY",
+        "SHODAN_API_KEY",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_URL",
+        "TWILIO_API_KEY",
+        "TWILIO_API_SECRET",
+        "VIRUSTOTAL_API_KEY",
+        "X_API_BEARER_TOKEN"
+      ],
+      "dynamic_lookups_requiring_source_review": [
+        {
+          "file": "supabase/functions/osint-tools/index.ts",
+          "kind": "dynamic_configuration_lookup"
+        },
+        {
+          "file": "supabase/functions/osint-tools/index.ts",
+          "kind": "dynamic_configuration_lookup"
+        },
+        {
+          "file": "supabase/functions/osint-tools/index.ts",
+          "kind": "dynamic_configuration_lookup"
+        },
+        {
+          "file": "supabase/functions/osint-tools/index.ts",
+          "kind": "dynamic_configuration_lookup"
+        },
+        {
+          "file": "supabase/functions/osint-tools/index.ts",
+          "kind": "dynamic_configuration_lookup"
+        }
+      ],
+      "assembly_source_files": [
+        {
+          "path": "supabase/functions/_shared/independentAi.ts",
+          "bytes": 8489,
+          "sha256": "153f96254be0bb18a9cc6212f97424329811750a9dc3e3c49f10a3faa0ada0b9"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplacePublic.ts",
+          "bytes": 24255,
+          "sha256": "fd703c31e4f2525ec55547de3adcf15ca8b20191f7ab665fa655c2a038895bd2"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplaceOpen.ts",
+          "bytes": 13336,
+          "sha256": "5cb56d5c6757ca2313b5ba1d3775cc49ce265a7ccec4e713d0e80e0665112129"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplaceConnected.ts",
+          "bytes": 16657,
+          "sha256": "1504b6d414da6dfbc322e1b75e1d41e1f4ed8cff7fd6113c16818028aa313556"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplaceLicensed.ts",
+          "bytes": 19713,
+          "sha256": "f3c093320f3b24123fb31e23620284e2b3aa873c6856633cb9408be962ceae7b"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplaceAlternatives.ts",
+          "bytes": 9291,
+          "sha256": "e02e9250bea838496debe0c8b7c4d2d3850f101cf2881198ff02e4a017bbb471"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplaceSocialFull.ts",
+          "bytes": 9962,
+          "sha256": "26b7d431aff4fa614eb8be8462b08880725fe3a4608213d9f8bbf7c292067397"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplaceAuth.ts",
+          "bytes": 3712,
+          "sha256": "2483ae8991b4ee9a565253d533c63788782c95cc34a7ce4795809c79ee122005"
+        },
+        {
+          "path": "supabase/functions/osint-tools/marketplaceDispatch.ts",
+          "bytes": 5342,
+          "sha256": "4065ee694d83ba47f4af18176eb720ed80bf01c0c2635da4bd05c9618137f28f"
+        }
+      ],
+      "assembly_requirement": "Root must run scripts/assemble-marketplace-backend.mjs after the final module edit and verify the assembled index before regenerating this manifest; assembly sources are not runtime imports in the flattened index."
+    },
+    {
+      "name": "social-profile-scrape",
+      "entrypoint": "supabase/functions/social-profile-scrape/index.ts",
+      "verify_jwt_local_config": "not_explicit_in_local_config",
+      "authorization_review_requirement": "Verified user/social-scrape permission before retrieval and independent AI; Firecrawl verified allowance",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/independentAi.ts",
+          "bytes": 8489,
+          "sha256": "153f96254be0bb18a9cc6212f97424329811750a9dc3e3c49f10a3faa0ada0b9"
+        },
+        {
+          "path": "supabase/functions/social-profile-scrape/index.ts",
+          "bytes": 12942,
+          "sha256": "814d85c741e9ec8efdc06677d40f2dc63628a7f9c5858e9b65c4235d1f4516cc"
+        }
+      ],
+      "external_dependencies": [
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "configuration_names_only": [
+        "AI_API_KEY",
+        "AI_AUTH_MODE",
+        "AI_CHAT_COMPLETIONS_URL",
+        "AI_ENABLED",
+        "AI_MODEL",
+        "AI_ZERO_SPEND_VERIFIED",
+        "FIRECRAWL_API_KEY",
+        "MARKETPLACE_FIRECRAWL_FREE_ALLOWANCE_VERIFIED",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "stripe-webhook",
+      "entrypoint": "supabase/functions/stripe-webhook/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Raw-body verified Stripe signature, app product scope, exact stored provider refs, override preservation; no user JWT expected",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/authenticateUser.ts",
+          "bytes": 5756,
+          "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+        },
+        {
+          "path": "supabase/functions/_shared/stripeSubscription.ts",
+          "bytes": 2275,
+          "sha256": "368bb7a22a9be73493dd1606674b5b4f96fee8d48d6a6c6f2906b50b9a72b67b"
+        },
+        {
+          "path": "supabase/functions/stripe-webhook/index.ts",
+          "bytes": 12752,
+          "sha256": "4cc1ed3bffbb2d119be8d4762e3999361c38048772355ea19e2622b5466765ce"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "https://esm.sh/stripe@18.5.0",
+        "npm:@supabase/supabase-js@2.57.2"
+      ],
+      "configuration_names_only": [
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    },
+    {
+      "name": "wigle-lookup",
+      "entrypoint": "supabase/functions/wigle-lookup/index.ts",
+      "verify_jwt_local_config": false,
+      "authorization_review_requirement": "Shared remote session verification before provider request",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/authenticateUser.ts",
+          "bytes": 5756,
+          "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+        },
+        {
+          "path": "supabase/functions/_shared/safeFetch.ts",
+          "bytes": 4684,
+          "sha256": "f2a052d86331f88cc6fa1cd72c700a5c5233f565befb4ca1f8ce6490aab8351b"
+        },
+        {
+          "path": "supabase/functions/wigle-lookup/index.ts",
+          "bytes": 2952,
+          "sha256": "73f62cfc96f155a65c09431fe6d871ecbdfb6fbde94e0f523b2e73213bebc3c9"
+        }
+      ],
+      "external_dependencies": [
+        "https://deno.land/std@0.190.0/http/server.ts",
+        "npm:zod@3.23.8"
+      ],
+      "configuration_names_only": [
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL",
+        "WIGLE_API_KEY",
+        "WIGLE_API_NAME"
+      ],
+      "dynamic_lookups_requiring_source_review": []
+    }
+  ],
+  "workers": [
+    {
+      "name": "ai-worker",
+      "files": [
+        {
+          "path": "ai-worker/src/worker.js",
+          "bytes": 12669,
+          "sha256": "48cfac65f51c992709d5efecd0d5bf943c5cbe7eba99331532d6c395ad956dbd"
+        }
+      ],
+      "external_dependencies": [],
+      "configuration_names_only": [
+        "AI",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL",
+        "WORKERS_AI_ENABLED",
+        "WORKERS_AI_VERIFICATION_EXPIRES_AT",
+        "WORKERS_AI_VERIFIED_AT",
+        "WORKERS_AI_VERIFIED_PLAN",
+        "WORKERS_AI_ZERO_SPEND_VERIFIED"
+      ],
+      "dynamic_lookups_requiring_source_review": [],
+      "configuration_file": {
+        "path": "ai-worker/wrangler.jsonc",
+        "bytes": 665,
+        "sha256": "212c2835e3a38fb9b3734f4b95552d1015ae286afa35efe6c0ad2585f4941b2a"
+      },
+      "binding_names": [
+        "AI"
+      ],
+      "backend_project_refs": [
+        "ocliymtdvtxfxczxgbjr"
+      ],
+      "deployment_requirement": "Verify free-plan/no-overage entitlement, model allowance and Auth/permission before one authorized inference"
+    },
+    {
+      "name": "monitor-worker",
+      "files": [
+        {
+          "path": "monitor-worker/migrations/0001_monitors.sql",
+          "bytes": 3229,
+          "sha256": "c322fd8fe2b678e37686e99df4c3165066c78f876056b6e565315aec20b63463"
+        },
+        {
+          "path": "monitor-worker/src/alarms.js",
+          "bytes": 876,
+          "sha256": "a471adb8503e9d3e265b63d25069154c9c9c2a321a8c1426c0e3f22cdf34c8e7"
+        },
+        {
+          "path": "monitor-worker/src/api.js",
+          "bytes": 14202,
+          "sha256": "83f00de595495c820ac53ae026dbed66cedc0a1d18aa9a45552ffc1bef8dc462"
+        },
+        {
+          "path": "monitor-worker/src/core.js",
+          "bytes": 6058,
+          "sha256": "7b31369cb7660b8131ad8a8aa48a025a974ae0a92bcae3c345aecb1e9cf807b7"
+        },
+        {
+          "path": "monitor-worker/src/engine.js",
+          "bytes": 10612,
+          "sha256": "d754a5d056a62c9d192a9ed55d61f8c1bf525b7d4718aa36d9c7e2a80efad7a5"
+        },
+        {
+          "path": "monitor-worker/src/geometry.js",
+          "bytes": 2764,
+          "sha256": "18ce18ee6c91e74132ce305cb2eff6b322c8f9c0e37c0cbb298f030228a22fa7"
+        },
+        {
+          "path": "monitor-worker/src/pollers.js",
+          "bytes": 17756,
+          "sha256": "5525e6759c2efd3fa7a13fa2e7c0ab78018eb5cd35cefb1f3214d01954289588"
+        },
+        {
+          "path": "monitor-worker/src/positions.js",
+          "bytes": 9063,
+          "sha256": "9fb7be068971f7d85bcb2f7c103893cd24179a6cf91344e7ce4f62734a4ace26"
+        },
+        {
+          "path": "monitor-worker/src/sqlite-facade.js",
+          "bytes": 1174,
+          "sha256": "166f23da0e78f1dde047fb31a1b107e5a69f6909341fb17013ab6d68797c6e1c"
+        },
+        {
+          "path": "monitor-worker/src/worker.js",
+          "bytes": 1442,
+          "sha256": "4e7b2674d9aee3ce648b21b403ae5469da7854b30162958c55c4a3ad36e47fb6"
+        }
+      ],
+      "external_dependencies": [],
+      "configuration_names_only": [
+        "APP_ORIGIN",
+        "FEED_INGRESS_BASE",
+        "MAX_DUE_JOBS",
+        "MONITOR_ALLOWED_HOSTS",
+        "MONITOR_BRIDGE_SECRET",
+        "MONITOR_BRIDGE_URL",
+        "MONITOR_STORE",
+        "PUBLIC_API_BASE",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": [],
+      "configuration_file": {
+        "path": "monitor-worker/wrangler.jsonc",
+        "bytes": 1112,
+        "sha256": "c92d22240b1607258c36aad18fb244ed1c8e91986d6f7d83ed8586cc1bf6877a"
+      },
+      "binding_names": [
+        "MONITOR_STORE"
+      ],
+      "backend_project_refs": [
+        "zisrsttmjeipkmllqubi"
+      ],
+      "deployment_requirement": "Update old backend configuration to owned target while preserving existing Durable Object namespace/jobs and original user IDs; reauthenticate stored source sessions, avoid duplicate schedulers"
+    }
+  ],
+  "cloudflare_pages_routes": [
+    {
+      "route_file": "functions/api/breach-preview.js",
+      "files": [
+        {
+          "path": "functions/_lib/auth.js",
+          "bytes": 588,
+          "sha256": "a4450b73b5f2de848afaa81bb93ae008929d55ed69aea936b82669117c023af9"
+        },
+        {
+          "path": "functions/api/breach-preview.js",
+          "bytes": 1623,
+          "sha256": "4120c393e44389c0a6f8900bac304e370bb99c5ea40c4ce6110cb94c3f431796"
+        }
+      ],
+      "external_dependencies": [],
+      "configuration_names_only": [
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": [],
+      "deployment_requirement": "Owned target Pages Auth configuration/bearer verification and correct service bindings; active scan still requires explicit PORTSCAN_ALLOWED_IPS"
+    },
+    {
+      "route_file": "functions/api/gateway/[[path]].js",
+      "files": [
+        {
+          "path": "functions/api/gateway/[[path]].js",
+          "bytes": 1951,
+          "sha256": "d7a6d9b7b4fd7f5d645e85a00a007698e4f39bd5b333080d851f4c8ca680e6fb"
+        }
+      ],
+      "external_dependencies": [],
+      "configuration_names_only": [
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": [],
+      "deployment_requirement": "Owned target Pages Auth configuration/bearer verification and correct service bindings; active scan still requires explicit PORTSCAN_ALLOWED_IPS"
+    },
+    {
+      "route_file": "functions/api/marketplace-monitor/[[path]].js",
+      "files": [
+        {
+          "path": "functions/api/marketplace-monitor/[[path]].js",
+          "bytes": 1229,
+          "sha256": "ed029b0a03af8a1d459f98c894ea7ae818eaf982fcb0b195d14a75e86ea94386"
+        }
+      ],
+      "external_dependencies": [],
+      "configuration_names_only": [
+        "MARKETPLACE_MONITOR"
+      ],
+      "dynamic_lookups_requiring_source_review": [],
+      "deployment_requirement": "Owned target Pages Auth configuration/bearer verification and correct service bindings; active scan still requires explicit PORTSCAN_ALLOWED_IPS"
+    },
+    {
+      "route_file": "functions/api/marketplace-port-scan.js",
+      "files": [
+        {
+          "path": "functions/_lib/auth.js",
+          "bytes": 588,
+          "sha256": "a4450b73b5f2de848afaa81bb93ae008929d55ed69aea936b82669117c023af9"
+        },
+        {
+          "path": "functions/api/marketplace-port-scan.js",
+          "bytes": 8286,
+          "sha256": "0fbfe08457a54de0d9eac7cb115fdcb56b0ed1e4cd01c046c8561acd6bc27c5b"
+        }
+      ],
+      "external_dependencies": [
+        "cloudflare:sockets"
+      ],
+      "configuration_names_only": [
+        "PORTSCAN_ALLOWED_IPS",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": [],
+      "deployment_requirement": "Owned target Pages Auth configuration/bearer verification and correct service bindings; active scan still requires explicit PORTSCAN_ALLOWED_IPS"
+    },
+    {
+      "route_file": "functions/api/profile-search.js",
+      "files": [
+        {
+          "path": "functions/api/profile-search.js",
+          "bytes": 1765,
+          "sha256": "abc0f6310512f6c86392b58ee84659e1c6fc245bf0ecdd186a0f76382872f80b"
+        },
+        {
+          "path": "src/lib/publicProfiles.ts",
+          "bytes": 7754,
+          "sha256": "0da5fdfa8203ef06ebda1eed94236e18eafbb373a5f2ca8488db6f72ba9c6488"
+        }
+      ],
+      "external_dependencies": [],
+      "configuration_names_only": [
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_URL"
+      ],
+      "dynamic_lookups_requiring_source_review": [],
+      "deployment_requirement": "Owned target Pages Auth configuration/bearer verification and correct service bindings; active scan still requires explicit PORTSCAN_ALLOWED_IPS"
+    }
+  ],
+  "shared_source_files": [
+    {
+      "path": "supabase/functions/_shared/authenticateUser.ts",
+      "bytes": 5756,
+      "sha256": "8ba1e260c792abce32bbf2bc7b9078286510a138b76608dc9b54cacdc02cc5ba"
+    },
+    {
+      "path": "supabase/functions/_shared/billingConfiguration.ts",
+      "bytes": 1808,
+      "sha256": "e544b69584ab2d642babf39c0455b475cf155953d55ec6fcc1b2672f75465437"
+    },
+    {
+      "path": "supabase/functions/_shared/independentAi.ts",
+      "bytes": 8489,
+      "sha256": "153f96254be0bb18a9cc6212f97424329811750a9dc3e3c49f10a3faa0ada0b9"
+    },
+    {
+      "path": "supabase/functions/_shared/safeFetch.ts",
+      "bytes": 4684,
+      "sha256": "f2a052d86331f88cc6fa1cd72c700a5c5233f565befb4ca1f8ce6490aab8351b"
+    },
+    {
+      "path": "supabase/functions/_shared/stripeSubscription.ts",
+      "bytes": 2275,
+      "sha256": "368bb7a22a9be73493dd1606674b5b4f96fee8d48d6a6c6f2906b50b9a72b67b"
+    }
+  ],
+  "required_prior_database_changes": [
+    "authoritative owned-target application schema and original record restoration",
+    "reviewed invitation policy hardening and service-role-only SECURITY INVOKER accept_organization_invitation RPC",
+    "reviewed postgres-only stored alert engine and authenticated no-input owner wrapper before deploying check-alerts",
+    "rollback fixture/ACL/concurrency review before separate native cron activation"
+  ],
+  "remote_actions": 0,
+  "secret_values_copied": 0
+}

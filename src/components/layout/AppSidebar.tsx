@@ -1,5 +1,5 @@
 import {
-  Home, Wrench, Search, GraduationCap, BookOpen, Code2, CreditCard, LayoutDashboard, Shield, Radar, Receipt, Bot, FileText, Briefcase, Network, Store, Building2, Activity, Bell, Fingerprint, Users, Workflow, UserCheck, Database,
+  Search, Shield, Radar, FileText, Database, Settings, Brain, BookOpen,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -9,35 +9,15 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainNav = [
-  { title: "Home", url: "/", icon: Home },
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Tool Suite", url: "/tools", icon: Wrench },
-  { title: "Intelligence Lab", url: "/intelligence", icon: Fingerprint },
-  { title: "Marketplace", url: "/marketplace", icon: Store },
-  { title: "PDL History", url: "/pdl-history", icon: Database },
-  { title: "Agents", url: "/agents", icon: Bot },
-  { title: "Reports", url: "/reports", icon: FileText },
-  { title: "Evidence Export", url: "/evidence-export", icon: Briefcase },
-  { title: "Correlations", url: "/correlations", icon: Network },
-  { title: "Identity Resolution", url: "/identity", icon: Fingerprint },
-  { title: "Social Graph", url: "/social-graph", icon: Users },
-  { title: "Pipelines", url: "/pipelines", icon: Workflow },
-  { title: "Persona Discovery", url: "/personas", icon: Radar },
-  { title: "Persona Profiles", url: "/persona-profile", icon: UserCheck },
-  { title: "Persona Intel", url: "/persona-intel", icon: Radar },
   { title: "Investigations", url: "/investigations", icon: Search },
-  { title: "Organizations", url: "/organizations", icon: Building2 },
-  { title: "Alerts", url: "/alerts", icon: Bell },
+  { title: "Reports", url: "/reports", icon: FileText },
+  { title: "Sources", url: "/sources", icon: Database },
+  { title: "Intelligence Lab", url: "/intelligence", icon: Brain },
+  { title: "Research Workbench", url: "/research", icon: BookOpen },
 ];
 
 const resourceNav = [
-  { title: "Training", url: "/training", icon: GraduationCap },
-  { title: "Knowledge Base", url: "/knowledge", icon: BookOpen },
-  { title: "API", url: "/api", icon: Code2 },
-  { title: "Pricing", url: "/pricing", icon: CreditCard },
-  { title: "Billing", url: "/billing", icon: Receipt },
-  { title: "Admin", url: "/admin", icon: Shield },
-  { title: "Activity Logs", url: "/activity", icon: Activity },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -61,7 +41,7 @@ export function AppSidebar() {
                 Insight<span className="text-primary">Nexus</span>
               </span>
               <span className="font-mono text-[9px] tracking-widest text-muted-foreground">
-                INTELLIGENCE PLATFORM
+                PERSON INVESTIGATIONS
               </span>
             </div>
           )}
@@ -71,7 +51,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-3">
         <SidebarGroup>
           <SidebarGroupLabel className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground px-2 mb-1">
-            OPERATIONS
+            WORKSPACE
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -100,7 +80,7 @@ export function AppSidebar() {
 
         <SidebarGroup className="mt-4">
           <SidebarGroupLabel className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground px-2 mb-1">
-            RESOURCES
+            ACCOUNT
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

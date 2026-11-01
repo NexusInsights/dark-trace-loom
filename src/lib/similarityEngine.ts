@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 // Levenshtein distance for username similarity
@@ -50,10 +51,10 @@ export async function runBehavioralSimilarity(
 
   const [{ data: entities }, { data: infraLinks }, { data: observations }, { data: timeline }] =
     await Promise.all([
-      supabase.from("identity_entities").select("id, entity_type, entity_value, metadata, created_at").eq("user_id", userId),
-      supabase.from("infrastructure_links").select("entity_id, infrastructure_type, value").eq("user_id", userId),
-      supabase.from("entity_observations").select("entity_id, case_id, source_tool, created_at").eq("user_id", userId),
-      supabase.from("entity_timeline").select("entity_id, event_type, event_timestamp").eq("user_id", userId),
+      checkedDatabase(supabase.from("identity_entities").select("id, entity_type, entity_value, metadata, created_at").eq("user_id", userId)),
+      checkedDatabase(supabase.from("infrastructure_links").select("entity_id, infrastructure_type, value").eq("source_tool", "live-dns").eq("user_id", userId)),
+      checkedDatabase(supabase.from("entity_observations").select("entity_id, case_id, source_tool, created_at").eq("user_id", userId)),
+      checkedDatabase(supabase.from("entity_timeline").select("entity_id, event_type, event_timestamp").eq("user_id", userId)),
     ]);
 
   if (!entities || entities.length < 2) {
@@ -175,7 +176,7 @@ export async function runBehavioralSimilarity(
   onProgress?.(`Saving ${top.length} similarity scores...`);
 
   // Clear old scores
-  await supabase.from("similarity_scores").delete().eq("user_id", userId);
+  await checkedDatabase(supabase.from("similarity_scores").delete().eq("user_id", userId));
 
   // Batch insert
   const batchSize = 50;
@@ -192,7 +193,7 @@ export async function runBehavioralSimilarity(
       user_id: userId,
       details: {},
     }));
-    await supabase.from("similarity_scores").insert(batch);
+    await checkedDatabase(supabase.from("similarity_scores").insert(batch));
   }
 
   const highSim = top.filter((r) => r.similarity >= 0.6).length;

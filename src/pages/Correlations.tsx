@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { GlassPanel, IntelCard } from "@/components/intel";
 import { Button } from "@/components/ui/button";
@@ -140,11 +141,11 @@ export default function CorrelationsPage() {
     queryKey: ["correlations", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("cross_case_correlations")
         .select("*")
         .eq("user_id", user!.id)
-        .order("confidence", { ascending: false });
+        .order("confidence", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },

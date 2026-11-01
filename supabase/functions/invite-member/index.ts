@@ -16,6 +16,20 @@ const Body = z.object({
   role: z.enum(["admin", "investigator", "viewer"]),
 });
 
+const SenderEmail = z.string().email().max(254).refine(
+  (value) => !Array.from(value).some(character => character.charCodeAt(0) <= 32 || character.charCodeAt(0) === 127 || character === "<" || character === ">"),
+  "Use one bare email address without whitespace or header characters",
+);
+
+/** RESEND_FROM_EMAIL is a bare address; display-name formatting stays fixed.
+ * A missing setting preserves the historical sender. A defined invalid setting
+ * fails closed before creating an invitation or calling the mail provider. */
+export function invitationSender(configured: unknown): string {
+  const parsed = SenderEmail.safeParse(configured === undefined ? "invites@tjksecurity.com" : configured);
+  if (!parsed.success) throw new Error("RESEND_FROM_EMAIL must be one valid bare email address.");
+  return `TJK Security <${parsed.data}>`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -49,6 +63,12 @@ serve(async (req) => {
 
   const { data: org } = await admin.from("organizations").select("name").eq("id", org_id).maybeSingle();
   if (!org) return json({ error: "org_not_found" }, 404);
+
+  let from: string;
+  try { from = invitationSender(Deno.env.get("RESEND_FROM_EMAIL")); }
+  catch {
+    return json({ error: "invalid_sender_configuration", reason: "RESEND_FROM_EMAIL must be one valid bare email address." }, 503);
+  }
 
   const token = crypto.randomUUID() + "-" + crypto.randomUUID();
   const { data: invitation, error: ierr } = await admin
@@ -85,7 +105,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "TJK Security <invites@tjksecurity.com>",
+        from,
         to: [email],
         subject: `You've been invited to ${org.name}`,
         text,

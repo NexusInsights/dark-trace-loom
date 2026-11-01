@@ -1,0 +1,19 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "insight-nexus-ai",
+  "account_id": "da9871f264f6e4268fd904015f5703df",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-14",
+  "workers_dev": true,
+  "ai": { "binding": "AI" },
+  "vars": {
+    "SUPABASE_URL": "https://ocliymtdvtxfxczxgbjr.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_G4Wdd5_Agn8gZO27Bm3hfw_RK2Qk_W6",
+    "WORKERS_AI_ENABLED": "true",
+    "WORKERS_AI_ZERO_SPEND_VERIFIED": "true",
+    "WORKERS_AI_VERIFIED_PLAN": "free",
+    "WORKERS_AI_VERIFIED_AT": "",
+    "WORKERS_AI_VERIFICATION_EXPIRES_AT": ""
+  },
+  "observability": { "enabled": false }
+}

@@ -1,4 +1,7 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
+import { marketplaceImplementation, type MarketplaceTool } from "@/lib/marketplaceTools";
+import { useInstalledTools } from "@/hooks/useInstalledTools";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,25 +41,6 @@ const PLAN_LABELS: Record<string, string> = {
   enterprise: "Enterprise",
 };
 
-interface MarketplaceTool {
-  id: string;
-  tool_name: string;
-  slug: string;
-  developer_name: string;
-  description: string | null;
-  long_description: string | null;
-  category: string;
-  pricing_model: string;
-  min_plan: string;
-  icon_name: string | null;
-  version: string;
-  downloads: number;
-  rating: number | null;
-  status: string;
-  tags: string[] | null;
-  created_at: string;
-}
-
 export default function MarketplacePage() {
   const { user } = useAuth();
   const { plan } = useSubscription();
@@ -66,57 +50,50 @@ export default function MarketplacePage() {
   const [selectedTool, setSelectedTool] = useState<MarketplaceTool | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
 
-  const { data: tools = [], isLoading } = useQuery({
+  const { data: tools = [], isLoading, error: catalogError } = useQuery({
     queryKey: ["marketplace-tools"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("tool_marketplace")
         .select("*")
-        .order("downloads", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data as unknown as MarketplaceTool[];
     },
   });
 
-  const { data: installed = [] } = useQuery({
-    queryKey: ["installed-tools"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_installed_tools")
-        .select("tool_id, enabled");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { data: installed = [], error: installationsError } = useInstalledTools();
 
   const installMutation = useMutation({
     mutationFn: async (toolId: string) => {
-      const { error } = await supabase
+      if (!user) throw new Error("Sign in to save a marketplace tool.");
+      const { error } = await checkedDatabase(supabase
         .from("user_installed_tools")
-        .insert({ user_id: user!.id, tool_id: toolId });
+        .insert({ user_id: user!.id, tool_id: toolId }));
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["installed-tools"] });
-      toast({ title: "Tool installed", description: "The tool has been added to your suite." });
+      toast({ title: "Tool saved to your suite", description: "Visible under Installed marketplace tools. Execution is available only for configured implementations." });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const uninstallMutation = useMutation({
     mutationFn: async (toolId: string) => {
-      const { error } = await supabase
+      if (!user) throw new Error("Sign in to manage your installed tools.");
+      const { error } = await checkedDatabase(supabase
         .from("user_installed_tools")
         .delete()
         .eq("user_id", user!.id)
-        .eq("tool_id", toolId);
+        .eq("tool_id", toolId));
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["installed-tools"] });
       toast({ title: "Tool removed" });
     },
+    onError: (e: Error) => toast({ title: "Removal failed", description: e.message, variant: "destructive" }),
   });
 
   const installedIds = new Set(installed.map((i) => i.tool_id));
@@ -144,11 +121,12 @@ export default function MarketplacePage() {
           <span className="intel-tag intel-tag-purple mb-3 inline-block">MARKETPLACE</span>
           <h1 className="text-2xl font-display font-bold tracking-tight">Tool Marketplace</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Discover, install, and publish OSINT tools
+            Saved listings appear under Installed marketplace tools in Tool Suite. Only configured implementations can run; catalog descriptions alone do not install code or connect providers.
           </p>
         </div>
         <PublishToolDialog open={publishOpen} onOpenChange={setPublishOpen} userId={user?.id} />
       </div>
+      {(catalogError || installationsError) && <p role="alert" className="text-sm text-destructive">{catalogError?.message || installationsError?.message}</p>}
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -240,9 +218,7 @@ export default function MarketplacePage() {
 
         <TabsContent value="my-tools" className="mt-4">
           <ToolGrid
-            tools={tools.filter((t) => t.developer_name === "You" || (user && tools.some(
-              (tt) => tt.id === t.id
-            )))}
+            tools={tools.filter((t) => t.developer_id === user?.id)}
             installedIds={installedIds}
             plan={plan}
             canUseTool={canUseTool}
@@ -331,16 +307,7 @@ function ToolGrid({
               </div>
 
               <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1">
-                    <Download className="h-3 w-3" /> {t.downloads.toLocaleString()}
-                  </span>
-                  {t.rating && (
-                    <span className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-current text-primary" /> {Number(t.rating).toFixed(1)}
-                    </span>
-                  )}
-                </div>
+                <span>{marketplaceImplementation(t) ? `Runner: ${marketplaceImplementation(t)!.name}` : "No executable integration"}</span>
                 <Button
                   size="sm"
                   variant={isInstalled ? "outline" : accessible ? "default" : "secondary"}
@@ -352,7 +319,7 @@ function ToolGrid({
                   }}
                   disabled={!accessible && !isInstalled}
                 >
-                  {isInstalled ? "Remove" : accessible ? "Install" : `Requires ${PLAN_LABELS[t.min_plan]}`}
+                  {isInstalled ? "Unsave" : accessible ? "Save listing" : `Requires ${PLAN_LABELS[t.min_plan]}`}
                 </Button>
               </div>
             </GlassPanel>
@@ -398,18 +365,10 @@ function ToolDetailDialog({
 
         <div className="space-y-4 mt-2">
           <p className="text-sm text-muted-foreground">{tool.long_description || tool.description}</p>
+          {isInstalled && <Button asChild variant="outline"><a href={`/tools?tool=${encodeURIComponent(`marketplace:${tool.id}`)}`}>View in Tool Suite</a></Button>}
+          {marketplaceImplementation(tool) ? <div className="space-y-2"><p className="text-sm text-muted-foreground">Available scope: {marketplaceImplementation(tool)!.description}</p><Button asChild variant="secondary"><a href={`/tools?tool=${encodeURIComponent(marketplaceImplementation(tool)!.id)}`}>Open {marketplaceImplementation(tool)!.name}</a></Button></div> : <p className="text-sm text-muted-foreground">This listing has no runnable implementation in the deployed tool registry.</p>}
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-2 rounded-md bg-muted/50">
-              <Download className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-              <span className="text-sm font-bold">{tool.downloads.toLocaleString()}</span>
-              <p className="text-[10px] text-muted-foreground">Downloads</p>
-            </div>
-            <div className="text-center p-2 rounded-md bg-muted/50">
-              <Star className="h-4 w-4 mx-auto mb-1 fill-current text-primary" />
-              <span className="text-sm font-bold">{tool.rating ? Number(tool.rating).toFixed(1) : "N/A"}</span>
-              <p className="text-[10px] text-muted-foreground">Rating</p>
-            </div>
+          <div className="grid grid-cols-1 gap-3">
             <div className="text-center p-2 rounded-md bg-muted/50">
               <Clock className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
               <span className="text-sm font-bold">{new Date(tool.created_at).toLocaleDateString()}</span>
@@ -448,7 +407,7 @@ function ToolDetailDialog({
             disabled={!canUse && !isInstalled}
             onClick={() => isInstalled ? onUninstall(tool.id) : onInstall(tool.id)}
           >
-            {isInstalled ? "Remove from Suite" : canUse ? "Install Tool" : `Upgrade to ${PLAN_LABELS[tool.min_plan]}`}
+            {isInstalled ? "Unsave listing" : canUse ? "Save catalog listing" : `Upgrade to ${PLAN_LABELS[tool.min_plan]}`}
           </Button>
         </div>
       </DialogContent>
@@ -473,13 +432,13 @@ function PublishToolDialog({
   const publishMutation = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error("Not authenticated");
-      const { error } = await supabase.from("tool_marketplace").insert({
+      const { error } = await checkedDatabase(supabase.from("tool_marketplace").insert({
         ...form,
         slug: form.slug || form.tool_name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
         developer_id: userId,
         developer_name: "Community Developer",
         status: "pending",
-      });
+      }));
       if (error) throw error;
     },
     onSuccess: () => {

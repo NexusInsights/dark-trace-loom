@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-01",
+  "repositoryBaseline": "9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86",
+  "scope": "Actual isolated current-source execution; providers/auth/DB fixtures unless explicitly identified as native embedded PostgreSQL, real Sharp byte decoding, TensorFlow or temporary loopback sockets. No production/provider acceptance.",
+  "app": {
+    "tests": 1012,
+    "passed": 1012,
+    "failed": 0,
+    "files": 81
+  },
+  "worker": {
+    "passed": 36,
+    "scope": "Temporary HTTP/SOCKS fixtures; sandbox loopback failed, one bounded approved escalation passed all36. No external providers/services."
+  },
+  "cloudflarePackaging": {
+    "passed": 19,
+    "scope": "Synthetic controllers, temporary loopback supervisor/readiness sockets and bounded fixture subprocesses; no Wrangler/Docker/deployment."
+  },
+  "intelligenceClient": {
+    "passed": 15
+  },
+  "intelligenceSql": {
+    "passed": 11,
+    "scope": "Real existing embedded PostgreSQL; single connection, not live policies/concurrency proof"
+  },
+  "research": {
+    "passed": 107,
+    "scope": "Includes11 reused intelligence SQL cases; count is test executions, not unique scenarios"
+  },
+  "monitors": {
+    "passed": 23
+  },
+  "retainedGateways": {
+    "dispatcher": 29,
+    "githubPaired": 10,
+    "scope": "Actual handlers with synthetic auth/SDK/transport; no sockets/provider calls"
+  },
+  "ownershipSql": {
+    "passed": 1,
+    "scope": "Exact new restrictive policy SQL + rollback; real embedded PostgreSQL with minimal synthetic dependencies and rows; not applied live"
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 16
+  },
+  "typecheck": "passed",
+  "build": "passed; existing mixed-import/large-chunk warnings",
+  "archives": "Both Git bundles reverified; byte hashes equal capture; earlier restore/fsck receipts preserved",
+  "ownerSnapshotDrift": [],
+  "liveAcceptance": false
+}

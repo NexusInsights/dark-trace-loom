@@ -1,3 +1,5 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
+import { downloadArtifact } from "@/lib/downloadArtifact";
 import { useState } from "react";
 import { GlassPanel } from "@/components/intel";
 import { Button } from "@/components/ui/button";
@@ -27,8 +29,8 @@ const REPORT_TYPES: { id: ReportType; label: string; description: string; icon: 
 
 const FORMAT_OPTIONS: { id: ReportFormat; label: string; icon: typeof FileText; ext: string }[] = [
   { id: "json", label: "JSON", icon: FileJson, ext: ".json" },
-  { id: "pdf", label: "PDF (HTML)", icon: File, ext: ".html" },
-  { id: "docx", label: "DOCX", icon: FileType, ext: ".doc" },
+  { id: "pdf", label: "PDF", icon: File, ext: ".pdf" },
+  { id: "docx", label: "DOCX", icon: FileType, ext: ".docx" },
 ];
 
 export default function ReportsPage() {
@@ -51,12 +53,12 @@ export default function ReportsPage() {
     queryKey: ["reports", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("reports")
         .select("*")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(20));
       if (error) throw error;
       return data ?? [];
     },
@@ -90,7 +92,7 @@ export default function ReportsPage() {
   const handleDownload = async (filePath: string) => {
     try {
       const url = await getReportDownloadUrl(filePath);
-      if (url) window.open(url, "_blank");
+      await downloadArtifact(url);
     } catch {
       toast.error("Failed to get download link");
     }
@@ -99,9 +101,9 @@ export default function ReportsPage() {
   const handleDelete = async (reportId: string, filePath: string | null) => {
     try {
       if (filePath) {
-        await supabase.storage.from("reports").remove([filePath]);
+        await checkedDatabase(supabase.storage.from("reports").remove([filePath]));
       }
-      await supabase.from("reports").delete().eq("id", reportId);
+      await checkedDatabase(supabase.from("reports").delete().eq("id", reportId));
       refetchReports();
       toast.success("Report deleted");
     } catch {
@@ -119,7 +121,7 @@ export default function ReportsPage() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Reports</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Report Generator</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Generate forensic-grade reports from your investigations with integrity verification.
+          Export saved investigation records as JSON, PDF or DOCX. Recorded hashes do not establish factual accuracy or verify external originals.
         </p>
       </div>
 
@@ -225,7 +227,7 @@ export default function ReportsPage() {
               variant="outline"
               size="sm"
               className="w-full gap-2"
-              onClick={() => window.open(lastDownloadUrl, "_blank")}
+              onClick={() => downloadArtifact(lastDownloadUrl).catch(error => toast.error(error.message))}
             >
               <Download className="h-3.5 w-3.5" />
               DOWNLOAD REPORT
@@ -267,6 +269,7 @@ export default function ReportsPage() {
                     size="sm"
                     className="gap-1 font-mono text-[10px]"
                     onClick={() => r.file_path && handleDownload(r.file_path)}
+                    aria-label={`Download ${r.format.toUpperCase()} report`}
                   >
                     <Download className="h-3 w-3" />
                   </Button>

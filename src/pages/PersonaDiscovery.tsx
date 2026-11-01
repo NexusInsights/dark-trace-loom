@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { PublicProfileEvidence } from "@/components/persona/PublicProfileEvidence";
+import { identifierSource } from "@/lib/profileLookup";
 import { usePersonas, usePersonaIdentifiers, usePersonaDiscovery, useDeletePersona } from "@/hooks/usePersonas";
 import { useUsernameCandidates, useRunUsernamePermutation } from "@/hooks/useUsernameCandidates";
 import { useEmailCandidates, useRunEmailPermutation } from "@/hooks/useEmailCandidates";
@@ -53,17 +55,31 @@ export default function PersonaDiscovery() {
   const [form, setForm] = useState<PersonaInput>({ name: "", username: "", email: "", domain: "", phone: "" });
   const [permForm, setPermForm] = useState({ firstName: "", lastName: "", knownUsername: "" });
   const [emailForm, setEmailForm] = useState({ firstName: "", lastName: "", knownDomains: "", companyDomains: "" });
+  const [enrich, setEnrich] = useState(false);
+  const [discoveryError, setDiscoveryError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectedId || !identifiers) return;
+    const saved: PersonaInput = {name:"",username:"",email:"",domain:"",phone:""};
+    for (const identifier of identifiers) {
+      const field = identifier.identifier_type;
+      if (["input","auto_expansion"].includes(identifier.source || "") && ["name","username","email","domain","phone"].includes(field)) {
+        saved[field as "name" | "username" | "email" | "domain" | "phone"] = identifier.identifier_value;
+      }
+    }
+    setForm(saved);
+  }, [selectedId,identifiers]);
 
-  const handleRun = () => {
+  const handleRun = (existingPersonaId?: string) => {
+    setDiscoveryError(null);
     const hasInput = Object.values(form).some((v) => v && v.trim());
     if (!hasInput) { toast.error("Provide at least one identifier"); return; }
-    discover(form, {
+    discover({ ...form, enrich, personaId: existingPersonaId }, {
       onSuccess: (res) => {
-        toast.success(`Persona created with ${res.identifiersGenerated} identifiers`);
+        toast.success(res.lookup ? `${res.lookup.profiles.length} actual account records retrieved; ${res.lookup.checks.filter(c => c.status === "unavailable").length} providers unavailable` : "Inputs saved. No identity or contact ownership has been verified.");
         setSelectedId(res.personaId);
         setForm({ name: "", username: "", email: "", domain: "", phone: "" });
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => { setDiscoveryError(e.message); toast.error(e.message); },
     });
   };
 
@@ -98,7 +114,7 @@ export default function PersonaDiscovery() {
         <Fingerprint className="h-6 w-6 text-primary" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Persona Discovery</h1>
-          <p className="text-sm text-muted-foreground">Generate possible online identities belonging to the same individual</p>
+          <p className="text-sm text-muted-foreground">Retrieve actual public profiles for an exact username. Preserve supplied names, emails and phone numbers with their provenance.</p>
         </div>
       </div>
 
@@ -117,14 +133,18 @@ export default function PersonaDiscovery() {
               { key: "phone", label: "Phone", ph: "+1234567890" },
             ] as const).map(({ key, label, ph }) => (
               <div key={key} className="space-y-1">
-                <Label className="text-xs text-muted-foreground">{label}</Label>
-                <Input placeholder={ph} value={form[key] || ""} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} className="h-8 text-sm" />
+                <Label htmlFor={`discovery-${key}`} className="text-xs text-muted-foreground">{label}</Label>
+                <Input id={`discovery-${key}`} placeholder={ph} value={form[key] || ""} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} className="h-8 text-sm" />
               </div>
             ))}
-            <Button onClick={handleRun} disabled={isPending} className="w-full mt-2" size="sm">
+            <Button onClick={() => handleRun()} disabled={isPending} className="w-full mt-2" size="sm">
               {isPending ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> Discovering...</> : <><Plus className="h-3.5 w-3.5 mr-2" /> Run Discovery</>}
             </Button>
+            {selectedId && <Button size="sm" variant="secondary" className="w-full" disabled={isPending} onClick={() => handleRun(selectedId)}>Retrieve evidence for selected persona</Button>}
+            <label className="flex items-start gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={enrich} onChange={event => setEnrich(event.target.checked)} className="mt-0.5" /> Retrieve real emails, phone numbers and profiles using the configured People Data Labs account. This provider lookup may use paid credits; provider failures are shown explicitly.</label>
             {progress && <p className="text-xs text-muted-foreground animate-pulse">{progress}</p>}
+            {discoveryError && <p role="alert" className="text-xs text-destructive break-words">{discoveryError}</p>}
+            <p className="text-xs text-muted-foreground">Live username coverage: GitHub, GitLab, DEV Community, Hacker News and Keybase. Email, phone and name inputs are saved as supplied; this lookup does not invent owners or contact details. Use the configured People Data Labs tools for provider enrichment.</p>
           </CardContent>
         </Card>
 
@@ -141,7 +161,7 @@ export default function PersonaDiscovery() {
                 <p className="text-sm text-muted-foreground p-4">No personas discovered yet</p>
               ) : (
                 personas.map((p) => (
-                  <button key={p.id} onClick={() => setSelectedId(p.id)}
+                  <button key={p.id} onClick={() => { setSelectedId(p.id); setDiscoveryError(null); }}
                     className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-accent/50 transition-colors border-b border-border/50 ${selectedId === p.id ? "bg-accent" : ""}`}>
                     <div>
                       <span className="text-sm font-medium">{p.persona_label}</span>
@@ -166,8 +186,8 @@ export default function PersonaDiscovery() {
             <CardHeader className="pb-2">
               <TabsList className="w-full">
                 <TabsTrigger value="identifiers" className="flex-1 text-xs"><Eye className="h-3 w-3 mr-1" /> Identifiers</TabsTrigger>
-                <TabsTrigger value="usernames" className="flex-1 text-xs"><Shuffle className="h-3 w-3 mr-1" /> Usernames</TabsTrigger>
-                <TabsTrigger value="emails" className="flex-1 text-xs"><Mail className="h-3 w-3 mr-1" /> Emails</TabsTrigger>
+                <TabsTrigger value="usernames" className="flex-1 text-xs"><Shuffle className="h-3 w-3 mr-1" /> Handle guesses</TabsTrigger>
+                <TabsTrigger value="emails" className="flex-1 text-xs"><Mail className="h-3 w-3 mr-1" /> Email guesses</TabsTrigger>
               </TabsList>
             </CardHeader>
 
@@ -189,8 +209,7 @@ export default function PersonaDiscovery() {
                           <div key={id.id} className="px-4 py-1.5 flex items-center justify-between border-b border-border/30 text-sm">
                             <span className="truncate max-w-[200px] font-mono text-xs">{id.identifier_value}</span>
                             <div className="flex items-center gap-2">
-                              <Progress value={id.confidence_score * 100} className="w-12 h-1.5" />
-                              <span className={`text-[10px] font-bold ${confidenceColor(id.confidence_score)}`}>{Math.round(id.confidence_score * 100)}%</span>
+                              <span className="text-[10px] text-muted-foreground">{identifierSource(id.source)}</span>
                             </div>
                           </div>
                         ))}
@@ -233,7 +252,7 @@ export default function PersonaDiscovery() {
                       {items.map((c) => (
                         <div key={c.id} className="px-4 py-1 flex items-center justify-between border-b border-border/30">
                           <span className="font-mono text-xs">{c.candidate_username}</span>
-                          <span className={`text-[10px] font-bold ${confidenceColor(c.confidence_score)}`}>{Math.round(c.confidence_score * 100)}%</span>
+                          <span className="text-[10px] text-muted-foreground">Unverified guess</span>
                         </div>
                       ))}
                     </div>
@@ -278,7 +297,7 @@ export default function PersonaDiscovery() {
                       {items.map((c) => (
                         <div key={c.id} className="px-4 py-1 flex items-center justify-between border-b border-border/30">
                           <span className="font-mono text-xs truncate max-w-[180px]">{c.candidate_email}</span>
-                          <span className={`text-[10px] font-bold ${confidenceColor(c.confidence_score)}`}>{Math.round(c.confidence_score * 100)}%</span>
+                          <span className="text-[10px] text-muted-foreground">Unverified guess</span>
                         </div>
                       ))}
                     </div>
@@ -289,6 +308,7 @@ export default function PersonaDiscovery() {
           </Tabs>
         </Card>
       </div>
+      <PublicProfileEvidence personaId={selectedId} />
     </div>
   );
 }

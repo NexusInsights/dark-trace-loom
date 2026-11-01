@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface BreachScanResult {
@@ -19,10 +20,10 @@ export async function runBreachScan(
 ): Promise<BreachScanResult> {
   onProgress?.("Loading identifiers...");
 
-  const { data: entities } = await supabase
+  const { data: entities } = await checkedDatabase(supabase
     .from("identity_entities")
     .select("id, entity_type, entity_value")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
   const scannable = (entities ?? []).filter((e) =>
     ["email", "username", "phone"].includes(e.entity_type),
@@ -57,6 +58,8 @@ export async function runBreachScan(
       reason = payload.reason;
       break;
     }
+    if (!payload || payload.status === "error" || !Array.isArray(payload.results)) throw new Error(payload?.reason || "Breach provider returned no usable scan result");
+    if (payload.results.some(result => result.status === "error" || result.status === "not_configured")) throw new Error("One or more breach providers failed; an absence of exposure has not been established");
     for (const r of payload?.results ?? []) {
       if (r.status === "exposure") exposures++;
     }

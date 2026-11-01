@@ -1,0 +1,50 @@
+{
+  "scope": "Synthetic local pixels only; no photographs, people or network. Encoded with already installed Sharp. Never transmitted externally.",
+  "files": [
+    {
+      "name": "ascending.png",
+      "bytes": 127,
+      "sha256": "34486e698cbff8bbae05ff7a29816b085f67a21eb472327aacd8c1db02a8d884"
+    },
+    {
+      "name": "descending.png",
+      "bytes": 127,
+      "sha256": "6cdcbcc817d987fd8118cc7778197fc85abfc6256311d55afa821b01e787473e"
+    },
+    {
+      "name": "constant.png",
+      "bytes": 141,
+      "sha256": "4be5bcbb5b390e61aa4837865e8701f3b85f0613a3a7e7f537574b3305979390"
+    },
+    {
+      "name": "constant.jpg",
+      "bytes": 269,
+      "sha256": "a024e6ceb10e493c3753ae455fed01f7f68224c5d4b3349da1e0710e4272124f"
+    },
+    {
+      "name": "checker.png",
+      "bytes": 149,
+      "sha256": "70cde4ac1d65f36ad0b8df112959a16593617d39af4f334cf6693a11b25b99b7"
+    },
+    {
+      "name": "transparent-a.png",
+      "bytes": 121,
+      "sha256": "5d17bbe30613516dcf20522acd23d66f1e39089f8fa94531909d1a156c7480b6"
+    },
+    {
+      "name": "transparent-b.png",
+      "bytes": 121,
+      "sha256": "9e36bca21f45f595f8a3e5aa68ac50ba94e4ffd1cc29e087bdb0eb791f92707c"
+    },
+    {
+      "name": "unsupported.webp",
+      "bytes": 60,
+      "sha256": "085c928053fb34c4b4a89a648274950ee70021020f4d5f4a1d67efb6278e67d7"
+    },
+    {
+      "name": "unsupported.gif",
+      "bytes": 43,
+      "sha256": "1de1aabb60516a29981a1eb39d853e3992df0e21ab93c50443fbeec332643dd2"
+    }
+  ]
+}

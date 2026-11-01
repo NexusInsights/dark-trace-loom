@@ -146,22 +146,22 @@ const workflowSteps = [
   { icon: Cpu, title: "Analyze Entities", desc: "Extract and classify entities, personas, and infrastructure." },
   { icon: Layers, title: "Correlate Infrastructure", desc: "Cross-reference findings across disparate data points." },
   { icon: Target, title: "Investigate Relationships", desc: "Map entity connections and uncover hidden networks." },
-  { icon: FileText, title: "Generate Evidence", desc: "Produce verified, exportable intelligence packages." },
+  { icon: FileText, title: "Generate Evidence", desc: "Export saved records, source references and recorded custody logs." },
 ];
 
 const useCases = [
   { icon: Shield, title: "Cyber Threat Intelligence", desc: "Track threat actors, infrastructure, and attack patterns across the cyber landscape." },
   { icon: Search, title: "Fraud Investigation", desc: "Identify fraudulent entities, financial networks, and deceptive operations." },
   { icon: Briefcase, title: "Corporate Due Diligence", desc: "Comprehensive background investigations for M&A, partnerships, and compliance." },
-  { icon: Fingerprint, title: "Digital Identity Attribution", desc: "Attribute online identities to real-world entities through behavioral correlation." },
+  { icon: Fingerprint, title: "Digital Identity Attribution", desc: "Collect sourced account records and review identity hypotheses against evidence." },
   { icon: Globe, title: "Infrastructure Mapping", desc: "Map hosting, DNS, certificate, and network relationships at scale." },
 ];
 
 const securityFeatures = [
-  { icon: Lock, title: "Encrypted Evidence Storage", desc: "AES-256 encryption for all evidence artifacts and investigation data." },
-  { icon: Activity, title: "Chain-of-Custody Tracking", desc: "Cryptographic audit trails for every evidence interaction." },
+  { icon: Lock, title: "Private Evidence Storage", desc: "Private investigation records with authenticated access and storage permissions." },
+  { icon: Activity, title: "Chain-of-Custody Tracking", desc: "Recorded evidence hashes and custody events; exports include the saved logs." },
   { icon: BarChart3, title: "Audit Logging", desc: "Comprehensive activity logging for compliance and forensics." },
-  { icon: Shield, title: "Secure Investigation Environment", desc: "Isolated investigation environments with zero-trust architecture." },
+  { icon: Shield, title: "Secure Investigation Environment", desc: "Authenticated workspace access backed by database policies." },
   { icon: KeyRound, title: "Role-Based Access Control", desc: "Granular permissions with organizational role hierarchies." },
 ];
 
@@ -282,9 +282,9 @@ export default function LandingPage() {
             {/* Trust indicators */}
             <div className="flex items-center gap-6 mt-10 pt-8 border-t border-border/30">
               {[
-                { label: "Investigations", value: "10K+" },
-                { label: "Data Sources", value: "250+" },
-                { label: "Uptime SLA", value: "99.9%" },
+                { label: "Evidence", value: "Source links" },
+                { label: "Public profile APIs", value: "5" },
+                { label: "Provider status", value: "Reported per query" },
               ].map((stat) => (
                 <div key={stat.label}>
                   <p className="font-display text-xl font-bold text-foreground">{stat.value}</p>
@@ -416,25 +416,11 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { title: "Operations Dashboard", desc: "Real-time operational overview with active case metrics, threat alerts, and team activity.", icon: BarChart3 },
+            { title: "Operations Dashboard", desc: "Overview of saved case metrics, notifications and recorded team activity.", icon: BarChart3 },
             { title: "Investigation Workspace", desc: "Unified workspace for multi-source investigations with artifact management and timeline views.", icon: Search },
             { title: "Entity Graph", desc: "Interactive relationship visualization with force-directed graphs and entity clustering.", icon: Network },
           ].map((panel) => (
             <GlassCard key={panel.title} className="overflow-hidden">
-              {/* Mock UI */}
-              <div className="bg-background/60 rounded-md border border-border/40 p-3 mb-4 min-h-[140px] flex flex-col">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-destructive/60" />
-                  <div className="w-2 h-2 rounded-full bg-warning/60" />
-                  <div className="w-2 h-2 rounded-full bg-success/60" />
-                  <span className="ml-2 font-mono text-[9px] text-muted-foreground">{panel.title.toLowerCase().replace(/ /g, "-")}</span>
-                </div>
-                <div className="flex-1 grid grid-cols-3 gap-1.5">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="bg-secondary/40 rounded-sm" style={{ height: `${20 + Math.random() * 30}px` }} />
-                  ))}
-                </div>
-              </div>
               <div className="flex items-center gap-2 mb-2">
                 <panel.icon className="h-4 w-4 text-primary" />
                 <h3 className="font-display text-sm font-semibold">{panel.title}</h3>

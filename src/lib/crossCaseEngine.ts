@@ -1,4 +1,5 @@
-import type { Json } from "@/integrations/supabase/types";
+import { jsonValue } from "@/lib/jsonValue";
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DiscoveryResult {
@@ -17,9 +18,9 @@ export async function runCrossCaseDiscovery(
   onProgress?.("Loading entities and observations...");
 
   const [{ data: entities }, { data: observations }, { data: cases }] = await Promise.all([
-    supabase.from("identity_entities").select("*").eq("user_id", userId),
-    supabase.from("entity_observations").select("*").eq("user_id", userId),
-    supabase.from("cases").select("id, title").eq("owner_id", userId),
+    checkedDatabase(supabase.from("identity_entities").select("*").eq("user_id", userId)),
+    checkedDatabase(supabase.from("entity_observations").select("*").eq("user_id", userId)),
+    checkedDatabase(supabase.from("cases").select("id, title").eq("owner_id", userId)),
   ]);
 
   if (!entities?.length || !cases?.length) return { casesScanned: 0, linksFound: 0 };
@@ -46,7 +47,7 @@ export async function runCrossCaseDiscovery(
     link_reason: string;
     user_id: string;
     severity: string;
-    metadata: Record<string, Json>;
+    metadata: Record<string, unknown>;
   }[] = [];
 
   for (const [entityId, caseIds] of entityCases.entries()) {
@@ -84,16 +85,16 @@ export async function runCrossCaseDiscovery(
   onProgress?.(`Saving ${links.length} cross-case links...`);
 
   // Delete existing links for user to rebuild
-  await supabase.from("cross_case_links").delete().eq("user_id", userId);
+  await checkedDatabase(supabase.from("cross_case_links").delete().eq("user_id", userId));
 
   let created = 0;
   const batchSize = 50;
   for (let i = 0; i < links.length; i += batchSize) {
     const batch = links.slice(i, i + batchSize);
-    const { data, error } = await supabase
+    const { data, error } = await checkedDatabase(supabase
       .from("cross_case_links")
-      .insert(batch)
-      .select("id");
+      .insert(batch.map(row => ({...row, metadata: jsonValue(row.metadata)})))
+      .select("id"));
     if (!error && data) created += data.length;
   }
 

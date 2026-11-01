@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,13 +34,13 @@ export function useAuditLog() {
     ) => {
       if (!user) return;
       try {
-        await supabase.from("activity_logs").insert({
+        await checkedDatabase(supabase.from("activity_logs").insert({
           user_id: user.id,
           action,
           entity_type: entityType ?? null,
           entity_id: entityId ?? null,
           metadata: (metadata ?? {}) as unknown as Json,
-        });
+        }));
       } catch {
         // Fire-and-forget — never block the main flow
       }

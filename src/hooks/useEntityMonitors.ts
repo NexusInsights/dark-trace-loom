@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,12 +61,12 @@ export function useEntityMonitors(entityId?: string) {
       monitor_type: MonitorType;
       frequency: MonitorFrequency;
     }) => {
-      const { error } = await supabase.from("entity_monitors").insert({
+      const { error } = await checkedDatabase(supabase.from("entity_monitors").insert({
         entity_id: input.entity_id,
         user_id: user!.id,
         monitor_type: input.monitor_type,
         frequency: input.frequency,
-      });
+      }));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -77,10 +78,10 @@ export function useEntityMonitors(entityId?: string) {
 
   const toggleMonitor = useMutation({
     mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("entity_monitors")
         .update({ enabled })
-        .eq("id", id);
+        .eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["entity-monitors"] }),
@@ -88,10 +89,10 @@ export function useEntityMonitors(entityId?: string) {
 
   const deleteMonitor = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("entity_monitors")
         .delete()
-        .eq("id", id);
+        .eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -109,10 +110,10 @@ export function useMonitorStats() {
     queryKey: ["entity-monitor-stats", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("entity_monitors")
         .select("id, enabled, monitor_type, last_triggered")
-        .eq("user_id", user!.id);
+        .eq("user_id", user!.id));
       if (error) throw error;
       const all = data ?? [];
       return {

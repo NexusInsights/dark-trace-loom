@@ -1,6 +1,8 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useMemo, useCallback, useRef, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isEvidenceIdentifier } from "@/lib/profileLookup";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { GlassPanel, StatDisplay } from "@/components/intel";
@@ -36,26 +38,26 @@ function usePersonaDashData() {
         { data: platformAccounts },
         { data: personaEvents },
       ] = await Promise.all([
-        supabase.from("personas").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-        supabase.from("persona_identifiers").select("*").eq("user_id", uid),
-        supabase.from("identity_clusters").select("*").eq("user_id", uid),
-        supabase.from("cluster_members").select("*, entity:identity_entities(id, entity_type, entity_value)").eq("user_id", uid),
-        supabase.from("identity_entities").select("id, entity_type, entity_value, created_at").eq("user_id", uid),
-        supabase.from("entity_scores").select("*").eq("user_id", uid).order("score", { ascending: false }),
-        supabase.from("cross_case_links").select("*, case:cases!cross_case_links_case_id_fkey(id, title), linked_case:cases!cross_case_links_linked_case_id_fkey(id, title)").eq("user_id", uid).order("created_at", { ascending: false }).limit(20),
-        supabase.from("platform_accounts").select("*").eq("user_id", uid),
-        supabase.from("persona_events").select("*").eq("user_id", uid).order("event_timestamp", { ascending: false }).limit(30),
+        checkedDatabase(supabase.from("personas").select("*").eq("user_id", uid).order("created_at", { ascending: false })),
+        checkedDatabase(supabase.from("persona_identifiers").select("*").eq("user_id", uid)),
+        checkedDatabase(supabase.from("identity_clusters").select("*").eq("user_id", uid)),
+        checkedDatabase(supabase.from("cluster_members").select("*, entity:identity_entities(id, entity_type, entity_value)").eq("user_id", uid)),
+        checkedDatabase(supabase.from("identity_entities").select("id, entity_type, entity_value, created_at").eq("user_id", uid)),
+        checkedDatabase(supabase.from("entity_scores").select("*").eq("user_id", uid).order("score", { ascending: false })),
+        checkedDatabase(supabase.from("cross_case_links").select("*, case:cases!cross_case_links_case_id_fkey(id, title), linked_case:cases!cross_case_links_linked_case_id_fkey(id, title)").eq("user_id", uid).order("created_at", { ascending: false }).limit(20)),
+        checkedDatabase(supabase.from("platform_accounts").select("*").eq("user_id", uid)),
+        checkedDatabase(supabase.from("persona_events").select("*").eq("user_id", uid).order("event_timestamp", { ascending: false }).limit(30)),
       ]);
       return {
         personas: personas ?? [],
-        identifiers: identifiers ?? [],
+        identifiers: (identifiers ?? []).filter(isEvidenceIdentifier),
         clusters: clusters ?? [],
         clusterMembers: clusterMembers ?? [],
         entities: entities ?? [],
         scores: scores ?? [],
         crossLinks: crossLinks ?? [],
-        platformAccounts: platformAccounts ?? [],
-        personaEvents: personaEvents ?? [],
+        platformAccounts: (platformAccounts ?? []).filter(account => (identifiers ?? []).some(identifier => identifier.source?.startsWith("live:") && identifier.identifier_type === "social_profile" && identifier.identifier_value === account.profile_url)),
+        personaEvents: (personaEvents ?? []).filter(event => !["username_generated","email_generated","identifier_discovered"].includes(event.event_type)),
       };
     },
   });
@@ -330,7 +332,7 @@ export default function PersonaIntelDashboard() {
             Persona Intelligence
           </h1>
           <p className="text-xs text-muted-foreground font-mono mt-1">
-            Cross-persona analysis • Cluster intelligence • Risk assessment
+            Research clusters and connectivity heuristics from saved records. These patterns do not establish shared identity, communication or risk.
           </p>
         </div>
         <div className="flex gap-2">
@@ -396,10 +398,10 @@ export default function PersonaIntelDashboard() {
 
         {/* Side panels */}
         <div className="lg:col-span-2 space-y-4">
-          {/* High-Risk Personas */}
+          {/* Highly Connected Personas */}
           <GlassPanel className="p-4" neonLine="left">
             <h3 className="font-mono text-xs tracking-widest text-destructive mb-3 flex items-center gap-2">
-              <AlertTriangle className="h-3.5 w-3.5" /> HIGH-RISK PERSONAS ({metrics?.highRiskPersonas.length ?? 0})
+              <AlertTriangle className="h-3.5 w-3.5" /> HIGH CONNECTIVITY ({metrics?.highRiskPersonas.length ?? 0})
             </h3>
             <ScrollArea className="h-[160px]">
               {metrics?.highRiskPersonas.length ? (
@@ -422,7 +424,7 @@ export default function PersonaIntelDashboard() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground font-mono text-center py-6">No high-risk personas detected</p>
+                <p className="text-xs text-muted-foreground font-mono text-center py-6">No highly connected personas detected</p>
               )}
             </ScrollArea>
           </GlassPanel>

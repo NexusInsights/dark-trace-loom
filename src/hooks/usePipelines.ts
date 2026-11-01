@@ -1,4 +1,5 @@
-import type { Json } from "@/integrations/supabase/types";
+import { jsonValue } from "@/lib/jsonValue";
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,11 +11,11 @@ export function usePipelines() {
     queryKey: ["pipelines", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("pipelines")
         .select("*")
         .eq("user_id", user!.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },
@@ -56,13 +57,13 @@ export function useCreatePipeline() {
       schedule: string;
       tool_sequence: string[];
       target_case_id?: string | null;
-      input_params?: Record<string, Json>;
+      input_params?: Record<string, unknown>;
     }) => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("pipelines")
-        .insert([{ ...pipeline, user_id: user!.id }])
+        .insert([{ ...pipeline, input_params: jsonValue(pipeline.input_params ?? {}), user_id: user!.id }])
         .select()
-        .single();
+        .single());
       if (error) throw error;
       return data;
     },
@@ -78,7 +79,7 @@ export function useDeletePipeline() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("pipelines").delete().eq("id", id);
+      const { error } = await checkedDatabase(supabase.from("pipelines").delete().eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -93,10 +94,10 @@ export function useTogglePipeline() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("pipelines")
         .update({ enabled })
-        .eq("id", id);
+        .eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {

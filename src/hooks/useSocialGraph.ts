@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,13 +9,13 @@ export function useSocialGraphEdges() {
     queryKey: ["social_graph_edges", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("social_graph_edges")
         .select("*, source:identity_entities!social_graph_edges_source_entity_id_fkey(*), target:identity_entities!social_graph_edges_target_entity_id_fkey(*)")
         .eq("user_id", user!.id)
-        .order("confidence_score", { ascending: false });
+        .order("confidence_score", { ascending: false }));
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map(edge => ({ ...edge, relationship_type: edge.relationship_type === "communication" ? "identity_link" : edge.relationship_type === "shared_infrastructure" && !edge.source_tool ? "unverified_association" : edge.relationship_type }));
     },
   });
 }

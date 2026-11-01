@@ -1,0 +1,23 @@
+# Recoverable Insight Nexus repair archives
+
+These archives preserve local Git history while active-writer coordination is pending. **They are not integrated or tested product source. Nothing has been pushed or deployed.** This backup branch retains PR #3 source at 3a4bd4de5e531140fc827a8ea3106092bf748681 and adds archive/documentation files only.
+
+- `retained-history.bundle`: all retained repair history ending at d5de90df667ecb3cef9c237f2d332847e154b54a, including cfb2165, 0b23727, 503b43b, f1143b5 and earlier provider/image/ownership fixes and evidence.
+- `stopped-port.bundle`: the canonical repository history plus incomplete isolated port checkpoint d253b2fff08828c52e42d4dac8a91b7d745b6883, based on PR #3 head. Its checked-in checklist identifies missing work and active writer. Do not publish it as a completed repair.
+- `manifest.json`: archive SHA-256, byte counts, source heads and validation scope. A limited credential-shaped literal/service-role JWT scan found no matches; it is not a guarantee about every possible sensitive datum.
+
+Both bundles passed `git bundle verify`, were cloned without network into fresh allowed temporary directories, and passed `git fsck --full`. Restored HEADs equal the source heads above. This proves archive recoverability, not source behavior or live acceptance.
+
+The original source task “Analyze and deploy with Cloudflare” is not loaded. A different active writer, “Review tracking and scraping code” (01a19442-d436-70e0-a691-65869f46164f), is integrating Intelligence Lab, migration and Cloudflare packaging in D:/CodexProjects/github-merge-verification-2026-10-17/repos/NexusInsights__dark-trace-loom. Its task registry cwd is not assumed to identify that repository. Do not apply/push intersecting repair code before agreeing the canonical checkpoint and ownership.
+
+Explicit human permission to send that coordination message is pending under the thread tool's direct-authorization rule. Source editing stopped when the active writer was identified. No denied source-access retry followed; the newly authorized three-file owner hash read succeeded once.
+
+## Remote publication gate
+
+The connected GitHub reader subsequently observed main at **40d1520a93d6483d05a15b5ef98403780e7f9b7a** (November 1 08:14:56 UTC, gpt-engineer-app[bot]), beyond the clone's main tracking ref 3ea92ce. This confirms that the paused PR #3-based port must not be treated as current-source reconciliation. `STATUS.json` records all observed/local SHAs and pending gates.
+
+The user authorized repository backup, not deployment. The pinned `.github/workflows/check.yml` runs lint/type/tests/build on pushes and contains no deployment command. **External Cloudflare Pages/Lovable/other branch-publication hooks have not been verified.** Workflow inspection alone does not establish that a backup push is free of preview/deployment side effects. No remote branch/commit was created and no remote commit equality or new exact-SHA CI is claimed. Do not push until the existing integration's branch behavior is verified or the user explicitly approves the resulting automatic publication. Do not change service settings as a workaround.
+
+The newly observed main also contains an Intelligence container preparation workflow limited to main pushes and matching PR paths. It builds/tests an image without publishing or Cloudflare credentials. Combined commit statuses were empty. These read-only findings narrow the GitHub-workflow risk but do not prove absence of external Git-provider deployment hooks.
+
+Once ownership and the publication gate are resolved, finish selective source reconciliation, run applicable retained and aggregate checks through an authorized existing execution route, back up the tested non-production branch, and verify exact local/remote SHA equality plus CI. Existing local dependency-link creation was denied; no installation or link retry occurred.

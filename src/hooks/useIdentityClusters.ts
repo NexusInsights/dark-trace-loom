@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,11 +11,11 @@ export function useIdentityClusters() {
     queryKey: ["identity_clusters", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("identity_clusters")
         .select("*")
         .eq("user_id", user!.id)
-        .order("cluster_score", { ascending: false });
+        .order("cluster_score", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },
@@ -26,11 +27,11 @@ export function useClusterMembers(clusterId: string | null) {
     queryKey: ["cluster_members", clusterId],
     enabled: !!clusterId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("cluster_members")
         .select("*, entity:identity_entities(*)")
         .eq("cluster_id", clusterId!)
-        .order("confidence_score", { ascending: false });
+        .order("confidence_score", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },

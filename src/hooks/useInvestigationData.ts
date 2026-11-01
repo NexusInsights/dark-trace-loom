@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,10 +11,10 @@ export function useCases() {
   return useQuery({
     queryKey: ["cases"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("cases")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw new Error(`Failed to load cases: ${error.message}`);
       return data ?? [];
     },
@@ -28,11 +29,11 @@ export function useCreateCase() {
     mutationFn: async (input: { title: string; description?: string }) => {
       if (!user) throw new Error("You must be signed in");
       const validated = createCaseSchema.parse(input);
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("cases")
         .insert({ title: validated.title, description: validated.description ?? null, owner_id: user.id })
         .select()
-        .single();
+        .single());
       if (error) throw new Error(`Failed to create case: ${error.message}`);
       return data;
     },
@@ -51,11 +52,11 @@ export function useSubjects(caseId: string | null) {
     queryKey: ["subjects", caseId],
     enabled: !!caseId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("subjects")
         .select("*")
         .eq("case_id", caseId!)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw new Error(`Failed to load subjects: ${error.message}`);
       return data ?? [];
     },
@@ -68,11 +69,11 @@ export function useCreateSubject() {
   return useMutation({
     mutationFn: async (input: { case_id: string; name: string; type: string; notes?: string }) => {
       createSubjectSchema.parse(input);
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("subjects")
         .insert(input)
         .select()
-        .single();
+        .single());
       if (error) throw new Error(`Failed to add subject: ${error.message}`);
       return data;
     },
@@ -91,11 +92,11 @@ export function useArtifacts(caseId: string | null) {
     queryKey: ["artifacts", caseId],
     enabled: !!caseId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("artifacts")
         .select("*")
         .eq("case_id", caseId!)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw new Error(`Failed to load artifacts: ${error.message}`);
       return data ?? [];
     },
@@ -109,11 +110,11 @@ export function useCreateArtifact() {
     mutationFn: async (input: { case_id: string; artifact_type: string; data?: string }) => {
       if (!input.artifact_type?.trim()) throw new Error("Artifact type is required");
       if (input.data && input.data.length > 100000) throw new Error("Artifact data too large");
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("artifacts")
         .insert(input)
         .select()
-        .single();
+        .single());
       if (error) throw new Error(`Failed to attach artifact: ${error.message}`);
       return data;
     },
@@ -132,11 +133,11 @@ export function useEvents(caseId: string | null) {
     queryKey: ["events", caseId],
     enabled: !!caseId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("events")
         .select("*")
         .eq("case_id", caseId!)
-        .order("timestamp", { ascending: true });
+        .order("timestamp", { ascending: true }));
       if (error) throw new Error(`Failed to load events: ${error.message}`);
       return data ?? [];
     },
@@ -149,11 +150,11 @@ export function useCreateEvent() {
   return useMutation({
     mutationFn: async (input: { case_id: string; event_type?: string; timestamp?: string; description?: string }) => {
       createEventSchema.parse(input);
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("events")
         .insert(input)
         .select()
-        .single();
+        .single());
       if (error) throw new Error(`Failed to add event: ${error.message}`);
       return data;
     },

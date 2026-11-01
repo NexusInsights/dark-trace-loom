@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +36,7 @@ function useDashCases() {
   return useQuery({
     queryKey: ["dash", "cases"],
     queryFn: async () => {
-      const { data } = await supabase.from("cases").select("*").order("created_at", { ascending: false }).limit(5);
+      const { data } = await checkedDatabase(supabase.from("cases").select("*").order("created_at", { ascending: false }).limit(5));
       return data ?? [];
     },
   });
@@ -46,13 +47,13 @@ function useDashCounts() {
     queryKey: ["dash", "counts"],
     queryFn: async () => {
       const [cases, artifacts, toolResults, subjects, entities, links, breaches] = await Promise.all([
-        supabase.from("cases").select("*", { count: "exact", head: true }),
-        supabase.from("artifacts").select("*", { count: "exact", head: true }),
-        supabase.from("tool_results").select("*", { count: "exact", head: true }),
-        supabase.from("subjects").select("*", { count: "exact", head: true }),
-        supabase.from("identity_entities").select("*", { count: "exact", head: true }),
-        supabase.from("identity_entity_links").select("*", { count: "exact", head: true }),
-        supabase.from("breach_records").select("*", { count: "exact", head: true }),
+        checkedDatabase(supabase.from("cases").select("*", { count: "exact", head: true })),
+        checkedDatabase(supabase.from("artifacts").select("*", { count: "exact", head: true })),
+        checkedDatabase(supabase.from("tool_results").select("*", { count: "exact", head: true })),
+        checkedDatabase(supabase.from("subjects").select("*", { count: "exact", head: true })),
+        checkedDatabase(supabase.from("identity_entities").select("*", { count: "exact", head: true })),
+        checkedDatabase(supabase.from("identity_entity_links").select("*", { count: "exact", head: true })),
+        checkedDatabase(supabase.from("breach_records").select("*", { count: "exact", head: true })),
       ]);
       return {
         cases: cases.count ?? 0,
@@ -73,12 +74,12 @@ function useDashEntities() {
     queryKey: ["dash", "entities", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("identity_entities")
         .select("id, entity_type, entity_value, confidence_score, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(100));
       return data ?? [];
     },
   });
@@ -90,12 +91,12 @@ function useDashScores() {
     queryKey: ["dash", "scores", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("entity_scores")
         .select("*, entity:identity_entities!entity_scores_entity_id_fkey(entity_type, entity_value)")
         .eq("user_id", user!.id)
         .order("score", { ascending: false })
-        .limit(20);
+        .limit(20));
       return data ?? [];
     },
   });
@@ -107,12 +108,12 @@ function useDashLinks() {
     queryKey: ["dash", "links", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("identity_entity_links")
         .select("id, relationship_type, confidence_score, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(100));
       return data ?? [];
     },
   });
@@ -122,7 +123,7 @@ function useDashToolResults() {
   return useQuery({
     queryKey: ["dash", "tool_results"],
     queryFn: async () => {
-      const { data } = await supabase.from("tool_results").select("*").order("created_at", { ascending: false }).limit(5);
+      const { data } = await checkedDatabase(supabase.from("tool_results").select("*").order("created_at", { ascending: false }).limit(5));
       return data ?? [];
     },
   });
@@ -134,10 +135,10 @@ function useDashBreachStats() {
     queryKey: ["dash", "breach-stats", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("breach_records")
-        .select("severity, credential_leaked")
-        .eq("user_id", user!.id);
+        .select("severity, credential_leaked").eq("status", "exposure")
+        .eq("user_id", user!.id));
       const records = data ?? [];
       return {
         total: records.length,
@@ -156,12 +157,12 @@ function useDashActivity() {
     queryKey: ["dash", "activity", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("activity_logs")
         .select("action, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(200));
       return data ?? [];
     },
   });
@@ -385,7 +386,7 @@ export default function DashboardPage() {
         </IntelCard>
 
         {/* Risk Score Distribution */}
-        <IntelCard icon={TrendingUp} title="Risk Distribution">
+        <IntelCard icon={TrendingUp} title="Connectivity Distribution (heuristic)">
           <div className="h-[220px] mt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={riskDistribution}>

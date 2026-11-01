@@ -1,24 +1,21 @@
-import { jsonValue } from "@/lib/jsonValue";
+import { runOsint as invokeOsint } from "./runOsint";
+import { IMAGE_HASH_ALGORITHM, IMAGE_HASH_MAX_BYTES, IMAGE_HASH_MAX_PIXELS, IMAGE_HASH_MAX_SIDE } from "../../../supabase/functions/_shared/imageHash";
+import { ToolExecutionError, type ExecutionStatus } from "./executeTool";
 import { ToolDefinition } from "./types";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { edgeFunctionError } from "@/lib/edgeFunctionError";
+import { normalizePdlResult } from "@/lib/pdlResults";
 import {
   Phone, MapPin, Wifi, Shield, Link as LinkIcon, Hash, FileText, Search,
   Server, Lock, Eye, Database, AlertTriangle, Fingerprint, Globe2, Network,
   Binary, KeyRound, Radio, Scan, Code, Camera, Building2, CreditCard,
 } from "lucide-react";
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const seedOf = (s: string) => s.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-const pick = <T,>(arr: T[], seed: number) => arr[seed % arr.length];
 
-async function runOsint<T = Record<string, unknown>>(action: string, params: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("osint-tools", { body: { action, params } });
-  if (error) throw new Error(error.message || `${action} failed`);
-  if (data?.error) throw new Error(data.error);
-  return data as T;
-}
+async function runOsint<T = Record<string, unknown>>(action: string, params: Record<string, unknown>): Promise<T> { const data = await invokeOsint(action, params); return (action.startsWith("pdl-") ? normalizePdlResult(data) : data) as T; }
 
-// Save PDL lookups for later review (best-effort, ignores failures)
+// Preserve the paid provider result even when history persistence fails; surface the failure.
 async function savePdlLookup(
   lookup_type: "person-enrich" | "person-search" | "company-enrich",
   label: string,
@@ -27,36 +24,42 @@ async function savePdlLookup(
 ) {
   try {
     const { data: auth } = await supabase.auth.getUser();
-    if (!auth?.user) return;
-    await supabase.from("pdl_lookups").insert([{
+    if (!auth?.user) throw new Error("No authenticated user to save lookup history");
+    const saved = await supabase.from("pdl_lookups").insert([{
       user_id: auth.user.id,
       lookup_type,
       label: label.slice(0, 200),
-      inputs: jsonValue(inputs),
-      result: jsonValue(result),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inputs: inputs as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      result: result as any,
     }]);
-  } catch {
-    /* non-fatal */
+    if (saved.error) throw saved.error;
+  } catch (error) {
+    toast.warning(`Provider result received, but PDL history could not be saved: ${error instanceof Error ? error.message : "Database write failed"}`);
   }
 }
 
 // 1. Phone — country/calling-code resolution (real)
 const phoneLookup: ToolDefinition = {
   id: "phone-lookup", name: "Phone Number Intelligence",
-  description: "Resolve country, calling code, and timezones for a phone number",
+  description: "Parse international phone number syntax and numbering-plan region; owner and carrier require provider enrichment",
   icon: Phone, category: "Communications",
   fields: [{ key: "phone", label: "Phone Number", placeholder: "+14155552671", required: true }],
   process: async (inputs) => {
     const phone = inputs.phone.trim();
-    const data = await runOsint<{ country?: string }>("phone-lookup", { phone });
-    return { summary: `${phone} → ${data.country || "unknown country"}`, details: data, tags: ["phone", "communications"] };
+    const { parsePhoneNumberFromString } = await import("libphonenumber-js/max");
+    if (!phone.startsWith("+")) throw new Error("Include the international calling code, beginning with +");
+    const parsed = parsePhoneNumberFromString(phone);
+    if (!parsed || !parsed.isPossible()) throw new Error("The number is not possible in the current numbering plan");
+    return { summary: `${parsed.formatInternational()} — numbering-plan region ${parsed.country || "non-geographic or ambiguous"}; ownership unverified`, details: { input: phone, normalized: parsed.number, country_calling_code: parsed.countryCallingCode, numbering_plan_region: parsed.country || null, valid_pattern: parsed.isValid(), possible: parsed.isPossible(), note: "Local numbering-plan parser. This does not establish the subscriber, carrier, active service, location or registration. Use configured person enrichment for sourced contact records." }, tags: ["phone", "parser"] };
   },
 };
 
 // 2. IP Geolocation (real — ip-api.com)
 const ipGeo: ToolDefinition = {
   id: "ip-geolocation", name: "IP Geolocation",
-  description: "Resolve IP address to geolocation, ASN, ISP, proxy/hosting flags",
+  description: "IP geolocation requires an approved HTTPS provider for commercial use",
   icon: MapPin, category: "Reconnaissance",
   fields: [{ key: "ip", label: "IP Address", placeholder: "8.8.8.8", required: true }],
   process: async (inputs) => {
@@ -96,13 +99,14 @@ const portScanner: ToolDefinition = {
     const results = await Promise.all(probes.map(async (p) => {
       try {
         const r = await fetch(p.url, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(5000) });
-        return { port: p.port, reachable: true, status: r.status || "opaque", server: r.headers.get("server") };
-      } catch { return { port: p.port, reachable: false }; }
+        return { port: p.port, reachable: r.type === "opaque" || r.status === 0 ? null : true, status: r.status || "opaque", server: r.headers.get("server") };
+      } catch { return { port: p.port, reachable: null, status: "unknown" }; }
     }));
     const open = results.filter((r) => r.reachable);
     return {
-      summary: `${open.length}/${probes.length} HTTP(S) ports reachable on ${host}`,
-      details: { host, results, note: "Browser context can only probe HTTP(S). True TCP scanning requires a dedicated scanner." },
+      status: results.some(r => r.reachable === null) ? "partial" : "success",
+      summary: `${open.length}/${probes.length} HTTP(S) responses confirmed on ${host}`,
+      details: { host, results, note: "Opaque responses and browser errors cannot prove port reachability. True TCP scanning requires a dedicated scanner." },
       tags: ["port", "scan", "recon"],
     };
   },
@@ -116,9 +120,13 @@ const breachLookup: ToolDefinition = {
   fields: [{ key: "email", label: "Email or Username", placeholder: "user@example.com", required: true }],
   process: async (inputs) => {
     const query = inputs.email.trim();
-    const data = await runOsint<{ found: boolean; total: number }>("breach-lookup", { query });
+    const session = await supabase.auth.getSession();
+    if (session.error || !session.data.session) throw new Error("Sign in to query the breach provider");
+    const response = await fetch("/api/breach-preview", { method:"POST", headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.data.session.access_token}`},body:JSON.stringify({query}),signal:AbortSignal.timeout(25000) });
+    const data = await response.json();
+    if (!response.ok || data.error) throw new Error(data.error || `Provider request failed (HTTP ${response.status})`);
     return {
-      summary: data.found ? `Exposed in ${data.total} breach(es)` : "No breaches found",
+      summary: data.found ? `Provider reports ${data.total} exposure records` : "No matches returned in the LeakCheck public preview; broader exposure is unknown",
       details: data, tags: ["breach", "credentials", "threat"],
     };
   },
@@ -143,25 +151,29 @@ const urlReputation: ToolDefinition = {
 // 7. Reverse Image Hash — real pHash/dHash via edge function (decodes image bytes)
 const reverseImageHash: ToolDefinition = {
   id: "reverse-image-hash", name: "Image Perceptual Hash",
-  description: "Compute perceptual hash (pHash) and difference hash (dHash) from image bytes",
+  description: "Compute versioned perceptual hashes from a public HTTPS JPEG or static PNG",
   icon: Camera, category: "Media",
   fields: [{ key: "url", label: "Image URL", placeholder: "https://example.com/img.jpg", required: true }],
   process: async (inputs) => {
     const url = inputs.url.trim();
     const { data, error } = await supabase.functions.invoke("image-hash", { body: { url } });
-    if (error) throw new Error(error.message);
-    if (data?.status !== "success") {
-      return {
-        summary: `Image hash failed: ${data?.reason ?? "unknown"}`,
-        details: data ?? { url },
-        tags: ["image", "phash", "dhash", "error"],
-      };
-    }
-    const r = data.result as { phash: string; dhash: string; width: number; height: number; format: string; bytes: number };
+    let body = data;
+    if (error?.context instanceof Response) body = await error.context.clone().json().catch(() => body);
+    const status: ExecutionStatus = ["success", "partial", "demo", "not_configured", "error", "unknown_tool"].includes(body?.status) ? body.status : "error";
+    if (error || !["success", "partial", "demo"].includes(status)) throw new ToolExecutionError(body?.reason || error?.message || "Image hash returned an invalid outcome", status === "not_configured" || status === "unknown_tool" ? status : "error");
+    if (status === "partial" && !body?.result) return { status, summary: body.reason || "Image hash incomplete", details: body, tags: ["image", "partial"] };
+    const r = body?.result as { url: string; phash: string; dhash: string; width: number; height: number; format: string; bytes: number; algorithm?: string; sha256?: string; provenance?: { source_url?: string; phash_bits?: number; dhash_bits?: number } };
+    if (!r || r.url !== url || typeof r.phash !== "string" || !/^[a-f0-9]{16}$/.test(r.phash)
+      || typeof r.dhash !== "string" || !/^[a-f0-9]{16}$/.test(r.dhash) || !Number.isInteger(r.width) || r.width < 1 || r.width > IMAGE_HASH_MAX_SIDE
+      || !Number.isInteger(r.height) || r.height < 1 || r.height > IMAGE_HASH_MAX_SIDE || r.width * r.height > IMAGE_HASH_MAX_PIXELS
+      || !["png", "jpeg"].includes(r.format) || !Number.isInteger(r.bytes) || r.bytes < 1 || r.bytes > IMAGE_HASH_MAX_BYTES) throw new ToolExecutionError("Image hash returned invalid hash/provenance data");
+    const currentContract = r.algorithm === IMAGE_HASH_ALGORITHM && typeof r.sha256 === "string" && /^[a-f0-9]{64}$/.test(r.sha256)
+      && r.provenance?.source_url === url && r.provenance?.phash_bits === 63 && r.provenance?.dhash_bits === 64;
     return {
-      summary: `pHash: ${r.phash.slice(0, 16)}... | ${r.width}x${r.height} ${r.format}`,
-      details: { url, ...r },
-      tags: ["image", "phash", "dhash"],
+      status: currentContract || status === "demo" ? status : "partial",
+      summary: `pHash: ${r.phash} | ${r.width}x${r.height} ${r.format}${currentContract ? "" : " (algorithm/source provenance unverified)"}`,
+      details: { url, ...r, ...(!currentContract ? { warnings: ["Legacy or incomplete hash provenance. Do not compare with versioned hashes or treat as accepted case evidence."] } : {}) },
+      tags: ["image", "phash", "dhash", ...(status === "demo" ? ["demo"] : [])],
     };
   },
 };
@@ -169,7 +181,7 @@ const reverseImageHash: ToolDefinition = {
 // 8. Hash Identifier (real — pure logic)
 const hashIdentifier: ToolDefinition = {
   id: "hash-identifier", name: "Hash Identifier",
-  description: "Identify the algorithm of an unknown hash by length and prefix",
+  description: "Suggest compatible hash formats from length and prefix; the algorithm cannot be proven from format alone",
   icon: Hash, category: "Utility",
   fields: [{ key: "hash", label: "Hash", placeholder: "5d41402abc4b2a76b9719d911017c592", required: true }],
   process: async (inputs) => {
@@ -269,7 +281,7 @@ const sslInspector: ToolDefinition = {
   process: async (inputs) => {
     const host = inputs.host.trim();
     const data = await runOsint<{ grade?: string; status?: string }>("ssl-inspect", { host });
-    return { summary: `${host} → ${data.grade ? `Grade ${data.grade}` : data.status}`, details: data, tags: ["ssl", "tls", "certificate"] };
+    return { status: data.status === "READY" ? "success" : "partial", summary: `${host} → ${data.grade ? `Grade ${data.grade}` : data.status}`, details: data, tags: ["ssl", "tls", "certificate"] };
   },
 };
 
@@ -339,10 +351,10 @@ const whoisHistory: ToolDefinition = {
   },
 };
 
-// 16. Social Profile Scrape (real — Firecrawl + Lovable AI)
+// 16. Social Profile Scrape (retrieved public page + configured independent AI)
 const socialScrape: ToolDefinition = {
   id: "social-scrape", name: "Social Profile Scrape",
-  description: "Deep OSINT extraction: aliases, leaks, geo clues, opsec issues, investigative leads",
+  description: "Retrieve profile page content and review AI-generated research leads; model interpretations require source verification",
   icon: Globe2, category: "Identity",
   fields: [{ key: "url", label: "Profile URL", placeholder: "https://twitter.com/user", required: true }],
   process: async (inputs) => {
@@ -352,11 +364,12 @@ const socialScrape: ToolDefinition = {
     if (data?.error) throw new Error(data.error);
     const host = (() => { try { return new URL(u.startsWith("http") ? u : `https://${u}`).hostname; } catch { return u; } })();
     return {
-      summary: `${data.platform} profile analyzed (${host}) — exposure score ${data?.intel?.exposure_score ?? "?"}/100`,
+      summary: `${data.platform} page retrieved (${host}); AI interpretations are unverified research leads`,
       details: {
         platform: data.platform, url: data.url,
         page_title: data.page_title, page_summary: data.page_summary,
-        ...data.intel,
+        ai_interpretation: data.intel,
+        interpretation_warning: "AI output may contain errors. Do not treat inferred aliases, contacts, location, relationships or exposure scores as verified facts. Review the source page.",
         _meta: { scraped_chars: data.scraped_chars, link_count: data.link_count, scraped_via: data.scraped_via },
       },
       tags: ["social", "profile", "osint", String(data.platform || "").toLowerCase()],
@@ -534,14 +547,14 @@ const pdlPersonSearch: ToolDefinition = {
     { key: "skill", label: "Skill", placeholder: "python" },
     { key: "school", label: "School", placeholder: "stanford university" },
     { key: "size", label: "Max Results (1-25)", placeholder: "5" },
-    { key: "page", label: "Page (1+)", placeholder: "1" },
+    { key: "scroll_token", label: "Continuation Token (optional)", placeholder: "Leave empty for the first batch; use scroll_token from the previous result for the next batch" },
   ],
   process: async (inputs) => {
-    const data = await runOsint<{ total: number; returned: number; matches: unknown[]; page?: number; total_pages?: number }>("pdl-person-search", inputs);
+    const data = await runOsint<{ total: number; returned: number; matches: unknown[]; scroll_token?: string | null }>("pdl-person-search", inputs);
     const label = Object.entries(inputs).filter(([, v]) => v).map(([k, v]) => `${k}:${v}`).join(" ").slice(0, 120) || "search";
     await savePdlLookup("person-search", label, inputs, data);
     return {
-      summary: `${data.returned} of ${data.total ?? "?"} matches — page ${data.page ?? 1}${data.total_pages ? ` of ${data.total_pages}` : ""}`,
+      summary: `${data.returned} of ${data.total ?? "?"} matches${data.scroll_token ? " — more results available using the continuation token" : ""}`,
       details: data,
       tags: ["person", "pdl", "search"],
     };
@@ -556,10 +569,12 @@ const radioLookup: ToolDefinition = {
   fields: [{ key: "freq", label: "Frequency (MHz)", placeholder: "462.5625", required: true }],
   process: async (inputs) => {
     const f = parseFloat(inputs.freq.trim());
+    if (!Number.isFinite(f) || f <= 0) throw new Error("Frequency must be a positive number in MHz");
     let band = "Unknown"; let service = "Unknown";
-    if (f >= 0.003 && f < 0.03) band = "ELF";
-    else if (f < 0.3) band = "VLF";
-    else if (f < 3) band = "LF";
+    if (f < 0.003) band = "Below VLF";
+    else if (f < 0.03) band = "VLF";
+    else if (f < 0.3) band = "LF";
+    else if (f < 3) band = "MF";
     else if (f < 30) { band = "HF"; service = "Shortwave / Amateur (HF)"; }
     else if (f < 300) { band = "VHF"; service = f < 88 ? "VHF Low / Marine" : f < 108 ? "FM Broadcast" : f < 137 ? "Aviation" : f < 174 ? "VHF Marine / Amateur" : "VHF Hi"; }
     else if (f < 3000) { band = "UHF"; service = f < 470 ? "UHF Land Mobile / GMRS / Amateur" : f < 698 ? "TV / Public Safety" : f < 960 ? "Cellular" : f < 1700 ? "GPS / DAB" : "UHF Hi"; }

@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -5,6 +6,7 @@ import { runPersonaDiscovery, PersonaInput } from "@/lib/personaDiscoveryEngine"
 import { personaDiscoverySchema } from "@/lib/validations";
 import { checkRateLimit } from "@/lib/rateLimiter";
 import { useState } from "react";
+import { isEvidenceIdentifier } from "@/lib/profileLookup";
 
 export function usePersonas() {
   const { user } = useAuth();
@@ -12,11 +14,11 @@ export function usePersonas() {
     queryKey: ["personas", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("personas")
         .select("*")
         .eq("user_id", user!.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },
@@ -28,13 +30,13 @@ export function usePersonaIdentifiers(personaId: string | null) {
     queryKey: ["persona_identifiers", personaId],
     enabled: !!personaId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("persona_identifiers")
         .select("*")
         .eq("persona_id", personaId!)
-        .order("confidence_score", { ascending: false });
+        .order("confidence_score", { ascending: false }));
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).filter(isEvidenceIdentifier);
     },
   });
 }
@@ -60,10 +62,13 @@ export function usePersonaDiscovery() {
         throw new Error(`Rate limited. Try again in ${Math.ceil(rl.retryAfterMs / 1000)}s`);
       }
 
-      return runPersonaDiscovery(user.id, result.data, setProgress);
+      return runPersonaDiscovery(user.id, { ...result.data, enrich: input.enrich === true, personaId: input.personaId, searchProfiles: input.searchProfiles }, setProgress);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["personas"] });
+      qc.invalidateQueries({ queryKey: ["persona_identifiers"] });
+      qc.invalidateQueries({ queryKey: ["persona_public_profiles"] });
+      qc.invalidateQueries({ queryKey: ["person-investigation-records"] });
       setProgress(null);
     },
     onError: () => setProgress(null),
@@ -76,7 +81,7 @@ export function useDeletePersona() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (personaId: string) => {
-      const { error } = await supabase.from("personas").delete().eq("id", personaId);
+      const { error } = await checkedDatabase(supabase.from("personas").delete().eq("id", personaId));
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["personas"] }),

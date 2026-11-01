@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { usePipelines, usePipelineRuns, useCreatePipeline, useDeletePipeline, useTogglePipeline } from "@/hooks/usePipelines";
 import { executePipeline, getPipelineTemplates } from "@/lib/pipelineEngine";
+import { pipelineNotice } from "@/lib/toolOutcome";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -26,6 +27,9 @@ const SCHEDULE_OPTIONS = [
 
 const STATUS_CONFIG: Record<string, { icon: typeof CheckCircle2; color: string; label: string }> = {
   completed: { icon: CheckCircle2, color: "text-green-400", label: "Completed" },
+  partial: { icon: AlertTriangle, color: "text-yellow-400", label: "Partial" },
+  demo: { icon: AlertTriangle, color: "text-yellow-400", label: "DEMO" },
+  not_configured: { icon: AlertTriangle, color: "text-muted-foreground", label: "Not configured" },
   running: { icon: Loader2, color: "text-primary", label: "Running" },
   failed: { icon: XCircle, color: "text-destructive", label: "Failed" },
   pending: { icon: Clock, color: "text-muted-foreground", label: "Pending" },
@@ -49,14 +53,18 @@ export default function PipelinesPage() {
   const [description, setDescription] = useState("");
   const [schedule, setSchedule] = useState("manual");
   const [toolSequence, setToolSequence] = useState("");
+  const [inputParams, setInputParams] = useState("{}");
 
   const templates = getPipelineTemplates();
 
   const handleCreate = () => {
     if (!name.trim()) return;
     const tools = toolSequence.split(",").map((t) => t.trim()).filter(Boolean);
+    let params: Record<string,unknown>;
+    try { params = JSON.parse(inputParams); if (!params || typeof params !== "object" || Array.isArray(params)) throw new Error(); }
+    catch { toast.error("Inputs must be a JSON object"); return; }
     createPipeline.mutate(
-      { name, description, schedule, tool_sequence: tools },
+      { name, description, schedule: "manual", tool_sequence: tools, input_params: params },
       {
         onSuccess: () => {
           setShowCreate(false);
@@ -67,12 +75,7 @@ export default function PipelinesPage() {
   };
 
   const handleCreateFromTemplate = (tpl: typeof templates[0]) => {
-    createPipeline.mutate({
-      name: tpl.name,
-      description: tpl.description,
-      schedule: tpl.schedule,
-      tool_sequence: tpl.tool_sequence,
-    });
+    setName(tpl.name); setDescription(tpl.description || ""); setSchedule("manual"); setToolSequence(tpl.tool_sequence.join(", ")); setInputParams(JSON.stringify(tpl.input_params || {}, null, 2)); setShowCreate(true);
   };
 
   const handleRun = async (pipelineId: string) => {
@@ -85,9 +88,9 @@ export default function PipelinesPage() {
       qc.invalidateQueries({ queryKey: ["pipeline_runs"] });
       qc.invalidateQueries({ queryKey: ["pipelines"] });
       qc.invalidateQueries({ queryKey: ["identity_entities"] });
-      toast.success(
-        `Pipeline complete: ${result.artifactsCreated} artifacts created, ${result.entitiesLinked} entities linked`
-      );
+      const notice = pipelineNotice(result);
+      toast[notice.kind](notice.message);
+      if (result.warning) toast.warning(result.warning);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Pipeline failed");
     } finally {
@@ -103,7 +106,7 @@ export default function PipelinesPage() {
           <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Automation</span>
           <h1 className="text-2xl font-display font-bold tracking-tight mt-1">OSINT Pipelines</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Automated intelligence gathering workflows that discover and link entities across investigations.
+            Run a sequence of real tools with explicit inputs. Execution is manual; no background scheduler is configured.
           </p>
         </div>
         <Button variant="neon" size="sm" className="gap-2" onClick={() => setShowCreate(!showCreate)}>
@@ -120,7 +123,7 @@ export default function PipelinesPage() {
             <Select value={schedule} onValueChange={setSchedule}>
               <SelectTrigger className="bg-secondary/50"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {SCHEDULE_OPTIONS.map((o) => (
+                {SCHEDULE_OPTIONS.filter(o => o.value === "manual").map((o) => (
                   <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                 ))}
               </SelectContent>
@@ -134,12 +137,13 @@ export default function PipelinesPage() {
             rows={2}
           />
           <Input
-            placeholder="Tool sequence (comma-separated): username_search, social_analyzer, breach_search"
+            placeholder="Tool IDs: username-search, dns-query, breach-lookup"
             value={toolSequence}
             onChange={(e) => setToolSequence(e.target.value)}
             className="bg-secondary/50 font-mono text-xs"
           />
           <div className="flex justify-end">
+            <Textarea aria-label="Pipeline inputs" value={inputParams} onChange={e => setInputParams(e.target.value)} placeholder={'{"username":"octocat"}'} className="font-mono text-xs mr-3" rows={3} />
             <Button variant="neon" size="sm" className="gap-2" onClick={handleCreate} disabled={!name.trim() || createPipeline.isPending}>
               {createPipeline.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Workflow className="h-3.5 w-3.5" />}
               CREATE
@@ -194,7 +198,7 @@ export default function PipelinesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-display font-semibold text-sm text-foreground truncate">{p.name}</span>
-                      <Badge variant="outline" className="text-[9px] font-mono">{p.schedule}</Badge>
+                      <Badge variant="outline" className="text-[9px] font-mono">{p.schedule === "manual" ? "Manual execution" : `${p.schedule} preference · no scheduler`}</Badge>
                       {!p.enabled && <Badge variant="secondary" className="text-[9px]">DISABLED</Badge>}
                     </div>
                     {p.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.description}</p>}
@@ -281,7 +285,7 @@ export default function PipelinesPage() {
                   <div className="flex items-center gap-3 text-xs">
                     <Icon className={`h-3.5 w-3.5 ${cfg.color} ${run.status === "running" ? "animate-spin" : ""}`} />
                     <span className="font-mono font-semibold text-foreground">{pipeline?.name ?? "Unknown"}</span>
-                    <span className={`font-mono text-[10px] ${cfg.color}`}>{cfg.label}</span>
+                    <span className={`font-mono text-[10px] ${cfg.color}`}>{Array.isArray(run.results) && run.results.some(result => result && typeof result === "object" && !Array.isArray(result) && ["sourced-v1", "sourced-v2"].includes(String(result.execution_version))) ? cfg.label : `Legacy ${cfg.label} · unverified`}</span>
                     {run.started_at && (
                       <span className="font-mono text-[10px] text-muted-foreground ml-auto">
                         {format(new Date(run.started_at), "MMM d, HH:mm:ss")}
@@ -298,6 +302,10 @@ export default function PipelinesPage() {
                       </span>
                     )}
                   </div>
+                  {Array.isArray(run.results) && run.results.map((step, index) => {
+                    if (!step || typeof step !== "object" || Array.isArray(step)) return null;
+                    return <p key={index} className="mt-1 text-xs text-muted-foreground">{String(step.tool ?? step.toolId ?? "Tool")}: {String(step.status ?? "unknown")} · {String(step.summary ?? step.reason ?? "")}</p>;
+                  })}
                 </GlassPanel>
               );
             })}

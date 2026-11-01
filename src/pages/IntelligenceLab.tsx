@@ -29,9 +29,9 @@ function Result({ outcome }: { outcome?: Outcome }) {
 }
 
 export default function IntelligenceLab() {
-  const { user } = useAuth();
-  const { plan, loading: subscriptionLoading } = useSubscription();
-  const { dailyTotal, loading: usageLoading, refresh } = useUsageTracking();
+  const { user, loading: authLoading } = useAuth();
+  const { plan, loading: subscriptionLoading, error: subscriptionError, refreshSubscription } = useSubscription();
+  const { dailyTotal, loading: usageLoading, error: usageError, refresh } = useUsageTracking();
   const [busy, setBusy] = useState<string | null>(null);
   const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
   const [fingerprintConsent, setFingerprintConsent] = useState(false);
@@ -49,7 +49,9 @@ export default function IntelligenceLab() {
   const training = useRef<AbortController | null>(null);
   const cookieIntent = useRef(0);
   const mounted = useRef(true);
-  const locked = Boolean(busy) || subscriptionLoading || usageLoading;
+  const accessError = subscriptionError || usageError;
+  const accessLoading = authLoading || subscriptionLoading || usageLoading;
+  const locked = Boolean(busy) || accessLoading || Boolean(accessError);
   const maxRuns = getPlanPermissions(plan).maxToolRunsPerDay;
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function IntelligenceLab() {
 
   async function authorize(id: string) {
     if (!user) throw new Error("Sign in to use intelligence tools.");
+    if (accessLoading || accessError) throw new Error(accessError || "Account access is still being verified.");
     const gate = checkToolExecutionGate(plan, dailyTotal);
     if (!gate.allowed) throw new Error(gate.reason);
     const { data, error } = await supabase.from("tool_permissions").select("allowed")
@@ -148,6 +151,17 @@ export default function IntelligenceLab() {
         <h1 className="text-2xl font-display font-bold">Intelligence Lab</h1>
         <p className="text-sm text-muted-foreground">Run browser collection, sourced lookups and a labeled outcome classifier. Every operation starts with your action.</p>
         <p className="text-xs text-muted-foreground">Tool use today: {dailyTotal}{maxRuns === -1 ? "" : ` / ${maxRuns}`}. Provider tools use the authenticated backend and configured intelligence worker.</p>
+        {accessLoading && <p role="status" className="text-sm text-muted-foreground">Checking account access…</p>}
+        {accessError && <div className="space-y-2">
+          <p role="alert" className="text-sm text-destructive">Account access verification failed: {accessError}</p>
+          <Button variant="outline" disabled={accessLoading || Boolean(busy)} onClick={() => {
+            void Promise.allSettled([refreshSubscription(), refresh()]).then((results) => {
+              const failure = results.find((result) => result.status === "rejected");
+              if (failure?.status === "rejected") show("access", { error: failure.reason instanceof Error ? failure.reason.message : "Account access could not be refreshed." });
+            });
+          }}>Refresh account access</Button>
+          <Result outcome={outcomes.access} />
+        </div>}
       </header>
 
       <div className="grid gap-4 md:grid-cols-2">

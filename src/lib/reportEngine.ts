@@ -1,4 +1,6 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
+import { encodeReport } from "./reportFormats";
 
 export type ReportType = "investigation-summary" | "evidence-list" | "timeline" | "subject-profile";
 export type ReportFormat = "json" | "pdf" | "docx";
@@ -48,24 +50,26 @@ const REPORT_LABELS: Record<ReportType, string> = {
 /** Fetch all case data needed for report generation */
 async function fetchCaseData(caseId: string): Promise<ReportData> {
   const [caseRes, subjectsRes, artifactsRes, eventsRes] = await Promise.all([
-    supabase.from("cases").select("*").eq("id", caseId).single(),
-    supabase.from("subjects").select("*").eq("case_id", caseId).order("created_at"),
-    supabase.from("artifacts").select("*").eq("case_id", caseId).order("created_at"),
-    supabase.from("events").select("*").eq("case_id", caseId).order("timestamp", { ascending: true }),
+    checkedDatabase(supabase.from("cases").select("*").eq("id", caseId).single()),
+    checkedDatabase(supabase.from("subjects").select("*").eq("case_id", caseId).order("created_at")),
+    checkedDatabase(supabase.from("artifacts").select("*").eq("case_id", caseId).order("created_at")),
+    checkedDatabase(supabase.from("events").select("*").eq("case_id", caseId).order("timestamp", { ascending: true })),
   ]);
 
   if (caseRes.error) throw new Error(`Failed to load case: ${caseRes.error.message}`);
+  for (const result of [subjectsRes, artifactsRes, eventsRes]) if (result.error) throw new Error(`Report data could not be loaded: ${result.error.message}`);
   const caseData = caseRes.data;
 
   // Fetch evidence logs for artifacts
   const artifactIds = (artifactsRes.data ?? []).map((a) => a.id);
   let evidenceLogs: Array<{ artifact_id: string; action: string; hash: string; timestamp: string }> = [];
   if (artifactIds.length > 0) {
-    const { data } = await supabase
+    const { data, error } = await checkedDatabase(supabase
       .from("evidence_logs")
       .select("artifact_id, action, hash, timestamp")
       .in("artifact_id", artifactIds)
-      .order("timestamp");
+      .order("timestamp"));
+    if (error) throw new Error(`Evidence logs could not be loaded: ${error.message}`);
     evidenceLogs = data ?? [];
   }
 
@@ -167,7 +171,7 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
       });
       break;
 
-    case "timeline": {
+    case "timeline":
       lines.push(`## Event Timeline (${data.events.length} events)`);
       lines.push("");
       if (data.events.length === 0) {
@@ -182,13 +186,12 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
       }
 
       lines.push(`## Artifact Timeline`);
-      const sorted = [...data.artifacts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      { const sorted = [...data.artifacts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       sorted.forEach((a) => {
         lines.push(`- ${dt(a.createdAt)} — [${a.type}] artifact \`${a.id.slice(0, 8)}\``);
-      });
+      }); }
       break;
 
-    }
     case "subject-profile":
       lines.push(`## Subject Profiles (${data.subjects.length})`);
       lines.push("");
@@ -224,75 +227,6 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
 }
 
 /** Convert markdown to a minimal HTML document for PDF rendering */
-function markdownToHtml(md: string): string {
-  let html = md
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/_(.+?)_/g, "<em>$1</em>")
-    .replace(/`(.+?)`/g, '<code style="background:#1a1a2e;padding:1px 4px;border-radius:3px;font-size:11px;">$1</code>')
-    .replace(/^> (.+)$/gm, '<blockquote style="border-left:3px solid #4a5568;padding-left:12px;color:#a0aec0;margin:8px 0;">$1</blockquote>')
-    .replace(/^- (.+)$/gm, "<li>$1</li>")
-    .replace(/^---$/gm, "<hr/>")
-    .replace(/\n{2,}/g, "<br/><br/>")
-    .replace(/\n/g, "<br/>");
-
-  // Wrap table rows
-  html = html.replace(/\|(.+)\|/g, (match) => {
-    const cells = match.split("|").filter(Boolean).map((c) => c.trim());
-    if (cells.every((c) => /^-+$/.test(c))) return "";
-    const tag = match.includes("---") ? "th" : "td";
-    const row = cells.map((c) => `<${tag} style="padding:6px 10px;border:1px solid #2d3748;text-align:left;font-size:11px;">${c}</${tag}>`).join("");
-    return `<tr>${row}</tr>`;
-  });
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8"/>
-<style>
-  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #e2e8f0; background: #0d1117; padding: 40px; font-size: 13px; line-height: 1.6; max-width: 800px; margin: 0 auto; }
-  h1 { color: #63b3ed; font-size: 24px; border-bottom: 2px solid #2d3748; padding-bottom: 8px; }
-  h2 { color: #90cdf4; font-size: 18px; margin-top: 24px; }
-  h3 { color: #bee3f8; font-size: 15px; }
-  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-  li { margin: 4px 0; margin-left: 16px; }
-  hr { border: none; border-top: 1px solid #2d3748; margin: 24px 0; }
-  strong { color: #f7fafc; }
-</style>
-</head>
-<body>${html}</body>
-</html>`;
-}
-
-/** Generate DOCX-compatible HTML (simplified XML) */
-function generateDocxContent(md: string): string {
-  // Use a simplified HTML that Word can open
-  const htmlBody = md
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
-    .replace(/`(.+?)`/g, "<code>$1</code>")
-    .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
-    .replace(/^- (.+)$/gm, "<li>$1</li>")
-    .replace(/^---$/gm, "<hr/>")
-    .replace(/\n/g, "<br/>");
-
-  return `<html xmlns:o="urn:schemas-microsoft-com:office:office"
-xmlns:w="urn:schemas-microsoft-com:office:word"
-xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="utf-8"/><title>Report</title>
-<style>body{font-family:Calibri,sans-serif;font-size:11pt;line-height:1.5;}
-h1{font-size:18pt;color:#1a365d;}h2{font-size:14pt;color:#2c5282;}h3{font-size:12pt;color:#2b6cb0;}
-table{border-collapse:collapse;width:100%;}td,th{border:1px solid #ccc;padding:4px 8px;font-size:10pt;}
-code{font-family:Consolas,monospace;background:#f0f0f0;padding:1px 3px;}
-blockquote{border-left:3px solid #ccc;padding-left:10px;color:#555;}</style>
-</head><body>${htmlBody}</body></html>`;
-}
-
 /** Main report generation function */
 export async function generateReport(
   caseId: string,
@@ -306,7 +240,7 @@ export async function generateReport(
   data.reportType = reportType;
 
   onProgress?.("Generating report content...");
-  let content: string;
+  let content: string | Blob;
   let mimeType: string;
   let extension: string;
 
@@ -318,16 +252,16 @@ export async function generateReport(
       break;
     case "pdf": {
       const md = generateMarkdown(data, reportType);
-      content = markdownToHtml(md);
-      mimeType = "text/html";
-      extension = "html"; // HTML file styled for print-to-PDF
+      content = await encodeReport(md, "pdf");
+      mimeType = "application/pdf";
+      extension = "pdf";
       break;
     }
     case "docx": {
       const md = generateMarkdown(data, reportType);
-      content = generateDocxContent(md);
+      content = await encodeReport(md, "docx");
       mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-      extension = "doc";
+      extension = "docx";
       break;
     }
   }
@@ -337,15 +271,15 @@ export async function generateReport(
   const filePath = `${userId}/${caseId}/${fileName}`;
 
   onProgress?.("Uploading to storage...");
-  const blob = new Blob([content], { type: mimeType });
-  const { error: uploadError } = await supabase.storage
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+  const { error: uploadError } = await checkedDatabase(supabase.storage
     .from("reports")
-    .upload(filePath, blob, { contentType: mimeType, upsert: true });
+    .upload(filePath, blob, { contentType: mimeType, upsert: true }));
 
   if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
   onProgress?.("Saving report metadata...");
-  const { data: report, error: insertError } = await supabase
+  const { data: report, error: insertError } = await checkedDatabase(supabase
     .from("reports")
     .insert({
       case_id: caseId,
@@ -362,14 +296,15 @@ export async function generateReport(
       },
     })
     .select()
-    .single();
+    .single());
 
   if (insertError) throw new Error(`Metadata save failed: ${insertError.message}`);
 
   // Generate signed download URL
-  const { data: urlData } = await supabase.storage
+  const { data: urlData, error: urlError } = await checkedDatabase(supabase.storage
     .from("reports")
-    .createSignedUrl(filePath, 3600);
+    .createSignedUrl(filePath, 3600));
+  if (urlError || !urlData?.signedUrl) throw new Error(`Report saved, but download could not be authorized: ${urlError?.message || "No URL returned"}`);
 
   onProgress?.("Complete!");
   return {
@@ -380,9 +315,10 @@ export async function generateReport(
 
 /** Get download URL for an existing report */
 export async function getReportDownloadUrl(filePath: string): Promise<string> {
-  const { data } = await supabase.storage
+  const { data, error } = await checkedDatabase(supabase.storage
     .from("reports")
-    .createSignedUrl(filePath, 3600);
+    .createSignedUrl(filePath, 3600));
+  if (error || !data?.signedUrl) throw new Error(error?.message || "No download URL returned");
   return data?.signedUrl ?? "";
 }
 

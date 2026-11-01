@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,12 +11,12 @@ export function useSimilarityScores() {
     queryKey: ["similarity_scores", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("similarity_scores")
         .select("*")
         .eq("user_id", user!.id)
         .order("similarity_score", { ascending: false })
-        .limit(100);
+        .limit(100));
       if (error) throw error;
       return data ?? [];
     },

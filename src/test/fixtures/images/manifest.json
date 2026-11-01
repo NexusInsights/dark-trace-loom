@@ -1,0 +1,25 @@
+{
+  "scope": "Locally generated 2x2 synthetic pixels. GPS 0,0 deliberately embedded in EXIF, not a real location or photograph.",
+  "files": [
+    {
+      "name": "no-exif.jpg",
+      "bytes": 268,
+      "sha256": "1191e170ebe4a0c7b613deab9ce9ca09d78b7cbbd70432d2f78575914ab9501e"
+    },
+    {
+      "name": "container.png",
+      "bytes": 95,
+      "sha256": "9b256c2b68a863a3e62754d8937734abd8647ab8a7feefe3372f8dbe8c6ab1cc"
+    },
+    {
+      "name": "zero-gps.jpg",
+      "bytes": 406,
+      "sha256": "765658786b8f958df99e7db76a991a04d261c372229ff285718d86568688fe29"
+    },
+    {
+      "name": "invalid-gps.jpg",
+      "bytes": 406,
+      "sha256": "dd2533751c3bf3aac26a288b204dd180d2a6b5e85b1472a0909940b2293fdb38"
+    }
+  ]
+}

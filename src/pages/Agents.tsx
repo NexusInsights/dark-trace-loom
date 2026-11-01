@@ -7,7 +7,7 @@ import { allTools } from "@/components/tools/toolDefinitions";
 import { toast } from "sonner";
 import {
   Bot, Play, Loader2, CheckCircle, XCircle, Clock, Tag, ArrowRight, Plus,
-  Zap, ChevronDown, ChevronUp,
+  Zap, ChevronDown, ChevronUp, AlertTriangle,
 } from "lucide-react";
 
 export default function AgentsPage() {
@@ -43,6 +43,8 @@ export default function AgentsPage() {
     switch (status) {
       case "completed": return <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />;
       case "failed": return <XCircle className="h-3.5 w-3.5 text-destructive" />;
+      case "error": return <XCircle className="h-3.5 w-3.5 text-destructive" />;
+      case "partial": case "demo": case "not_configured": case "unknown_tool": return <AlertTriangle className="h-3.5 w-3.5 text-yellow-400" />;
       case "running": return <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />;
       default: return <Clock className="h-3.5 w-3.5 text-muted-foreground" />;
     }
@@ -55,11 +57,12 @@ export default function AgentsPage() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Automation</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Investigation Agents</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Automated OSINT pipelines that run tools in sequence and save findings to your cases.
+          Run real tools in sequence with explicit inputs and saved case evidence. Execution continues while this page is open; failed or unavailable tools are reported as failures.
         </p>
       </div>
 
       {/* Agent Selection */}
+      {agents.length > 0 && <Button variant="outline" disabled={createAgent.isPending || agents.some(agent => agent.name === "Public Profile Lookup")} onClick={() => createAgent.mutate({name:"Public Profile Lookup",description:"Retrieve sourced public account records for an exact username",tool_sequence:["username-search"]})}>Add public profile lookup agent</Button>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {agentsLoading ? (
           <div className="col-span-3 flex justify-center py-10">
@@ -79,9 +82,9 @@ export default function AgentsPage() {
               disabled={createAgent.isPending}
               onClick={() =>
                 createAgent.mutate({
-                  name: "New Agent",
-                  description: "Describe what this agent does",
-                  tool_sequence: [],
+                  name: "Public Profile Lookup",
+                  description: "Retrieve sourced public account records for an exact username",
+                  tool_sequence: ["username-search"],
                 })
               }
             >
@@ -146,10 +149,11 @@ export default function AgentsPage() {
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. john_doe_42, example.com, or paste email headers"
+                placeholder={'Exact target, or JSON inputs such as {"username":"octocat","domain":"example.com"}'}
                 maxLength={2000}
                 className="w-full bg-secondary border border-border rounded px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
+              <p className="text-xs text-muted-foreground">A single target is used only for tools with one required input. For multiple tools, use JSON with their named fields or objects keyed by tool ID. Each failure is reported; this run does not execute in the background after the page closes.</p>
             </div>
             <div className="space-y-1">
               <label className="font-mono text-[10px] tracking-widest text-muted-foreground">LINK TO CASE (optional)</label>
@@ -279,7 +283,7 @@ export default function AgentsPage() {
                     run.status === "completed" ? "intel-tag-blue" : 
                     run.status === "failed" ? "intel-tag-purple" : "intel-tag-blue"
                   }`}>
-                    {run.status.toUpperCase()}
+                    {inputData?.execution_version === "sourced-v1" ? run.status.toUpperCase() : `LEGACY ${run.status.toUpperCase()} · UNVERIFIED`}
                   </span>
                   {isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
                 </button>

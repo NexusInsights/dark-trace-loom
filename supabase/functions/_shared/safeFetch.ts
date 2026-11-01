@@ -1,156 +1,80 @@
-// Hardened fetch helper for OSINT dispatchers.
-// - Blocks SSRF to private IP ranges via DNS resolution
-// - 10s timeout, 5MB body cap, max 3 redirects
-// - HTTPS only by default; opt in via { allowHttp: true } for port probes
-
-const PRIVATE_V4: Array<[number, number, number]> = [
-  // [octet0, mask0_value, prefix_octets_to_match]
-];
-
-function ipv4ToInt(ip: string): number | null {
-  const parts = ip.split(".");
-  if (parts.length !== 4) return null;
-  let n = 0;
-  for (const p of parts) {
-    const v = Number(p);
-    if (!Number.isInteger(v) || v < 0 || v > 255) return null;
-    n = (n << 8) + v;
+// Bound network requests and reject private destinations before every redirect.
+// DNS validation does not pin the socket address; fixed provider URLs are preferred.
+function ipv4Parts(ip: string): number[] | null {
+  if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) return null;
+  const p = ip.split(".").map(Number);
+  return p.every(v => v >= 0 && v <= 255) ? p : null;
+}
+export function isBlockedAddress(address: string): boolean {
+  const ip = address.replace(/^\[|\]$/g, "").toLowerCase();
+  const v4 = ipv4Parts(ip);
+  if (v4) {
+    const [a, b] = v4;
+    return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 172 && b >= 16 && b <= 31)
+      || (a === 192 && b === 168) || (a === 169 && b === 254) || (a === 100 && b >= 64 && b <= 127)
+      || (a === 198 && (b === 18 || b === 19));
   }
-  return n >>> 0;
+  if (!ip.includes(":")) return true; // malformed DNS answers fail closed
+  const parts = ip.split("::");
+  if (parts.length > 2) return true;
+  const parse = (s: string) => s ? s.split(":").flatMap(part => {
+    const dotted = ipv4Parts(part);
+    return dotted ? [(dotted[0] << 8) | dotted[1], (dotted[2] << 8) | dotted[3]] : [parseInt(part, 16)];
+  }) : [];
+  const left = parse(parts[0]), right = parts.length === 2 ? parse(parts[1]) : [];
+  const words = parts.length === 2 ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill(0), ...right] : left;
+  if (words.length !== 8 || words.some(v => !Number.isInteger(v) || v < 0 || v > 65535)) return true;
+  if (words.slice(0, 5).every(v => v === 0) && (words[5] === 0xffff || words[5] === 0))
+    return isBlockedAddress([words[6] >> 8, words[6] & 255, words[7] >> 8, words[7] & 255].join("."));
+  return words.every(v => v === 0) || (words.slice(0, 7).every(v => v === 0) && words[7] === 1)
+    || (words[0] & 0xfe00) === 0xfc00 || (words[0] & 0xffc0) === 0xfe80
+    || (words[0] & 0xff00) === 0xff00;
 }
-
-function isPrivateV4(ip: string): boolean {
-  const n = ipv4ToInt(ip);
-  if (n === null) return false;
-  // 10.0.0.0/8
-  if ((n & 0xff000000) === 0x0a000000) return true;
-  // 172.16.0.0/12
-  if ((n & 0xfff00000) === 0xac100000) return true;
-  // 192.168.0.0/16
-  if ((n & 0xffff0000) === 0xc0a80000) return true;
-  // 127.0.0.0/8
-  if ((n & 0xff000000) === 0x7f000000) return true;
-  // 169.254.0.0/16
-  if ((n & 0xffff0000) === 0xa9fe0000) return true;
-  // 0.0.0.0/8
-  if ((n & 0xff000000) === 0x00000000) return true;
-  return false;
-}
-
-function isPrivateV6(ip: string): boolean {
-  const lower = ip.toLowerCase();
-  if (lower === "::1" || lower === "::") return true;
-  if (lower.startsWith("fe80:") || lower.startsWith("fe80::")) return true;
-  // fc00::/7  -> first byte 0xfc or 0xfd
-  if (/^f[cd][0-9a-f]{2}:/.test(lower)) return true;
-  return false;
-}
-
-async function resolveHost(hostname: string): Promise<string[]> {
-  // If hostname is already an IP literal, return it directly.
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) return [hostname];
-  if (hostname.includes(":")) return [hostname.replace(/^\[|\]$/g, "")];
-
-  const ips: string[] = [];
-  for (const type of ["A", "AAAA"]) {
-    try {
-      const r = await fetch(
-        `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(hostname)}&type=${type}`,
-        { headers: { Accept: "application/dns-json" } },
-      );
-      const j = await r.json();
-      for (const a of j.Answer ?? []) {
-        if (typeof a.data === "string") ips.push(a.data);
-      }
-    } catch {
-      // ignore; we'll fail closed below if no IPs resolve
-    }
-  }
-  return ips;
-}
-
-export interface SafeFetchOptions extends RequestInit {
-  allowHttp?: boolean;
-  maxBytes?: number;
-  timeoutMs?: number;
-  maxRedirects?: number;
-}
-
+export interface SafeFetchOptions extends RequestInit { allowHttp?: boolean; maxBytes?: number; timeoutMs?: number; maxRedirects?: number; }
 export async function safeFetch(url: string, options: SafeFetchOptions = {}): Promise<Response> {
-  const {
-    allowHttp = false,
-    maxBytes = 5 * 1024 * 1024,
-    timeoutMs = 10_000,
-    maxRedirects = 3,
-    headers,
-    ...rest
-  } = options;
-
-  let currentUrl = url;
-  let hops = 0;
-
-  while (true) {
-    const u = new URL(currentUrl);
-    if (u.protocol !== "https:" && !(allowHttp && u.protocol === "http:")) {
-      throw new Error(`Blocked non-HTTPS URL: ${u.protocol}//${u.hostname}`);
+  const { allowHttp = false, maxBytes = 5 * 1024 * 1024, timeoutMs = 10000, maxRedirects = 3, ...rest } = options;
+  const signal = AbortSignal.timeout(timeoutMs);
+  const headers = new Headers(rest.headers);
+  if (!headers.has("User-Agent")) headers.set("User-Agent", "InsightNexus-OSINT/1.0");
+  let current = new URL(url);
+  for (let hops = 0; ; hops++) {
+    if (current.username || current.password) throw new Error("URL credentials are not allowed");
+    if (current.protocol !== "https:" && !(allowHttp && current.protocol === "http:")) throw new Error("Blocked non-HTTPS URL");
+    const host = current.hostname.replace(/^\[|\]$/g, "");
+    let addresses = host.includes(":") || ipv4Parts(host) ? [host] : [];
+    if (!addresses.length) {
+      const answers = await Promise.all(["A", "AAAA"].map(async type => {
+        const r = await fetch("https://cloudflare-dns.com/dns-query?name=" + encodeURIComponent(host) + "&type=" + type, { headers: { Accept: "application/dns-json" }, redirect: "error", signal });
+        if (!r.ok) throw new Error("DNS resolver HTTP " + r.status);
+        const data = await r.json();
+        return (data.Answer ?? []).filter((a: { type: number }) => a.type === 1 || a.type === 28).map((a: { data: string }) => a.data);
+      }));
+      addresses = answers.flat();
     }
-
-    const ips = await resolveHost(u.hostname);
-    if (ips.length === 0) {
-      throw new Error(`DNS resolution failed for ${u.hostname}`);
+    if (!addresses.length || addresses.some(isBlockedAddress)) throw new Error("Blocked private or unresolved destination");
+    const response = await fetch(current.toString(), { ...rest, headers, redirect: "manual", signal });
+    const location = response.headers.get("location");
+    if (response.status >= 300 && response.status < 400 && location && rest.redirect !== "manual") {
+      await response.body?.cancel();
+      if (hops >= maxRedirects) throw new Error("Too many redirects");
+      const next = new URL(location, current);
+      if (next.origin !== current.origin && [...headers.keys()].some(key => /authorization|cookie|api.?key|token/i.test(key)))
+        throw new Error("Blocked credential forwarding across origins");
+      current = next; continue;
     }
-    for (const ip of ips) {
-      if (ip.includes(".") ? isPrivateV4(ip) : isPrivateV6(ip)) {
-        throw new Error(`Blocked private IP ${ip} for ${u.hostname}`);
-      }
+    if (!response.body) return response;
+    const reader = response.body.getReader(), chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) { await reader.cancel(); throw new Error("Response body exceeded " + maxBytes + " bytes"); }
+      chunks.push(value);
     }
-
-    const mergedHeaders = new Headers(headers);
-    if (!mergedHeaders.has("User-Agent")) {
-      mergedHeaders.set("User-Agent", "InsightNexus-OSINT/1.0");
-    }
-
-    const res = await fetch(currentUrl, {
-      ...rest,
-      headers: mergedHeaders,
-      redirect: "manual",
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-
-    if (res.status >= 300 && res.status < 400 && res.headers.get("location")) {
-      hops++;
-      if (hops > maxRedirects) throw new Error(`Exceeded ${maxRedirects} redirects`);
-      currentUrl = new URL(res.headers.get("location")!, currentUrl).toString();
-      continue;
-    }
-
-    // Enforce body size cap by streaming.
-    if (res.body) {
-      const reader = res.body.getReader();
-      const chunks: Uint8Array[] = [];
-      let total = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        total += value.byteLength;
-        if (total > maxBytes) {
-          await reader.cancel();
-          throw new Error(`Response body exceeded ${maxBytes} bytes`);
-        }
-        chunks.push(value);
-      }
-      const merged = new Uint8Array(total);
-      let offset = 0;
-      for (const c of chunks) {
-        merged.set(c, offset);
-        offset += c.byteLength;
-      }
-      return new Response(merged, {
-        status: res.status,
-        statusText: res.statusText,
-        headers: res.headers,
-      });
-    }
-    return res;
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    return new Response(bytes, { status: response.status, statusText: response.statusText, headers: response.headers });
   }
 }

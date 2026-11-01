@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ClusterCandidate {
@@ -14,10 +15,10 @@ export async function runIdentityClustering(
   onProgress?.("Loading entities and links...");
 
   const [{ data: entities }, { data: links }, { data: observations }, { data: infraLinks }] = await Promise.all([
-    supabase.from("identity_entities").select("id, entity_type, entity_value").eq("user_id", userId),
-    supabase.from("identity_entity_links").select("source_entity_id, target_entity_id, relationship_type, confidence_score").eq("user_id", userId),
-    supabase.from("entity_observations").select("entity_id, case_id").eq("user_id", userId),
-    supabase.from("infrastructure_links").select("entity_id, infrastructure_type, value").eq("user_id", userId),
+    checkedDatabase(supabase.from("identity_entities").select("id, entity_type, entity_value").eq("user_id", userId)),
+    checkedDatabase(supabase.from("identity_entity_links").select("source_entity_id, target_entity_id, relationship_type, confidence_score").eq("user_id", userId)),
+    checkedDatabase(supabase.from("entity_observations").select("entity_id, case_id").eq("user_id", userId)),
+    checkedDatabase(supabase.from("infrastructure_links").select("entity_id, infrastructure_type, value").eq("source_tool", "live-dns").eq("user_id", userId)),
   ]);
 
   if (!entities?.length) return { clustersCreated: 0, entitiesClustered: 0 };
@@ -145,7 +146,7 @@ export async function runIdentityClustering(
 
   // Clear old clusters
   onProgress?.(`Saving ${validClusters.length} clusters...`);
-  await supabase.from("identity_clusters").delete().eq("user_id", userId);
+  await checkedDatabase(supabase.from("identity_clusters").delete().eq("user_id", userId));
 
   const entityMap = new Map(entities.map((e) => [e.id, e]));
   let totalMembers = 0;
@@ -157,11 +158,11 @@ export async function runIdentityClustering(
     const label = primaryEntity?.entity_value ?? `Cluster (${memberIds.size} entities)`;
     const score = Math.min(memberIds.size * 15, 100);
 
-    const { data: cluster } = await supabase
+    const { data: cluster } = await checkedDatabase(supabase
       .from("identity_clusters")
       .insert({ user_id: userId, cluster_label: label, cluster_score: score })
       .select("id")
-      .single();
+      .single());
 
     if (!cluster) continue;
 
@@ -173,7 +174,7 @@ export async function runIdentityClustering(
       join_reason: edgeReasons.get([...memberIds].filter((id) => id !== entityId).map((id) => [entityId, id].sort().join(":")).find((k) => edgeReasons.has(k)) ?? "") ?? "cluster_member",
     }));
 
-    const { data } = await supabase.from("cluster_members").upsert(members, { ignoreDuplicates: true }).select("id");
+    const { data } = await checkedDatabase(supabase.from("cluster_members").upsert(members, { ignoreDuplicates: true }).select("id"));
     if (data) totalMembers += data.length;
   }
 

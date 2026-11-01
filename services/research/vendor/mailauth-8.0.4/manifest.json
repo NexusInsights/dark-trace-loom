@@ -1,0 +1,23 @@
+{
+  "package": "mailauth",
+  "version": "8.0.4",
+  "license": "MIT",
+  "sourceUrl": "https://github.com/postalsys/mailauth/tree/v8.0.4",
+  "files": {
+    "dkim-verifier.js": "fc5e16763dd7e62b92060a6808480527563da53a26fd23581e145703cb8d8545",
+    "verify.js": "fab46db6e7bdf30a79d26ca0a47cdcf3141b370a169e3b8eb9dd0ac77ef1e8fe"
+  },
+  "mappings": {
+    "../tools.js": "mailauth/lib/tools",
+    "../trim.js": "mailauth/lib/trim",
+    "./syntax.js": "mailauth/lib/dkim/syntax",
+    "./message-parser.js": "mailauth/lib/dkim/message-parser",
+    "./body/index.js": "mailauth/lib/dkim/body",
+    "./body/prefix-hashes.js": "mailauth/lib/dkim/body/prefix-hashes",
+    "./header/index.js": "mailauth/lib/dkim/header",
+    "../arc/index.js": "mailauth/lib/arc",
+    "../dmarc/author-domain.js": "mailauth/lib/dmarc/author-domain"
+  },
+  "before": "signatureHeader.signAlgo === 'rsa' ? signatureHeader.algorithm : null",
+  "after": "signatureHeader.signAlgo === 'rsa' ? (signatureHeader.algorithm === 'rsa-sha256' ? 'sha256' : signatureHeader.algorithm) : null"
+}

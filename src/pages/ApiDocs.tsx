@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { GlassPanel, AnalysisPanel } from "@/components/intel";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ const endpoints = [
   { method: "GET", path: "/v1/cases", desc: "List all your cases" },
   { method: "GET", path: "/v1/cases/:id", desc: "Retrieve a specific case" },
   { method: "POST", path: "/v1/subjects", desc: "Submit a subject for investigation" },
-  { method: "POST", path: "/v1/tools/run", desc: "Run an OSINT tool" },
   { method: "GET", path: "/v1/reports", desc: "List investigation reports" },
   { method: "GET", path: "/v1/reports/:id", desc: "Retrieve a specific report" },
   { method: "GET", path: "/v1/artifacts?case_id=", desc: "Fetch case artifacts" },
@@ -25,7 +25,7 @@ const endpoints = [
   { method: "GET", path: "/v1/entities/:id", desc: "Get entity details" },
   { method: "GET", path: "/v1/relationships?entity_id=", desc: "Get entity relationship links" },
   { method: "GET", path: "/v1/graph?case_id=", desc: "Export full relationship graph (nodes + edges)" },
-  { method: "GET", path: "/v1/scores?min_score=", desc: "Retrieve entity risk scores" },
+  { method: "GET", path: "/v1/scores?min_score=", desc: "Retrieve saved connectivity heuristics; these are not risk probabilities" },
   { method: "GET", path: "/v1/analysis?case_id=", desc: "Get AI analysis reports for a case" },
   { method: "GET", path: "/v1/breaches?entity_id=", desc: "Get breach intelligence records" },
 ];
@@ -53,11 +53,11 @@ export default function ApiDocsPage() {
     queryKey: ["api-keys", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("api_keys")
         .select("*")
         .eq("user_id", user!.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },
@@ -68,12 +68,12 @@ export default function ApiDocsPage() {
     enabled: !!user && apiKeys.length > 0,
     queryFn: async () => {
       const keyIds = apiKeys.map((k) => k.id);
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("api_usage")
         .select("key_id, endpoint, timestamp")
         .in("key_id", keyIds)
         .order("timestamp", { ascending: false })
-        .limit(100);
+        .limit(100));
       if (error) throw error;
       return data ?? [];
     },
@@ -99,7 +99,7 @@ export default function ApiDocsPage() {
 
   const deleteKey = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("api_keys").delete().eq("id", id);
+      const { error } = await checkedDatabase(supabase.from("api_keys").delete().eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -122,7 +122,7 @@ export default function ApiDocsPage() {
     (u) => new Date(u.timestamp).toDateString() === new Date().toDateString()
   ).length;
 
-  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-gateway`;
+  const baseUrl = `${window.location.origin}/api/gateway`;
 
   return (
     <div className="p-6 max-w-7xl mx-auto animate-fade-in space-y-6">
@@ -338,12 +338,9 @@ export default function ApiDocsPage() {
           </div>
 
           <div>
-            <p className="font-mono text-[10px] text-muted-foreground mb-1">RUN OSINT TOOL</p>
+            <p className="font-mono text-[10px] text-muted-foreground mb-1">API TOOL EXECUTION UNAVAILABLE</p>
             <pre className="bg-background/60 border border-border rounded-md p-3 font-mono text-[11px] overflow-x-auto">
-{`curl -X POST -H "x-api-key: YOUR_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"tool_name":"domain_lookup","case_id":"...","input":{"domain":"example.com"}}' \\
-  ${baseUrl}/v1/tools/run`}
+{`The managed tool endpoint has no verified executor.\nA queued database row is not tool execution.\nCloudflare returns HTTP 501 and creates no fake result.\nAuthenticated Tool Suite, Agents and Pipelines execute the tools directly.`}
             </pre>
           </div>
         </GlassPanel>

@@ -1,0 +1,7 @@
+{
+  "title": "InsightNexus synthetic monitoring verification",
+  "record_type": "deployment_test_fixture",
+  "contains_personal_data": false,
+  "revision": 2,
+  "observation": "Controlled content change for automatic alert verification."
+}

@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
@@ -28,7 +29,7 @@ function useCourses() {
   return useQuery({
     queryKey: ["courses"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("courses").select("*").order("created_at", { ascending: false });
+      const { data, error } = await checkedDatabase(supabase.from("courses").select("*").order("created_at", { ascending: false }));
       if (error) throw error;
       return (data ?? []) as Course[];
     },
@@ -40,7 +41,7 @@ function useCourseModules(courseId: string | null) {
     queryKey: ["modules", courseId],
     enabled: !!courseId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("modules").select("*").eq("course_id", courseId!).order("sort_order");
+      const { data, error } = await checkedDatabase(supabase.from("modules").select("*").eq("course_id", courseId!).order("sort_order"));
       if (error) throw error;
       return (data ?? []) as Module[];
     },
@@ -52,7 +53,7 @@ function useModuleLessons(moduleIds: string[]) {
     queryKey: ["lessons", moduleIds],
     enabled: moduleIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("lessons").select("*").in("module_id", moduleIds).order("sort_order");
+      const { data, error } = await checkedDatabase(supabase.from("lessons").select("*").in("module_id", moduleIds).order("sort_order"));
       if (error) throw error;
       return (data ?? []) as Lesson[];
     },
@@ -65,7 +66,7 @@ function useProgress(courseId: string | null) {
     queryKey: ["progress", courseId, user?.id],
     enabled: !!courseId && !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("progress").select("*").eq("course_id", courseId!).eq("user_id", user!.id);
+      const { data, error } = await checkedDatabase(supabase.from("progress").select("*").eq("course_id", courseId!).eq("user_id", user!.id));
       if (error) throw error;
       return (data ?? []) as Progress[];
     },
@@ -90,23 +91,23 @@ function CreateCourseForm({ onDone }: { onDone: () => void }) {
     setSaving(true);
     try {
       // Create course
-      const { data: course, error: cErr } = await supabase.from("courses")
+      const { data: course, error: cErr } = await checkedDatabase(supabase.from("courses")
         .insert({ title, description, difficulty, author_id: user!.id, published: true })
-        .select().single();
+        .select().single());
       if (cErr) throw cErr;
 
       // Create modules + lessons
       for (let mi = 0; mi < modules.length; mi++) {
         const mod = modules[mi];
-        const { data: dbMod, error: mErr } = await supabase.from("modules")
+        const { data: dbMod, error: mErr } = await checkedDatabase(supabase.from("modules")
           .insert({ course_id: course.id, title: mod.title, sort_order: mi })
-          .select().single();
+          .select().single());
         if (mErr) throw mErr;
 
         for (let li = 0; li < mod.lessons.length; li++) {
           const lesson = mod.lessons[li];
-          const { error: lErr } = await supabase.from("lessons")
-            .insert({ module_id: dbMod.id, title: lesson.title, content: lesson.content, sort_order: li });
+          const { error: lErr } = await checkedDatabase(supabase.from("lessons")
+            .insert({ module_id: dbMod.id, title: lesson.title, content: lesson.content, sort_order: li }));
           if (lErr) throw lErr;
         }
       }
@@ -114,8 +115,8 @@ function CreateCourseForm({ onDone }: { onDone: () => void }) {
       qc.invalidateQueries({ queryKey: ["courses"] });
       toast.success("Course published");
       onDone();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Training request failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Course could not be saved");
     } finally {
       setSaving(false);
     }
@@ -206,7 +207,7 @@ export default function TrainingPage() {
 
   const enroll = useMutation({
     mutationFn: async (courseId: string) => {
-      const { error } = await supabase.from("progress").insert({ user_id: user!.id, course_id: courseId, lesson_id: null, completed: false });
+      const { error } = await checkedDatabase(supabase.from("progress").insert({ user_id: user!.id, course_id: courseId, lesson_id: null, completed: false }));
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["progress"] }); toast.success("Enrolled!"); },
@@ -216,13 +217,13 @@ export default function TrainingPage() {
   const toggleLesson = useMutation({
     mutationFn: async ({ courseId, lessonId, completed }: { courseId: string; lessonId: string; completed: boolean }) => {
       if (completed) {
-        const { error } = await supabase.from("progress").upsert(
+        const { error } = await checkedDatabase(supabase.from("progress").upsert(
           { user_id: user!.id, course_id: courseId, lesson_id: lessonId, completed: true, completed_at: new Date().toISOString() },
           { onConflict: "user_id,course_id,lesson_id" }
-        );
+        ));
         if (error) throw error;
       } else {
-        await supabase.from("progress").delete().eq("user_id", user!.id).eq("course_id", courseId).eq("lesson_id", lessonId);
+        await checkedDatabase(supabase.from("progress").delete().eq("user_id", user!.id).eq("course_id", courseId).eq("lesson_id", lessonId));
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["progress"] }),

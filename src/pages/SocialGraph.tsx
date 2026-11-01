@@ -280,7 +280,7 @@ export default function SocialGraphPage() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Intelligence</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Social Graph Mining</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Analyze relationships between entities — communication, shared infrastructure, identifiers, and co-appearances.
+          Review saved co-occurrences and identifier patterns. These associations do not establish communication or common identity. Infrastructure records come from observed DNS answers.
         </p>
       </div>
 

@@ -1,10 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { z } from "npm:zod@3.23.8";
 import { safeFetch } from "../_shared/safeFetch.ts";
+import { authenticateUser, boundedJsonBody, RequestAuthenticationError } from "../_shared/authenticateUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const json = (body: unknown, status = 200) =>
@@ -17,9 +19,12 @@ const Body = z.object({ bssid: z.string().min(11).max(32) });
 const BSSID_RE = /^[0-9A-Fa-f]{2}([-:][0-9A-Fa-f]{2}){5}$/;
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  const parsed = Body.safeParse(await req.json().catch(() => ({})));
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
+  if (req.method !== "POST") return json({ status: "error", reason: "method_not_allowed" }, 405);
+  let body: unknown;
+  try { await authenticateUser(req); body = await boundedJsonBody(req); }
+  catch (error) { return json({ status: "error", reason: error instanceof RequestAuthenticationError ? error.code : "request_preparation_failed" }, error instanceof RequestAuthenticationError ? error.status : 503); }
+  const parsed = Body.safeParse(body);
   if (!parsed.success) return json({ status: "error", reason: "invalid_body" }, 400);
   const raw = parsed.data.bssid.trim();
   if (!BSSID_RE.test(raw)) return json({ status: "error", reason: "invalid_bssid_format" }, 400);

@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,11 +32,11 @@ export default function BillingPage() {
     queryKey: ["subscription-record", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", user!.id)
-        .maybeSingle();
+        .maybeSingle());
       if (error) throw error;
       return data;
     },

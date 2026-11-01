@@ -1,5 +1,7 @@
-import type { Json } from "@/integrations/supabase/types";
+import { jsonValue } from "@/lib/jsonValue";
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
+import { allTools } from "@/components/tools/toolDefinitions";
 
 interface RecommendationRule {
   triggerType: string;
@@ -58,8 +60,8 @@ export async function generateSuggestions(
   onProgress?.("Loading case subjects and artifacts...");
 
   const [{ data: subjects }, { data: artifacts }] = await Promise.all([
-    supabase.from("subjects").select("*").eq("case_id", caseId),
-    supabase.from("artifacts").select("*").eq("case_id", caseId),
+    checkedDatabase(supabase.from("subjects").select("*").eq("case_id", caseId)),
+    checkedDatabase(supabase.from("artifacts").select("*").eq("case_id", caseId)),
   ]);
 
   const triggers: { value: string; type: string }[] = [];
@@ -86,21 +88,24 @@ export async function generateSuggestions(
     recommended_tool: string;
     tool_description: string;
     confidence_score: number;
-    metadata: Record<string, Json>;
+    metadata: Record<string, unknown>;
   }[] = [];
 
   for (const trigger of triggers) {
     for (const rule of RULES) {
+      const aliases: Record<string,string> = { breach_search: "breach-lookup", domain_whois: "whois-history", dns_lookup: "dns-query", subdomain_scan: "subdomain-enum", ssl_cert_scan: "ssl-inspector", ip_geolocation: "ip-geolocation", port_scan: "port-scanner", company_lookup: "company-lookup", username_search: "username-search", phone_lookup: "phone-lookup" };
+      const tool = allTools.find(tool => tool.id === (aliases[rule.tool] || rule.tool));
+      if (!tool) continue;
       if (rule.pattern(trigger.value, trigger.type)) {
         suggestions.push({
           case_id: caseId,
           user_id: userId,
           trigger_type: rule.triggerType,
           trigger_value: trigger.value,
-          recommended_tool: rule.tool,
-          tool_description: rule.toolDescription,
+          recommended_tool: tool.id,
+          tool_description: tool.description,
           confidence_score: rule.confidence,
-          metadata: { source_type: trigger.type },
+          metadata: { source_type: trigger.type, score_kind: "rule priority, not identity confidence", provider_lookup_required: true },
         });
       }
     }
@@ -123,22 +128,14 @@ export async function generateSuggestions(
   const deduped = Array.from(unique.values());
   onProgress?.(`Saving ${deduped.length} recommendations...`);
 
-  // Delete existing non-executed suggestions for this case
-  await supabase
-    .from("investigation_suggestions")
-    .delete()
-    .eq("case_id", caseId)
-    .eq("user_id", userId)
-    .eq("executed", false);
-
   let created = 0;
   const batchSize = 50;
   for (let i = 0; i < deduped.length; i += batchSize) {
     const batch = deduped.slice(i, i + batchSize);
-    const { data, error } = await supabase
+    const { data, error } = await checkedDatabase(supabase
       .from("investigation_suggestions")
-      .upsert(batch, { onConflict: "case_id,trigger_value,recommended_tool" })
-      .select("id");
+      .upsert(batch.map(row => ({...row, metadata: jsonValue(row.metadata)})), { onConflict: "case_id,trigger_value,recommended_tool" })
+      .select("id"));
     if (!error && data) created += data.length;
   }
 

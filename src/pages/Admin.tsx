@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,11 +68,11 @@ function useIsAdmin() {
     queryKey: ["is-admin", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user!.id)
-        .eq("role", "admin");
+        .eq("role", "admin"));
       return (data ?? []).length > 0;
     },
   });
@@ -127,11 +128,11 @@ function useSystemLogs() {
   return useQuery({
     queryKey: ["system-logs"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("system_logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(100));
       if (error) throw error;
       return (data ?? []) as unknown as SystemLog[];
     },

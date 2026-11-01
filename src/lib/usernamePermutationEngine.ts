@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UsernameCandidate {
@@ -130,10 +131,10 @@ export async function runUsernamePermutation(
       confidence_score: c.confidence,
       generation_method: c.method,
     }));
-    const { data } = await supabase
+    const { data } = await checkedDatabase(supabase
       .from("username_candidates")
       .upsert(batch, { ignoreDuplicates: true })
-      .select("id");
+      .select("id"));
     if (data) total += data.length;
   }
 

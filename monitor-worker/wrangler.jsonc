@@ -1,0 +1,40 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "insight-nexus-monitors",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-13",
+  "workers_dev": true,
+  "vars": {
+    "APP_ORIGIN": "https://dark-trace-loom.pages.dev",
+    "SUPABASE_URL": "https://zisrsttmjeipkmllqubi.supabase.co",
+    "MONITOR_ALLOWED_HOSTS": "dark-trace-loom.pages.dev",
+    "MAX_DUE_JOBS": "10",
+    "SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inppc3JzdHRtamVpcGttbGxxdWJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTE0NzcsImV4cCI6MjA4ODU4NzQ3N30.qAqMuOMMPsgY4pX57oqDsqKBO1IbEnc-Wb2SAyWq1Tg",
+    "FEED_INGRESS_BASE": "https://dark-trace-loom.pages.dev/api/marketplace-monitor"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MONITOR_STORE",
+        "class_name": "MonitorStore"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "MonitorStore"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "type": "Text",
+      "globs": [
+        "**/*.sql"
+      ],
+      "fallthrough": true
+    }
+  ]
+}

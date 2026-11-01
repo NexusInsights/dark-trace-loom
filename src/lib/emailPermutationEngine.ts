@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmailCandidate {
@@ -110,10 +111,10 @@ export async function runEmailPermutation(
       confidence_score: c.confidence,
       generation_method: c.method,
     }));
-    const { data } = await supabase
+    const { data } = await checkedDatabase(supabase
       .from("email_candidates")
       .upsert(batch, { ignoreDuplicates: true })
-      .select("id");
+      .select("id"));
     if (data) total += data.length;
   }
 

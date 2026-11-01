@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 export const MONITOR_TYPES = [
@@ -9,10 +10,10 @@ export const MONITOR_TYPES = [
 ] as const;
 
 export const MONITOR_FREQUENCIES = [
-  { value: "realtime", label: "Real-time", description: "Check every 5 minutes" },
-  { value: "hourly", label: "Hourly", description: "Check every hour" },
-  { value: "daily", label: "Daily", description: "Check once per day" },
-  { value: "weekly", label: "Weekly", description: "Check once per week" },
+  { value: "realtime", label: "5 minute preference", description: "Stored preference; scheduler not configured" },
+  { value: "hourly", label: "Hourly preference", description: "Stored preference; scheduler not configured" },
+  { value: "daily", label: "Daily preference", description: "Stored preference; scheduler not configured" },
+  { value: "weekly", label: "Weekly preference", description: "Stored preference; scheduler not configured" },
 ] as const;
 
 /**
@@ -29,64 +30,64 @@ export async function checkMonitor(
 
   switch (monitorType) {
     case "domain_registration": {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("infrastructure_links")
-        .select("id")
+        .select("id").eq("source_tool", "live-dns")
         .eq("entity_id", entityId)
         .eq("infrastructure_type", "domain")
-        .gt("created_at", since);
+        .gt("created_at", since));
       if (data && data.length > 0)
         return { changed: true, message: `${data.length} new domain(s) detected` };
       return { changed: false, message: "No new domains" };
     }
 
     case "social_account": {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("identity_entity_links")
         .select("id")
         .or(`source_entity_id.eq.${entityId},target_entity_id.eq.${entityId}`)
         .eq("relationship_type", "social_profile")
-        .gt("created_at", since);
+        .gt("created_at", since));
       if (data && data.length > 0)
         return { changed: true, message: `${data.length} new social account(s) found` };
       return { changed: false, message: "No new social accounts" };
     }
 
     case "breach_appearance": {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("breach_records")
-        .select("id")
+        .select("id").eq("status", "exposure")
         .eq("entity_id", entityId)
-        .gt("created_at", since);
+        .gt("created_at", since));
       if (data && data.length > 0)
         return { changed: true, message: `${data.length} new breach record(s) found` };
       return { changed: false, message: "No new breaches" };
     }
 
     case "infrastructure_change": {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("infrastructure_links")
-        .select("id")
+        .select("id").eq("source_tool", "live-dns")
         .eq("entity_id", entityId)
-        .gt("created_at", since);
+        .gt("created_at", since));
       if (data && data.length > 0)
         return { changed: true, message: `${data.length} infrastructure change(s) detected` };
       return { changed: false, message: "No infrastructure changes" };
     }
 
     case "username_activity": {
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("entity_observations")
         .select("id")
         .eq("entity_id", entityId)
-        .gt("created_at", since);
+        .gt("created_at", since));
       if (data && data.length > 0)
         return { changed: true, message: `${data.length} new observation(s) recorded` };
       return { changed: false, message: "No new activity" };
     }
 
     default:
-      return { changed: false, message: "Unknown monitor type" };
+      throw new Error(`Unsupported monitor type: ${monitorType}`);
   }
 }
 
@@ -94,11 +95,11 @@ export async function checkMonitor(
  * Run all monitors for the current user and create notifications for triggered ones
  */
 export async function runAllMonitors(userId: string) {
-  const { data: monitors, error } = await supabase
+  const { data: monitors, error } = await checkedDatabase(supabase
     .from("entity_monitors")
     .select("*, entity:identity_entities!entity_monitors_entity_id_fkey(entity_type, entity_value)")
     .eq("user_id", userId)
-    .eq("enabled", true);
+    .eq("enabled", true));
 
   if (error || !monitors) return { checked: 0, triggered: 0 };
 
@@ -115,26 +116,26 @@ export async function runAllMonitors(userId: string) {
     );
 
     // Update last_checked
-    await supabase
+    await checkedDatabase(supabase
       .from("entity_monitors")
       .update({ last_checked: now })
-      .eq("id", monitor.id);
+      .eq("id", monitor.id));
 
     if (result.changed) {
       triggered++;
-      await supabase
+      await checkedDatabase(supabase
         .from("entity_monitors")
         .update({ last_triggered: now })
-        .eq("id", monitor.id);
+        .eq("id", monitor.id));
 
       // Add timeline event
-      await supabase.from("entity_timeline").insert({
+      await checkedDatabase(supabase.from("entity_timeline").insert({
         entity_id: monitor.entity_id,
         event_type: `monitor_${monitor.monitor_type}`,
         description: result.message,
         source: "monitor_engine",
         user_id: userId,
-      });
+      }));
     }
   }
 

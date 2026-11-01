@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
@@ -30,7 +31,7 @@ function useAllTags() {
   return useQuery({
     queryKey: ["kb-tags"],
     queryFn: async () => {
-      const { data } = await supabase.from("tags").select("*").order("name");
+      const { data } = await checkedDatabase(supabase.from("tags").select("*").order("name"));
       return data ?? [];
     },
   });
@@ -145,12 +146,12 @@ export default function KnowledgeBasePage() {
     mutationFn: async (input: { title: string; content: string; summary: string; tags: string[] }) => {
       // Upsert tags
       for (const tag of input.tags) {
-        await supabase.from("tags").upsert({ name: tag }, { onConflict: "name" });
+        await checkedDatabase(supabase.from("tags").upsert({ name: tag }, { onConflict: "name" }));
       }
-      const { error } = await supabase.from("articles").insert({
+      const { error } = await checkedDatabase(supabase.from("articles").insert({
         ...input,
         author_id: user!.id,
-      });
+      }));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -165,10 +166,10 @@ export default function KnowledgeBasePage() {
   const updateArticle = useMutation({
     mutationFn: async (input: { id: string; title: string; content: string; summary: string; tags: string[] }) => {
       for (const tag of input.tags) {
-        await supabase.from("tags").upsert({ name: tag }, { onConflict: "name" });
+        await checkedDatabase(supabase.from("tags").upsert({ name: tag }, { onConflict: "name" }));
       }
       const { id, ...rest } = input;
-      const { error } = await supabase.from("articles").update(rest).eq("id", id);
+      const { error } = await checkedDatabase(supabase.from("articles").update(rest).eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -182,7 +183,7 @@ export default function KnowledgeBasePage() {
 
   const deleteArticle = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("articles").delete().eq("id", id);
+      const { error } = await checkedDatabase(supabase.from("articles").delete().eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {

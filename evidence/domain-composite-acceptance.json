@@ -1,0 +1,317 @@
+{
+  "scope": "Actual manual execution helper, registry, edge handler, safe-fetch guard, and pipeline engine. Synthetic transport/auth and in-memory persistence only. No live provider/DB/UI acceptance.",
+  "sourceFiles": [
+    {
+      "path": "src/components/tools/toolDefinitions.ts",
+      "sha256": "f035de79dfb0c35a97418542937912217cb9cb23356422472b50caec504515ed"
+    },
+    {
+      "path": "src/components/tools/executeTool.ts",
+      "sha256": "ae4d8cddceb257f771ca66dafebea338d7b703ee0ef24dd10ca86185ddcb2dbb"
+    },
+    {
+      "path": "src/lib/pipelineEngine.ts",
+      "sha256": "2bc9309614a43132b3ae8442e1bf1b64d12e36bf92fe8a3f30a6490059a58536"
+    },
+    {
+      "path": "supabase/functions/osint-tools/index.ts",
+      "sha256": "a29c1a9ab36fc50d30d497a51d5c738718ef215d5813578c63d0adaad6333d00"
+    },
+    {
+      "path": "supabase/functions/_shared/safeFetch.ts",
+      "sha256": "b3a5ed1389c2fd8007c872b1d9c2fdded8e0bcd9c30dca9e5b99d2dd0ec1ebf8"
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "success",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "sourceStatuses": {
+        "whois": {
+          "status": "success"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "success"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "rdap-failure",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "error",
+          "reason": "rdap 503"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "success"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "dns-failure",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "success"
+        },
+        "dns": {
+          "status": "error",
+          "reason": "DNS status 2"
+        },
+        "hosting": {
+          "status": "skipped",
+          "reason": "DNS unavailable"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "hosting-failure",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "success"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "error",
+          "reason": "SYNTHETIC provider unavailable"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "hosting-not-configured",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "success"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "not_configured",
+          "reason": "SYNTHETIC geolocation provider access absent"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "commercial-unconfigured",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "success"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "not_configured",
+          "reason": "No approved HTTPS provider for commercial IP geolocation is configured. Anonymous ip-api.com is limited to non-commercial use and is disabled."
+        }
+      },
+      "syntheticTrafficCount": 60,
+      "accepted": true
+    },
+    {
+      "scenario": "all-failure",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "not-configured",
+      "manualStatus": "not_configured",
+      "pipelineStatus": "not_configured",
+      "artifactsCreated": 0,
+      "syntheticTrafficCount": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "unknown-tool",
+      "manualStatus": "unknown_tool",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "syntheticTrafficCount": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "malformed-source",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "private-answer",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "success"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "error",
+          "reason": "DNS returned only non-public or invalid A addresses; hosting lookup was not sent"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "private-redirect",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "error",
+          "reason": "Blocked private or unresolved destination"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "success"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "private-dns",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "error",
+          "reason": "Blocked private or unresolved destination"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "success"
+        }
+      },
+      "syntheticTrafficCount": 54,
+      "accepted": true
+    },
+    {
+      "scenario": "oversized-rdap",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "error",
+          "reason": "Response body exceeded 5242880 bytes"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "success"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "empty-dns",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "sourceStatuses": {
+        "whois": {
+          "status": "success"
+        },
+        "dns": {
+          "status": "success"
+        },
+        "hosting": {
+          "status": "skipped",
+          "reason": "DNS returned no public A address"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "demo",
+      "manualStatus": "demo",
+      "pipelineStatus": "demo",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "demo"
+        },
+        "dns": {
+          "status": "demo"
+        },
+        "hosting": {
+          "status": "demo"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    },
+    {
+      "scenario": "partial-provider",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "sourceStatuses": {
+        "whois": {
+          "status": "partial"
+        },
+        "dns": {
+          "status": "partial"
+        },
+        "hosting": {
+          "status": "partial"
+        }
+      },
+      "syntheticTrafficCount": 56,
+      "accepted": true
+    }
+  ]
+}

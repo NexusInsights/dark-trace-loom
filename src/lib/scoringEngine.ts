@@ -1,3 +1,5 @@
+import { jsonValue } from "@/lib/jsonValue";
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ScoreResult {
@@ -10,33 +12,33 @@ export async function computeEntityScores(
 ): Promise<ScoreResult> {
   onProgress?.("Loading entities...");
 
-  const { data: entities } = await supabase
+  const { data: entities } = await checkedDatabase(supabase
     .from("identity_entities")
     .select("id, entity_type, entity_value")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
   if (!entities?.length) return { entitiesScored: 0 };
 
   onProgress?.("Analyzing links...");
 
-  const { data: links } = await supabase
+  const { data: links } = await checkedDatabase(supabase
     .from("identity_entity_links")
     .select("source_entity_id, target_entity_id")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
   onProgress?.("Analyzing observations...");
 
-  const { data: observations } = await supabase
+  const { data: observations } = await checkedDatabase(supabase
     .from("entity_observations")
     .select("entity_id, case_id")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
   onProgress?.("Analyzing social graph...");
 
-  const { data: socialEdges } = await supabase
+  const { data: socialEdges } = await checkedDatabase(supabase
     .from("social_graph_edges")
     .select("source_entity_id, target_entity_id, relationship_type")
-    .eq("user_id", userId);
+    .eq("user_id", userId));
 
   // Build metrics per entity
   const linkCount = new Map<string, number>();
@@ -116,9 +118,9 @@ export async function computeEntityScores(
   const batchSize = 50;
   for (let i = 0; i < scores.length; i += batchSize) {
     const batch = scores.slice(i, i + batchSize);
-    await supabase
+    await checkedDatabase(supabase
       .from("entity_scores")
-      .upsert(batch, { onConflict: "entity_id,user_id" });
+      .upsert(batch.map(row => ({...row, score_reasons: jsonValue(row.score_reasons)})), { onConflict: "entity_id,user_id" }));
   }
 
   onProgress?.("Complete!");

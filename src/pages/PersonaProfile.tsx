@@ -1,4 +1,7 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState, useMemo } from "react";
+import { PublicProfileEvidence } from "@/components/persona/PublicProfileEvidence";
+import { identifierSource } from "@/lib/profileLookup";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePersonas, usePersonaIdentifiers } from "@/hooks/usePersonas";
@@ -43,16 +46,13 @@ function usePersonaProfile(personaId: string | null) {
   // Get linked entities by matching identifier values
   const { data: allEntities = [] } = useIdentityEntities();
   const { data: allScores = [] } = useEntityScores();
-  const { data: allClusters = [] } = useIdentityClusters();
   const { data: similarityScores = [] } = useSimilarityScores();
 
   // Fetch entity timeline for matched entities
   const matchedEntities = useMemo(() => {
-    if (!identifiers.length && !usernames.length && !emails.length) return [];
+    if (!identifiers.length) return [];
     const values = new Set<string>();
     identifiers.forEach((i) => values.add(i.identifier_value?.toLowerCase()));
-    usernames.forEach((u) => values.add(u.candidate_username?.toLowerCase()));
-    emails.forEach((e) => values.add(e.candidate_email?.toLowerCase()));
     return allEntities.filter((e) => values.has(e.entity_value?.toLowerCase()));
   }, [identifiers, usernames, emails, allEntities]);
 
@@ -75,14 +75,6 @@ function usePersonaProfile(personaId: string | null) {
     return Math.round(total / scores.size);
   }, [scores]);
 
-  // Clusters containing matched entities
-  const relatedClusters = useMemo(() => {
-    return allClusters.filter((c) => {
-      // We'll check cluster members separately
-      return true;
-    });
-  }, [allClusters]);
-
   // Similarity pairs involving matched entities
   const relatedSimilarity = useMemo(() => {
     return similarityScores.filter((s) =>
@@ -98,12 +90,12 @@ function usePersonaProfile(personaId: string | null) {
     enabled: matchedEntityIdList.length > 0,
     queryFn: async () => {
       if (!user || matchedEntityIdList.length === 0) return [];
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("entity_observations")
         .select("*")
         .in("entity_id", matchedEntityIdList.slice(0, 50))
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       return data ?? [];
     },
   });
@@ -113,12 +105,12 @@ function usePersonaProfile(personaId: string | null) {
     enabled: matchedEntityIdList.length > 0,
     queryFn: async () => {
       if (!user || matchedEntityIdList.length === 0) return [];
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("entity_timeline")
         .select("*")
         .in("entity_id", matchedEntityIdList.slice(0, 50))
         .eq("user_id", user.id)
-        .order("event_timestamp", { ascending: false });
+        .order("event_timestamp", { ascending: false }));
       return data ?? [];
     },
   });
@@ -128,11 +120,11 @@ function usePersonaProfile(personaId: string | null) {
     enabled: matchedEntityIdList.length > 0,
     queryFn: async () => {
       if (!user || matchedEntityIdList.length === 0) return [];
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("infrastructure_links")
-        .select("*")
+        .select("*").eq("source_tool", "live-dns")
         .in("entity_id", matchedEntityIdList.slice(0, 50))
-        .eq("user_id", user.id);
+        .eq("user_id", user.id));
       return data ?? [];
     },
   });
@@ -142,11 +134,11 @@ function usePersonaProfile(personaId: string | null) {
     enabled: matchedEntityIdList.length > 0,
     queryFn: async () => {
       if (!user || matchedEntityIdList.length === 0) return [];
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("breach_records")
-        .select("*")
+        .select("*").eq("status", "exposure")
         .in("entity_id", matchedEntityIdList.slice(0, 50))
-        .eq("user_id", user.id);
+        .eq("user_id", user.id));
       return data ?? [];
     },
   });
@@ -163,17 +155,17 @@ function usePersonaProfile(personaId: string | null) {
     enabled: linkedCaseIds.length > 0,
     queryFn: async () => {
       if (linkedCaseIds.length === 0) return [];
-      const { data } = await supabase
+      const { data } = await checkedDatabase(supabase
         .from("cases")
         .select("id, title, created_at")
-        .in("id", linkedCaseIds);
+        .in("id", linkedCaseIds));
       return data ?? [];
     },
   });
 
   return {
     identifiers, usernames, emails, matchedEntities, scores, riskScore,
-    relatedClusters, relatedSimilarity, observations, timeline, infraLinks,
+    relatedSimilarity, observations, timeline, infraLinks,
     breaches, linkedCases,
   };
 }
@@ -199,7 +191,7 @@ export default function PersonaProfile() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Intelligence</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Persona Profile Builder</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Aggregated view of all identifiers, infrastructure, timeline, and risk for a persona.
+          Source records, supplied identifiers and saved investigation observations. Relationship and similarity scores are research heuristics, not identity or risk probabilities.
         </p>
       </div>
 
@@ -208,7 +200,7 @@ export default function PersonaProfile() {
         <div className="lg:col-span-1">
           <GlassPanel className="p-4" neonLine="left">
             <h3 className="font-mono text-[10px] tracking-widest text-primary mb-3">SELECT PERSONA</h3>
-            <ScrollArea className="h-[calc(100vh-280px)]">
+            <ScrollArea className="h-72 lg:h-[calc(100vh-280px)]">
               <div className="space-y-1.5">
                 {personas.map((p) => (
                   <button
@@ -250,6 +242,7 @@ export default function PersonaProfile() {
           ) : (
             <>
               {/* Summary Header */}
+              <PublicProfileEvidence personaId={selectedId} />
               <GlassPanel className="p-5" neonLine="top">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -259,9 +252,9 @@ export default function PersonaProfile() {
                     )}
                   </div>
                   <div className="text-right">
-                    <div className="font-mono text-[10px] tracking-widest text-muted-foreground mb-1">RISK SCORE</div>
+                    <div className="font-mono text-[10px] tracking-widest text-muted-foreground mb-1">CONNECTIVITY HEURISTIC</div>
                     <div className={`font-mono text-3xl font-bold ${riskColor}`}>
-                      {profile.riskScore}
+                      {profile.scores.size ? profile.riskScore : "Unscored"}
                     </div>
                   </div>
                 </div>
@@ -287,7 +280,7 @@ export default function PersonaProfile() {
 
               {/* Tabbed Content */}
               <Tabs defaultValue="identifiers" className="w-full">
-                <TabsList className="grid w-full grid-cols-7 h-9">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 h-auto gap-1">
                   <TabsTrigger value="identifiers" className="text-[10px] font-mono">IDENTIFIERS</TabsTrigger>
                   <TabsTrigger value="platforms" className="text-[10px] font-mono">PLATFORMS</TabsTrigger>
                   <TabsTrigger value="infrastructure" className="text-[10px] font-mono">INFRA</TabsTrigger>
@@ -307,7 +300,7 @@ export default function PersonaProfile() {
                     {/* Persona identifiers */}
                     {profile.identifiers.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">DISCOVERED IDENTIFIERS</h4>
+                        <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">INPUTS AND SOURCED IDENTIFIERS</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {profile.identifiers.map((id) => {
                             const Icon = TYPE_ICONS[id.identifier_type] ?? User;
@@ -316,7 +309,7 @@ export default function PersonaProfile() {
                                 <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: TYPE_COLORS[id.identifier_type] ?? "hsl(var(--muted-foreground))" }} />
                                 <span className="font-mono text-xs truncate flex-1">{id.identifier_value}</span>
                                 <Badge variant="outline" className="text-[8px] font-mono">{id.identifier_type}</Badge>
-                                <span className="font-mono text-[9px] text-primary font-bold">{Math.round(id.confidence_score * 100)}%</span>
+                                <span className="text-[9px] text-muted-foreground">{identifierSource(id.source)}</span>
                               </div>
                             );
                           })}
@@ -333,7 +326,7 @@ export default function PersonaProfile() {
                             <div key={u.id} className="flex items-center gap-1.5 p-1.5 rounded bg-muted/20 border border-border/20">
                               <AtSign className="h-3 w-3 text-muted-foreground shrink-0" />
                               <span className="font-mono text-[10px] truncate flex-1">{u.candidate_username}</span>
-                              <span className="font-mono text-[8px] text-primary">{Math.round(u.confidence_score * 100)}%</span>
+                              <span className="font-mono text-[8px] text-muted-foreground">Unverified guess</span>
                             </div>
                           ))}
                         </div>
@@ -349,7 +342,7 @@ export default function PersonaProfile() {
                             <div key={e.id} className="flex items-center gap-1.5 p-1.5 rounded bg-muted/20 border border-border/20">
                               <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
                               <span className="font-mono text-[10px] truncate flex-1">{e.candidate_email}</span>
-                              <span className="font-mono text-[8px] text-primary">{Math.round(e.confidence_score * 100)}%</span>
+                              <span className="font-mono text-[8px] text-muted-foreground">Unverified guess</span>
                             </div>
                           ))}
                         </div>
@@ -412,7 +405,7 @@ export default function PersonaProfile() {
                     </div>
                     {platformAccounts.length > 0 ? (
                       <div className="space-y-4">
-                        {["social_media", "developer", "forums", "email_services", "domains", "other"].map((cat) => {
+                        {["public_profile", "social_media", "developer", "forums", "email_services", "domains", "other"].map((cat) => {
                           const catAccounts = platformAccounts.filter((a) => a.platform_category === cat);
                           if (catAccounts.length === 0) return null;
                           const catLabel = cat.replace(/_/g, " ").toUpperCase();
@@ -428,9 +421,8 @@ export default function PersonaProfile() {
                                       <div className="font-mono text-[9px] text-muted-foreground">{a.platform_name}</div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
-                                      {a.verified && <Badge variant="default" className="text-[7px] font-mono">VERIFIED</Badge>}
                                       <Badge variant="outline" className="text-[8px] font-mono">
-                                        {Math.round(Number(a.confidence_score) * 100)}%
+                                        Source record
                                       </Badge>
                                     </div>
                                     {a.profile_url && (
@@ -637,7 +629,7 @@ export default function PersonaProfile() {
                 <TabsContent value="similarity">
                   <GlassPanel className="p-4">
                     <h3 className="font-mono text-xs tracking-widest text-primary mb-3 flex items-center gap-2">
-                      <GitCompare className="h-3.5 w-3.5" /> BEHAVIORAL SIMILARITY ({profile.relatedSimilarity.length} pairs)
+                      <GitCompare className="h-3.5 w-3.5" /> PATTERN SIMILARITY (HEURISTIC) ({profile.relatedSimilarity.length} pairs)
                     </h3>
                     {profile.relatedSimilarity.length > 0 ? (
                       <div className="space-y-2">

@@ -1,0 +1,330 @@
+{
+  "scope": "Actual handler/hash code, safe-fetch/auth guard, registry/manual/pipeline. Real existing Sharp decode of synthetic local bytes; ImageScript 1.2.17 substituted and not runtime-accepted. No actual network, photographs, external image transmission or production DB/UI.",
+  "sourceFiles": [
+    {
+      "path": "supabase/functions/image-hash/index.ts",
+      "sha256": "1356d2e616d9103500d3b56849a94179d5c8b8d8fe3b6ea0d611d15619876360"
+    },
+    {
+      "path": "supabase/functions/_shared/imageHash.ts",
+      "sha256": "fb7dd7ab3253bb3e348462059f92e1cfeb1087caafbecbb481b6987bd24a7d48"
+    },
+    {
+      "path": "supabase/functions/_shared/safeFetch.ts",
+      "sha256": "b3a5ed1389c2fd8007c872b1d9c2fdded8e0bcd9c30dca9e5b99d2dd0ec1ebf8"
+    },
+    {
+      "path": "supabase/functions/_shared/requireUser.ts",
+      "sha256": "12d6fc22b641e8ac6741591639707dc6b21315ac51bcee0dac20fba7c675a22d"
+    },
+    {
+      "path": "src/components/tools/extraTools.ts",
+      "sha256": "8ecd9b113b9cf7aae32d259ab16dea7312e9e8290999382ea36479aba412b159"
+    },
+    {
+      "path": "src/components/tools/executeTool.ts",
+      "sha256": "ae4d8cddceb257f771ca66dafebea338d7b703ee0ef24dd10ca86185ddcb2dbb"
+    },
+    {
+      "path": "src/lib/pipelineEngine.ts",
+      "sha256": "2bc9309614a43132b3ae8442e1bf1b64d12e36bf92fe8a3f30a6490059a58536"
+    },
+    {
+      "path": "src/test/fixtures/image-hash/manifest.json",
+      "sha256": "4ea073188c2e15f4006b8c057fc68a2948bf8d192ec38ed12d8bff268483ca4b"
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "ascending.png",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "phash": "5400000000000000",
+      "dhash": "ffffffffffffffff",
+      "sha256": "34486e698cbff8bbae05ff7a29816b085f67a21eb472327aacd8c1db02a8d884",
+      "decoderCalls": 3,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "descending.png",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "phash": "aa00000000000000",
+      "dhash": "0000000000000000",
+      "sha256": "6cdcbcc817d987fd8118cc7778197fc85abfc6256311d55afa821b01e787473e",
+      "decoderCalls": 3,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "constant.png",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "phash": "0000000000000000",
+      "dhash": "0000000000000000",
+      "sha256": "4be5bcbb5b390e61aa4837865e8701f3b85f0613a3a7e7f537574b3305979390",
+      "decoderCalls": 3,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "constant.jpg",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "phash": "0000000000000000",
+      "dhash": "0000000000000000",
+      "sha256": "a024e6ceb10e493c3753ae455fed01f7f68224c5d4b3349da1e0710e4272124f",
+      "decoderCalls": 3,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "checker.png",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "phash": "0000000000000000",
+      "dhash": "8888888888888888",
+      "sha256": "70cde4ac1d65f36ad0b8df112959a16593617d39af4f334cf6693a11b25b99b7",
+      "decoderCalls": 3,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "transparent-a.png",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "phash": "0000000000000000",
+      "dhash": "0000000000000000",
+      "sha256": "5d17bbe30613516dcf20522acd23d66f1e39089f8fa94531909d1a156c7480b6",
+      "decoderCalls": 3,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "transparent-b.png",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "phash": "0000000000000000",
+      "dhash": "0000000000000000",
+      "sha256": "9e36bca21f45f595f8a3e5aa68ac50ba94e4ffd1cc29e087bdb0eb791f92707c",
+      "decoderCalls": 3,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "unsupported.webp",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "unsupported_or_malformed_image_format; use static JPEG or PNG",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "unsupported.gif",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "unsupported_or_malformed_image_format; use static JPEG or PNG",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "malformed",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "unsupported_or_malformed_image_format; use static JPEG or PNG",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "truncated",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "malformed_png",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "pixel-bomb",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "image_pixel_limit_exceeded",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "oversized",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "image_too_large",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "invalid-crc",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "malformed_png_crc",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "http-error",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "fetch_failed_403",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "private-dns",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Blocked private or unresolved destination",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "private-redirect",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Blocked private or unresolved destination",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "decoder-shape",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "invalid_decoder_output",
+      "decoderCalls": 2,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "invalid-hash",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Image hash returned invalid hash/provenance data",
+      "decoderCalls": 2,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "wrong-source",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Image hash returned invalid hash/provenance data",
+      "decoderCalls": 2,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "not-configured",
+      "manualStatus": "not_configured",
+      "pipelineStatus": "not_configured",
+      "artifactsCreated": 0,
+      "reason": "SYNTHETIC decoder unavailable",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "partial",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "phash": "5400000000000000",
+      "dhash": "ffffffffffffffff",
+      "sha256": "34486e698cbff8bbae05ff7a29816b085f67a21eb472327aacd8c1db02a8d884",
+      "decoderCalls": 2,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "demo",
+      "manualStatus": "demo",
+      "pipelineStatus": "demo",
+      "artifactsCreated": 0,
+      "phash": "5400000000000000",
+      "dhash": "ffffffffffffffff",
+      "sha256": "34486e698cbff8bbae05ff7a29816b085f67a21eb472327aacd8c1db02a8d884",
+      "decoderCalls": 2,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "save-denied",
+      "manualStatus": "success",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "phash": "5400000000000000",
+      "dhash": "ffffffffffffffff",
+      "sha256": "34486e698cbff8bbae05ff7a29816b085f67a21eb472327aacd8c1db02a8d884",
+      "decoderCalls": 2,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "legacy-output",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "phash": "5400000000000000",
+      "dhash": "ffffffffffffffff",
+      "decoderCalls": 2,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "duplicate-header",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "malformed_png_duplicate_header",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    },
+    {
+      "scenario": "animated-png",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "animated_images_unsupported",
+      "decoderCalls": 0,
+      "actualLocalDecoder": "Sharp adapter; not production ImageScript runtime",
+      "accepted": true
+    }
+  ]
+}

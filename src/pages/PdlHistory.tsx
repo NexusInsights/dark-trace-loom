@@ -1,3 +1,6 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
+import { normalizePdlResult } from "@/lib/pdlResults";
+import { PdlContactResults } from "@/components/tools/PdlContactResults";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassPanel } from "@/components/intel";
@@ -28,13 +31,13 @@ export default function PdlHistory() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await checkedDatabase(supabase
       .from("pdl_lookups")
       .select("id,lookup_type,label,inputs,result,created_at")
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(200));
     if (error) toast.error(error.message);
-    setItems((data || []) as unknown as Lookup[]);
+    setItems(((data || []) as unknown as Lookup[]).map(item => ({...item,result:normalizePdlResult(item.result)})));
     setLoading(false);
   };
 
@@ -44,7 +47,7 @@ export default function PdlHistory() {
   }, []);
 
   const remove = async (id: string) => {
-    const { error } = await supabase.from("pdl_lookups").delete().eq("id", id);
+    const { error } = await checkedDatabase(supabase.from("pdl_lookups").delete().eq("id", id));
     if (error) return toast.error(error.message);
     setItems((prev) => prev.filter((x) => x.id !== id));
     toast.success("Deleted");
@@ -111,6 +114,7 @@ export default function PdlHistory() {
                         {new Date(it.created_at).toLocaleString()}
                       </span>
                     </div>
+                    {open && it.lookup_type !== "company-enrich" && <div className="mt-3"><PdlContactResults data={it.result} /></div>}
                     {open && (
                       <div className="mt-3 grid md:grid-cols-2 gap-3">
                         <div>

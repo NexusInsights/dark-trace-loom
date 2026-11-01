@@ -1,0 +1,147 @@
+[
+  {
+    "path": "src/components/analysis/CaseAnalysis.tsx",
+    "runtimeEquivalent": false,
+    "errors": 7
+  },
+  {
+    "path": "src/components/ui/command.tsx",
+    "runtimeEquivalent": true,
+    "errors": 1
+  },
+  {
+    "path": "src/components/ui/textarea.tsx",
+    "runtimeEquivalent": true,
+    "errors": 1
+  },
+  {
+    "path": "src/hooks/usePipelines.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/lib/crossCaseEngine.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/lib/personaTimelineEngine.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/lib/recommendationEngine.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/lib/reportEngine.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/lib/scoringEngine.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/lib/similarityEngine.ts",
+    "runtimeEquivalent": false,
+    "errors": 4
+  },
+  {
+    "path": "src/lib/validations.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/pages/Alerts.tsx",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/pages/ApiDocs.tsx",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/pages/Dashboard.tsx",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/pages/IdentityResolution.tsx",
+    "runtimeEquivalent": false,
+    "errors": 9
+  },
+  {
+    "path": "src/pages/Investigations.tsx",
+    "runtimeEquivalent": false,
+    "errors": 7
+  },
+  {
+    "path": "src/pages/Marketplace.tsx",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "src/pages/Organizations.tsx",
+    "runtimeEquivalent": false,
+    "errors": 2
+  },
+  {
+    "path": "src/pages/PersonaIntelDashboard.tsx",
+    "runtimeEquivalent": false,
+    "errors": 19
+  },
+  {
+    "path": "src/pages/PersonaProfile.tsx",
+    "runtimeEquivalent": false,
+    "errors": 23
+  },
+  {
+    "path": "src/pages/Pipelines.tsx",
+    "runtimeEquivalent": false,
+    "errors": 4
+  },
+  {
+    "path": "src/pages/SocialGraph.tsx",
+    "runtimeEquivalent": false,
+    "errors": 9
+  },
+  {
+    "path": "src/pages/Training.tsx",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "supabase/functions/api-gateway/index.ts",
+    "runtimeEquivalent": false,
+    "errors": 4
+  },
+  {
+    "path": "supabase/functions/breach-lookup/index.ts",
+    "runtimeEquivalent": false,
+    "errors": 3
+  },
+  {
+    "path": "supabase/functions/identity-expansion/index.ts",
+    "runtimeEquivalent": false,
+    "errors": 5
+  },
+  {
+    "path": "supabase/functions/invite-member/index.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "supabase/functions/osint-tools/index.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  },
+  {
+    "path": "tailwind.config.ts",
+    "runtimeEquivalent": false,
+    "errors": 1
+  }
+]

@@ -1,0 +1,102 @@
+{
+  "scope": "Actual saved baseline handlers replayed against source-policy repository stub, then actual current React manual handler and pipeline engine. Synthetic actors/cases/transactions only; no actual database/RLS/live records/session or network. Client check does not fix server policies or eliminate check/write races.",
+  "baseline": "7fc3ed2d47eafe041a14f80297138738c70210e5",
+  "sourceFiles": [
+    {
+      "path": "src/lib/ownedToolResults.ts",
+      "sha256": "a85794e92efb119d31c7aba1e85007a0ca9bd0e307b2b85cf2445a151baa4e77"
+    },
+    {
+      "path": "src/lib/pipelineEngine.ts",
+      "sha256": "2bc9309614a43132b3ae8442e1bf1b64d12e36bf92fe8a3f30a6490059a58536"
+    },
+    {
+      "path": "src/components/tools/ToolRunner.tsx",
+      "sha256": "fce040ba7172e4a0cfcf4c1d566fecaef66ee6581bbb9b6217c428a3f3009518"
+    },
+    {
+      "path": "supabase/migrations/20260312034027_e042967e-54fa-4fe0-b929-6efc50d89ec2.sql",
+      "sha256": "5c271fa10f3531a915202ac9040e5ebb7c4762aa92f719b2fb7f9e1ec8ce3678"
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "baseline permissive source-policy reproduction",
+      "manualForeignCaseRows": 1,
+      "pipelineForeignCaseRows": 1,
+      "actualSQL": false,
+      "baseline": "7fc3ed2d47eafe041a14f80297138738c70210e5",
+      "accepted": true
+    },
+    {
+      "scenario": "unrelated-user",
+      "manual": "unsaved; ownership reason rendered",
+      "pipeline": "rejected before provider/run",
+      "caseWriteAttempts": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "unrelated-case",
+      "manual": "unsaved; ownership reason rendered",
+      "pipeline": "rejected before provider/run",
+      "caseWriteAttempts": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "missing-case",
+      "manual": "unsaved; ownership reason rendered",
+      "pipeline": "rejected before provider/run",
+      "caseWriteAttempts": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "case-partial-error",
+      "manual": "unsaved; ownership reason rendered",
+      "pipeline": "rejected before provider/run",
+      "caseWriteAttempts": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "auth-partial-error",
+      "manual": "unsaved; ownership reason rendered",
+      "pipeline": "rejected before provider/run",
+      "caseWriteAttempts": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "missing-session",
+      "manual": "unsaved; ownership reason rendered",
+      "pipeline": "rejected before provider/run",
+      "caseWriteAttempts": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "leaky-case-response",
+      "manual": "unsaved; ownership reason rendered",
+      "pipeline": "rejected before provider/run",
+      "caseWriteAttempts": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "owned",
+      "manual": "saved with verified owner",
+      "pipeline": "completed",
+      "artifactsCreated": 1,
+      "accepted": true
+    },
+    {
+      "scenario": "standalone",
+      "manual": "saved with verified owner",
+      "pipeline": "completed",
+      "artifactsCreated": 0,
+      "accepted": true
+    },
+    {
+      "scenario": "partial-result",
+      "manual": "saved with verified owner",
+      "pipeline": "partial",
+      "artifactsCreated": 0,
+      "accepted": true
+    }
+  ]
+}

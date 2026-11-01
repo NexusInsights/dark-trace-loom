@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useIdentityEntities, useIdentityLinks, useEntityObservations, useEntityScores } from "@/hooks/useIdentityResolution";
-import { useCases } from "@/hooks/useInvestigationData";
 import { useBreachRecords, useBreachStats } from "@/hooks/useBreachIntel";
 import { useEntityTimeline } from "@/hooks/useEntityTimeline";
 import { useQueryClient } from "@tanstack/react-query";
@@ -110,7 +109,7 @@ function useForceLayout(nodes: GNode[], edges: GEdge[], w: number, h: number) {
     };
     frameRef.current = requestAnimationFrame(tick);
     return () => { running = false; cancelAnimationFrame(frameRef.current); };
-  }, [nodes.length, edges.length, w, h]);
+  }, [nodes, edges, w, h]);
 
   return positions;
 }
@@ -118,9 +117,8 @@ function useForceLayout(nodes: GNode[], edges: GEdge[], w: number, h: number) {
 export default function IdentityResolutionPage() {
   const { user } = useAuth();
   const { plan } = useSubscription();
-  const { data: cases = [] } = useCases();
-  const { data: entities = [], isLoading: loadingEntities } = useIdentityEntities();
-  const { data: links = [], isLoading: loadingLinks } = useIdentityLinks();
+  const { data: entities = [], isLoading: loadingEntities, error: entitiesError } = useIdentityEntities();
+  const { data: links = [], isLoading: loadingLinks, error: linksError } = useIdentityLinks();
   const { data: scores = [] } = useEntityScores();
   const qc = useQueryClient();
 
@@ -128,6 +126,7 @@ export default function IdentityResolutionPage() {
   const [scoring, setScoring] = useState(false);
   const [scanningBreaches, setScanningBreaches] = useState(false);
   const [progress, setProgress] = useState("");
+  const [resolutionMessage, setResolutionMessage] = useState("");
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
@@ -206,13 +205,23 @@ export default function IdentityResolutionPage() {
   const handleRun = async () => {
     if (!user) return;
     setRunning(true);
+    setResolutionMessage("");
     try {
       const result = await runIdentityResolution(user.id, setProgress);
       qc.invalidateQueries({ queryKey: ["identity_entities"] });
       qc.invalidateQueries({ queryKey: ["identity_links"] });
-      toast.success(`Resolved ${result.entitiesResolved} entities with ${result.linksCreated} links`);
+      qc.invalidateQueries({ queryKey: ["entity_observations"] });
+      const message = result.entitiesResolved
+        ? `Resolved ${result.entitiesResolved} entities with ${result.linksCreated} links.`
+        : "No usable identifiers found. Save a persona identifier, a successful tool result, or case evidence containing an email, username, domain, IP, phone or social profile, then run again.";
+      setResolutionMessage(message);
+      if (result.entitiesResolved) toast.success(message);
+      else toast.info(message);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Resolution failed");
+      const message = err && typeof err === "object" && "message" in err && typeof err.message === "string"
+        ? err.message : "Resolution failed. Check your connection and try again.";
+      setResolutionMessage(`Identity resolution failed: ${message}`);
+      toast.error(message);
     } finally {
       setRunning(false);
       setProgress("");
@@ -274,7 +283,7 @@ export default function IdentityResolutionPage() {
 
       {/* Controls */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="neon" size="sm" className="gap-2" disabled={running || !cases.length} onClick={handleRun}>
+        <Button variant="neon" size="sm" className="gap-2" disabled={running || !user} onClick={handleRun}>
           {running ? (
             <><Loader2 className="h-3.5 w-3.5 animate-spin" />RESOLVING...</>
           ) : (
@@ -345,6 +354,12 @@ export default function IdentityResolutionPage() {
           </span>
         )}
       </div>
+
+      {(resolutionMessage || entitiesError || linksError) && (
+        <p role={entitiesError || linksError ? "alert" : "status"} className="text-sm text-muted-foreground break-words">
+          {resolutionMessage || `Identity data could not be loaded: ${(entitiesError || linksError)?.message}`}
+        </p>
+      )}
 
       {/* Breach stats */}
       {breachStats && breachStats.total > 0 && (
@@ -432,7 +447,7 @@ export default function IdentityResolutionPage() {
                 RUN THE ENGINE TO RESOLVE IDENTITIES
               </p>
               <p className="text-[10px] text-muted-foreground/60 mt-1">
-                The engine extracts and links identifiers across all your cases
+                The engine reads your case evidence, saved tool results and persona identifiers
               </p>
             </div>
           ) : (
@@ -650,7 +665,7 @@ export default function IdentityResolutionPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <Shield className="h-4 w-4 text-primary" />
-                    <span className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">Risk Score</span>
+                    <span className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">Connectivity Heuristic</span>
                     <span className={`font-mono text-lg font-bold ${scoreColor}`}>{Math.round(s.score)}</span>
                     <span className="font-mono text-[10px] text-muted-foreground">/ 100</span>
                   </div>
@@ -900,7 +915,7 @@ export default function IdentityResolutionPage() {
       {similarityScores.length > 0 && (
         <GlassPanel className="p-4" neonLine="top">
           <h3 className="font-mono text-xs tracking-widest text-primary mb-3 flex items-center gap-2">
-            <GitCompare className="h-3.5 w-3.5" /> BEHAVIORAL SIMILARITY ({similarityScores.length} pairs)
+            <GitCompare className="h-3.5 w-3.5" /> PATTERN SIMILARITY (HEURISTIC) ({similarityScores.length} pairs)
           </h3>
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {similarityScores.map((s) => {

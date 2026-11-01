@@ -1,0 +1,39 @@
+{
+  "scope": "Recoverable historical archives, retained beside selectively reconciled current expansion source. Historical claims are scoped to their captured source, not current product acceptance.",
+  "base": "3a4bd4de5e531140fc827a8ea3106092bf748681",
+  "activeWriter": "01a19442-d436-70e0-a691-65869f46164f",
+  "coordinationPending": false,
+  "archives": [
+    {
+      "name": "retained-history",
+      "file": "retained-history.bundle",
+      "head": "d5de90df667ecb3cef9c237f2d332847e154b54a",
+      "bytes": 659055,
+      "sha256": "b09a1d070ea1a6129ddc5b2464553cefb69f76582fce1f475de80312747e6013",
+      "scannedBlobs": 479,
+      "credentialPatternFindings": 0,
+      "scanLimit": "Limited literal/JWT scan, not a guarantee that arbitrary sensitive information is absent",
+      "bundleVerified": true,
+      "restoredHeadMatches": true,
+      "restoredGitFsck": "passed"
+    },
+    {
+      "name": "stopped-port",
+      "file": "stopped-port.bundle",
+      "head": "d253b2fff08828c52e42d4dac8a91b7d745b6883",
+      "bytes": 1306740,
+      "sha256": "0d94ccae22f1b364f2025c39c77139bae7ea671ac6f9fe08de7fd5d3220422ee",
+      "scannedBlobs": 486,
+      "credentialPatternFindings": 0,
+      "scanLimit": "Limited literal/JWT scan, not a guarantee that arbitrary sensitive information is absent",
+      "bundleVerified": true,
+      "restoredHeadMatches": true,
+      "restoredGitFsck": "passed"
+    }
+  ],
+  "remoteBackupCommit": null,
+  "remoteBranchCreated": false,
+  "publicationGate": "Known configurations permit a codex/* backup push; no main push, merge or deployment",
+  "activeWriterCoordination": "Human approval received; owner confirmed canonical/prepared source and released files",
+  "currentState": "../../repairs/WORK-STATE.json"
+}

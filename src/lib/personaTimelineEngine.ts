@@ -1,12 +1,14 @@
-import type { Json } from "@/integrations/supabase/types";
+import { checkedDatabase } from "@/lib/checkedDatabase";
+import { jsonValue } from "@/lib/jsonValue";
 import { supabase } from "@/integrations/supabase/client";
+import { isEvidenceIdentifier } from "./profileLookup";
 
 interface TimelineEvent {
   event_type: string;
   event_label: string;
   event_timestamp: string;
   source: string;
-  metadata: Record<string, Json>;
+  metadata: Record<string, unknown>;
 }
 
 export async function buildPersonaTimeline(
@@ -17,11 +19,12 @@ export async function buildPersonaTimeline(
   onProgress?.("Loading persona data...");
 
   // Get persona identifiers
-  const { data: identifiers } = await supabase
+  const { data: rawIdentifiers } = await checkedDatabase(supabase
     .from("persona_identifiers")
-    .select("identifier_type, identifier_value, confidence_score, created_at")
+    .select("identifier_type, identifier_value, confidence_score, created_at, source")
     .eq("persona_id", personaId)
-    .eq("user_id", userId);
+    .eq("user_id", userId));
+  const identifiers = rawIdentifiers?.filter(isEvidenceIdentifier);
 
   if (!identifiers?.length) {
     onProgress?.("No identifiers found");
@@ -41,13 +44,13 @@ export async function buildPersonaTimeline(
     { data: entityTimeline },
     { data: infraLinks },
   ] = await Promise.all([
-    supabase.from("identity_entities").select("id, entity_type, entity_value, created_at").eq("user_id", userId),
-    supabase.from("username_candidates").select("candidate_username, created_at, generation_method").eq("persona_id", personaId),
-    supabase.from("email_candidates").select("candidate_email, created_at, generation_method").eq("persona_id", personaId),
-    supabase.from("breach_records").select("id, entity_id, breach_source, breach_date, severity, data_exposed, created_at").eq("user_id", userId),
-    supabase.from("entity_observations").select("entity_id, case_id, source_tool, observed_value, created_at").eq("user_id", userId),
-    supabase.from("entity_timeline").select("entity_id, event_type, event_timestamp, description, source").eq("user_id", userId),
-    supabase.from("infrastructure_links").select("entity_id, infrastructure_type, value, created_at").eq("user_id", userId),
+    checkedDatabase(supabase.from("identity_entities").select("id, entity_type, entity_value, created_at").eq("user_id", userId)),
+    checkedDatabase(supabase.from("username_candidates").select("candidate_username, created_at, generation_method").eq("persona_id", personaId)),
+    checkedDatabase(supabase.from("email_candidates").select("candidate_email, created_at, generation_method").eq("persona_id", personaId)),
+    checkedDatabase(supabase.from("breach_records").select("id, entity_id, breach_source, breach_date, severity, data_exposed, created_at").eq("status", "exposure").eq("user_id", userId)),
+    checkedDatabase(supabase.from("entity_observations").select("entity_id, case_id, source_tool, observed_value, created_at").eq("user_id", userId)),
+    checkedDatabase(supabase.from("entity_timeline").select("entity_id, event_type, event_timestamp, description, source").eq("user_id", userId)),
+    checkedDatabase(supabase.from("infrastructure_links").select("entity_id, infrastructure_type, value, created_at").eq("source_tool", "live-dns").eq("user_id", userId)),
   ]);
 
   // Match entities to persona
@@ -62,33 +65,11 @@ export async function buildPersonaTimeline(
   // 1. Identifier discovery events
   for (const id of identifiers) {
     events.push({
-      event_type: "identifier_discovered",
-      event_label: `${id.identifier_type}: ${id.identifier_value}`,
+      event_type: id.source?.startsWith("live:") ? "identifier_retrieved" : "input_recorded",
+      event_label: `${id.source?.startsWith("live:") ? "Retrieved" : "Input recorded"} ${id.identifier_type}: ${id.identifier_value}`,
       event_timestamp: id.created_at,
       source: "persona_discovery",
       metadata: { type: id.identifier_type, value: id.identifier_value, confidence: id.confidence_score },
-    });
-  }
-
-  // 2. Username creation events
-  for (const u of usernames ?? []) {
-    events.push({
-      event_type: "username_generated",
-      event_label: `Username candidate: ${u.candidate_username}`,
-      event_timestamp: u.created_at,
-      source: u.generation_method,
-      metadata: { username: u.candidate_username },
-    });
-  }
-
-  // 3. Email permutation events
-  for (const e of emails ?? []) {
-    events.push({
-      event_type: "email_generated",
-      event_label: `Email candidate: ${e.candidate_email}`,
-      event_timestamp: e.created_at,
-      source: e.generation_method,
-      metadata: { email: e.candidate_email },
     });
   }
 
@@ -167,18 +148,20 @@ export async function buildPersonaTimeline(
 
   // Clear old events for this persona
   onProgress?.(`Saving ${events.length} events...`);
-  await supabase.from("persona_events").delete().eq("persona_id", personaId).eq("user_id", userId);
+  const existing = await checkedDatabase(supabase.from("persona_events").select("event_type,event_timestamp,event_label").eq("persona_id", personaId).eq("user_id", userId));
+  const existingKeys = new Set((existing.data || []).map(event => `${event.event_type}:${event.event_timestamp}:${event.event_label}`));
+  const fresh = events.filter(event => !existingKeys.has(`${event.event_type}:${event.event_timestamp}:${event.event_label}`));
 
   // Batch insert
   const batchSize = 50;
   let total = 0;
-  for (let i = 0; i < events.length; i += batchSize) {
-    const batch = events.slice(i, i + batchSize).map((ev) => ({
+  for (let i = 0; i < fresh.length; i += batchSize) {
+    const batch = fresh.slice(i, i + batchSize).map((ev) => ({
       persona_id: personaId,
       user_id: userId,
-      ...ev,
+      ...ev, metadata: jsonValue(ev.metadata),
     }));
-    const { data } = await supabase.from("persona_events").insert(batch).select("id");
+    const { data } = await checkedDatabase(supabase.from("persona_events").insert(batch).select("id"));
     total += data?.length ?? 0;
   }
 

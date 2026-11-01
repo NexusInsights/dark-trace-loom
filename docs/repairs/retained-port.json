@@ -1,0 +1,84 @@
+{
+  "copied": [
+    "src/components/tools/imageMetadata.ts",
+    "src/lib/ownedToolResults.ts",
+    "supabase/functions/_shared/imageHash.ts",
+    "supabase/functions/_shared/requireUser.ts",
+    "supabase/functions/_shared/safeFetch.ts",
+    "supabase/functions/image-hash/index.ts",
+    "supabase/functions/osint-dispatch/index.ts"
+  ],
+  "changes": [
+    {
+      "path": "src/components/tools/toolDefinitions.ts",
+      "declarations": [
+        "domainIntel",
+        "imageMetadata"
+      ]
+    },
+    {
+      "path": "src/components/tools/extraTools.ts",
+      "declarations": [
+        "ipGeo",
+        "portScanner",
+        "reverseImageHash",
+        "sslInspector"
+      ]
+    }
+  ],
+  "backendDeclarations": [
+    "safeFetch",
+    "ipGeo",
+    "dnsQuery",
+    "OptionalSourceFailure",
+    "optionalArray",
+    "githubRecon",
+    "reverseGeo",
+    "urlUnshorten",
+    "btcWallet",
+    "usernameSearch",
+    "rejectBlockedSearchPage",
+    "pasteSearch",
+    "darkWebSearch",
+    "breachLookup",
+    "phoneLookup",
+    "pdlGet"
+  ],
+  "retainedTests": [
+    "src/components/tools/ToolRunner.test.tsx",
+    "src/components/tools/executeTool.retained.test.ts",
+    "src/components/tools/registry.test.ts",
+    "src/lib/pipelineEngine.retained.test.ts",
+    "src/pages/Pipelines.test.tsx",
+    "src/test/domainCompositeIntegration.test.ts",
+    "src/test/fixtures/image-hash/ascending.png",
+    "src/test/fixtures/image-hash/checker.png",
+    "src/test/fixtures/image-hash/constant.jpg",
+    "src/test/fixtures/image-hash/constant.png",
+    "src/test/fixtures/image-hash/descending.png",
+    "src/test/fixtures/image-hash/manifest.json",
+    "src/test/fixtures/image-hash/transparent-a.png",
+    "src/test/fixtures/image-hash/transparent-b.png",
+    "src/test/fixtures/image-hash/unsupported.gif",
+    "src/test/fixtures/image-hash/unsupported.webp",
+    "src/test/fixtures/images/container.png",
+    "src/test/fixtures/images/invalid-gps.jpg",
+    "src/test/fixtures/images/manifest.json",
+    "src/test/fixtures/images/no-exif.jpg",
+    "src/test/fixtures/images/zero-gps.jpg",
+    "src/test/imageHashIntegration.test.ts",
+    "src/test/imageMetadataIntegration.test.ts",
+    "src/test/osintHandler.test.ts",
+    "src/test/ownershipIntegration.test.tsx",
+    "src/test/providerAcceptanceRegression.test.ts",
+    "src/test/security.test.ts"
+  ],
+  "preserved": [
+    "current registry entries and exact profile API",
+    "PDL search and normalization",
+    "all generated marketplace blocks and routes",
+    "research and monitoring expansion",
+    "current backend bindings and environment"
+  ],
+  "sourceHistory": "d5de90df667ecb3cef9c237f2d332847e154b54a"
+}

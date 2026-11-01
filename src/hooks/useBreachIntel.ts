@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +11,7 @@ export function useBreachRecords(entityId?: string | null) {
     queryFn: async () => {
       let query = supabase
         .from("breach_records")
-        .select("*, entity:identity_entities!breach_records_entity_id_fkey(*)")
+        .select("*, entity:identity_entities!breach_records_entity_id_fkey(*)").eq("status", "exposure")
         .eq("user_id", user!.id)
         .order("severity", { ascending: true });
 
@@ -31,10 +32,10 @@ export function useBreachStats() {
     queryKey: ["breach_stats", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("breach_records")
-        .select("severity, credential_leaked, password_reuse_detected")
-        .eq("user_id", user!.id);
+        .select("severity, credential_leaked, password_reuse_detected").eq("status", "exposure")
+        .eq("user_id", user!.id));
       if (error) throw error;
 
       const records = data ?? [];

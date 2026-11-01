@@ -1,0 +1,31 @@
+project_id = "insight-nexus"
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.api-gateway]
+verify_jwt = false
+
+[functions.analyze-case]
+verify_jwt = false
+
+[functions.check-alerts]
+verify_jwt = false
+
+[functions.osint-dispatch]
+verify_jwt = false
+
+[functions.breach-lookup]
+verify_jwt = false
+
+[functions.wigle-lookup]
+verify_jwt = false
+
+[functions.image-hash]
+verify_jwt = false
+
+[functions.invite-member]
+verify_jwt = false
+
+[functions.accept-invite]
+verify_jwt = false

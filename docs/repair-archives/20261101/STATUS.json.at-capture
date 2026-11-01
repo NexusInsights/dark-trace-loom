@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-01",
+  "repository": "NexusInsights/dark-trace-loom",
+  "observedRemoteMain": "9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86",
+  "observedMainCommitDate": "2026-11-01T08:31:40Z",
+  "observedMainAuthor": "gpt-engineer-app[bot]",
+  "clonedTrackingMain": "3ea92ce99a0dd571bc31c36e01e37aca23547c09",
+  "portBase": "3a4bd4de5e531140fc827a8ea3106092bf748681",
+  "retainedRepairHead": "d5de90df667ecb3cef9c237f2d332847e154b54a",
+  "stoppedPortHead": "d253b2fff08828c52e42d4dac8a91b7d745b6883",
+  "backupLocalCommitBeforeThisRecord": "91bc98f9c076325fdf29cfbc976c935f04ab2642",
+  "remoteBackupCommit": null,
+  "remoteBackupBranchCreated": false,
+  "activeWriter": {
+    "threadId": "01a19442-d436-70e0-a691-65869f46164f",
+    "title": "Review tracking and scraping code",
+    "status": "active",
+    "sourceReported": "D:/CodexProjects/github-merge-verification-2026-10-17/repos/NexusInsights__dark-trace-loom",
+    "registryCwdNotCanonicalSource": "C:/Users/gloss/OneDrive/Documents/ChatGPT/TJK OPS",
+    "coordinationMessageSent": true,
+    "directMessagePermissionQuestionPending": false,
+    "directHumanAuthorization": "I approve coordination messages",
+    "coordinationResponsePending": true
+  },
+  "publicationInspection": {
+    "pinnedSourceWorkflow": "lint/type/tests/build only",
+    "currentMainContainerWorkflow": {
+      "gitBlobSha": "07ccadaab2b2008978a9a91f14b797f3702cae0a",
+      "sourceRef": "40d1520a93d6483d05a15b5ef98403780e7f9b7a",
+      "branchFilter": "main",
+      "publishesImage": false,
+      "deploysCloudflare": false,
+      "scope": "docker build and local image smoke test only"
+    },
+    "combinedCommitStatuses": [],
+    "externalBranchPublicationPolicyVerified": false,
+    "reason": "No authoritative Cloudflare Pages/Lovable/external Git-preview configuration was obtained; repository workflows and empty statuses do not establish its absence"
+  },
+  "actualValidation": {
+    "bundleVerify": "both pass",
+    "freshLocalRestores": "both source HEADs match",
+    "gitFsck": "both pass; stopped-port restore also reports one valid dangling commit",
+    "newProductTests": "not run",
+    "newExactShaCI": "not run; no remote backup/source commit created"
+  },
+  "blockers": [
+    "Coordination message is explicitly authorized and sent; canonical source/branch and file-ownership response pending before intersecting edits/pushes",
+    "Verify automatic branch publication behavior or obtain explicit approval for any resulting preview/deployment before remote backup",
+    "Local dependency junction denied; do not retry or install runtimes without approval"
+  ],
+  "newSourceChangesAfterWriterDiscovery": false,
+  "deployments": 0
+}

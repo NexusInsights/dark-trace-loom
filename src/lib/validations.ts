@@ -94,7 +94,7 @@ export const setRoleSchema = z.object({
 export const personaDiscoverySchema = z.object({
   name: z.string().trim().max(200, "Name too long").optional().default(""),
   username: z.string().trim().max(100, "Username too long")
-    .refine((v) => !v || /^[a-zA-Z0-9._\-@]*$/.test(v), "Username contains invalid characters")
+    .refine((v) => !v || /^[a-zA-Z0-9._@-]*$/.test(v), "Username contains invalid characters")
     .optional().default(""),
   email: z.string().trim().max(255, "Email too long")
     .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email format")

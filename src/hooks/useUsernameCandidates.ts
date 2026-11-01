@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,11 +12,11 @@ export function useUsernameCandidates(personaId: string | null) {
     queryKey: ["username_candidates", personaId],
     enabled: !!personaId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("username_candidates")
         .select("*")
         .eq("persona_id", personaId!)
-        .order("confidence_score", { ascending: false });
+        .order("confidence_score", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },

@@ -1,4 +1,6 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
+import { evidenceText } from "./evidenceText";
 
 export type CorrelationType = "username" | "email" | "domain" | "ip" | "phone";
 
@@ -28,7 +30,7 @@ const PATTERNS: Record<CorrelationType, RegExp> = {
   domain: /(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})/g,
   ip: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
   phone: /(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}/g,
-  username: /@([a-zA-Z0-9_]{2,30})/g,
+  username: /(?<![a-zA-Z0-9._%+-])@([a-zA-Z0-9_]{2,30})\b/g,
 };
 
 /** Extract identifiers from text */
@@ -41,6 +43,8 @@ function extractIdentifiers(text: string, artifactId: string, caseId: string): E
     let match: RegExpExecArray | null;
     while ((match = re.exec(text)) !== null) {
       const value = (type === "username" ? match[1] : match[0]).toLowerCase();
+      if (type === "ip" && value.split(".").some(part => Number(part) > 255)) continue;
+      if (type === "phone" && value.replace(/\D/g, "").length < 10) continue;
       // Skip common false positives
       if (type === "domain" && /^(localhost|example\.com|test\.\w+)$/i.test(value)) continue;
       if (type === "ip" && (value === "0.0.0.0" || value === "127.0.0.1" || value.startsWith("255."))) continue;
@@ -131,10 +135,10 @@ export async function runCorrelationEngine(
   onProgress?: (step: string) => void
 ): Promise<{ correlationsFound: number; identifiersScanned: number }> {
   onProgress?.("Loading cases...");
-  const { data: cases, error: casesError } = await supabase
+  const { data: cases, error: casesError } = await checkedDatabase(supabase
     .from("cases")
     .select("id, title")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }));
 
   if (casesError) throw new Error(`Failed to load cases: ${casesError.message}`);
   if (!cases || cases.length < 2) {
@@ -143,25 +147,25 @@ export async function runCorrelationEngine(
 
   onProgress?.(`Scanning artifacts across ${cases.length} cases...`);
   const caseIds = cases.map((c) => c.id);
-  const { data: artifacts, error: artError } = await supabase
+  const { data: artifacts, error: artError } = await checkedDatabase(supabase
     .from("artifacts")
     .select("id, case_id, data, artifact_type")
-    .in("case_id", caseIds);
+    .in("case_id", caseIds));
 
   if (artError) throw new Error(`Failed to load artifacts: ${artError.message}`);
 
   // Also scan subjects
-  const { data: subjects } = await supabase
+  const { data: subjects } = await checkedDatabase(supabase
     .from("subjects")
     .select("id, case_id, name, notes, type")
-    .in("case_id", caseIds);
+    .in("case_id", caseIds));
 
   onProgress?.("Extracting identifiers...");
   const allIdentifiers: ExtractedIdentifier[] = [];
 
   for (const a of artifacts ?? []) {
     if (a.data) {
-      allIdentifiers.push(...extractIdentifiers(a.data, a.id, a.case_id));
+      allIdentifiers.push(...extractIdentifiers(evidenceText(a.data), a.id, a.case_id));
     }
   }
 
@@ -178,7 +182,7 @@ export async function runCorrelationEngine(
   if (correlations.length > 0) {
     onProgress?.(`Saving ${correlations.length} correlations...`);
     // Clear old correlations for this user
-    await supabase.from("cross_case_correlations").delete().eq("user_id", userId);
+    await checkedDatabase(supabase.from("cross_case_correlations").delete().eq("user_id", userId));
 
     // Insert new correlations in batches
     const batchSize = 50;
@@ -197,7 +201,7 @@ export async function runCorrelationEngine(
         confidence: c.confidence,
       }));
 
-      const { error } = await supabase.from("cross_case_correlations").insert(batch);
+      const { error } = await checkedDatabase(supabase.from("cross_case_correlations").insert(batch));
       if (error) console.error("Batch insert error:", error.message);
     }
   }

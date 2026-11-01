@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-01",
+  "repository": "https://github.com/NexusInsights/dark-trace-loom",
+  "branch": "codex/reconcile-insight-repairs-20261101",
+  "repositoryBaseline": "9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86",
+  "canonicalSource": "C:/Users/gloss/OneDrive/Documents/ChatGPT/Insight Nexus/dark-trace-loom",
+  "preparedSource": "D:/CodexProjects/insightnexus-expansion-20261101",
+  "sourceHasGit": false,
+  "coordination": {
+    "thread": "01a19442-d436-70e0-a691-65869f46164f",
+    "humanAuthorized": true,
+    "completed": true,
+    "writerReleasedFiles": true,
+    "otherThreadsStatusNotAsserted": true
+  },
+  "retainedHistory": "d5de90df667ecb3cef9c237f2d332847e154b54a",
+  "stoppedPort": "d253b2fff08828c52e42d4dac8a91b7d745b6883",
+  "localCommit": null,
+  "remoteCommit": null,
+  "tests": {
+    "app": {
+      "tests": 1012,
+      "passed": 1012,
+      "failed": 0,
+      "files": 81
+    },
+    "worker": 36,
+    "cloudflarePackaging": 19,
+    "intelligenceClient": 15,
+    "intelligenceSql": 11,
+    "research": 107,
+    "monitors": 23,
+    "ownershipSql": 1,
+    "dispatcherSynthetic": 29,
+    "githubPairedSynthetic": 10,
+    "lint": {
+      "errors": 0,
+      "warnings": 16
+    },
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "publication": {
+    "cloudflarePagesGitProvider": "No, verified by owner",
+    "lovableSyncedBranch": "main only, verified by owner",
+    "githubWorkflows": "validation only; main-only container preparation",
+    "nonProductionBackupRoute": "codex/* permitted under current checked configuration",
+    "uninspectedExternalWebhooks": "not certified",
+    "deploymentRequestedByThisContinuation": false
+  },
+  "boundaries": {
+    "noCredentialsAdded": true,
+    "noInstallPerformed": true,
+    "noProviderCallsPerformed": true,
+    "noOwnerSourceWritten": true,
+    "noLiveSettingsOrPoliciesChanged": true
+  },
+  "remaining": [
+    "Commit and back up nonproduction branch; verify remote SHA and exact-SHA CI",
+    "Separate release review: actual deployed functions, live schema/RLS and authenticated browser acceptance remain unverified",
+    "Exact Deno/ImageScript runtime setup remains unapproved; Sharp fixture decoding is not ImageScript acceptance"
+  ],
+  "ownerSnapshotDrift": []
+}

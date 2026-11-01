@@ -1,3 +1,5 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
+import { downloadArtifact } from "@/lib/downloadArtifact";
 import { useState } from "react";
 import { GlassPanel } from "@/components/intel";
 import { Button } from "@/components/ui/button";
@@ -18,7 +20,7 @@ import {
 
 const FORMAT_OPTIONS: { id: BundleFormat; label: string; description: string; icon: typeof Archive }[] = [
   { id: "zip", label: "Evidence Archive", description: "Text archive with all artifacts, metadata, chain-of-custody, and verification hashes", icon: Archive },
-  { id: "legal-pdf", label: "Legal Evidence PDF", description: "Formatted document suitable for court proceedings with integrated integrity verification", icon: FileText },
+  { id: "legal-pdf", label: "Evidence Summary PDF", description: "PDF of saved records and recorded custody entries; legal admissibility is not established", icon: FileText },
 ];
 
 export default function EvidenceExportPage() {
@@ -39,13 +41,13 @@ export default function EvidenceExportPage() {
     queryKey: ["evidence-bundles", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("reports")
         .select("*")
         .eq("user_id", user!.id)
         .like("report_type", "evidence-bundle-%")
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(20));
       if (error) throw error;
       return data ?? [];
     },
@@ -79,7 +81,7 @@ export default function EvidenceExportPage() {
   const handleDownload = async (filePath: string) => {
     try {
       const url = await getReportDownloadUrl(filePath);
-      if (url) window.open(url, "_blank");
+      await downloadArtifact(url);
     } catch {
       toast.error("Failed to get download link");
     }
@@ -87,8 +89,8 @@ export default function EvidenceExportPage() {
 
   const handleDelete = async (reportId: string, filePath: string | null) => {
     try {
-      if (filePath) await supabase.storage.from("reports").remove([filePath]);
-      await supabase.from("reports").delete().eq("id", reportId);
+      if (filePath) await checkedDatabase(supabase.storage.from("reports").remove([filePath]));
+      await checkedDatabase(supabase.from("reports").delete().eq("id", reportId));
       refetchBundles();
       toast.success("Bundle deleted");
     } catch {
@@ -108,7 +110,7 @@ export default function EvidenceExportPage() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Evidence</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Legal Evidence Export</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Generate court-ready evidence bundles with chain-of-custody documentation and integrity verification.
+          Export saved records with a snapshot hash and recorded custody log. External originals, factual accuracy and legal admissibility are not verified by this export.
         </p>
       </div>
 
@@ -229,7 +231,7 @@ export default function EvidenceExportPage() {
                 variant="outline"
                 size="sm"
                 className="w-full gap-2"
-                onClick={() => window.open(lastResult.url, "_blank")}
+                onClick={() => downloadArtifact(lastResult.url).catch(error => toast.error(error.message))}
               >
                 <Download className="h-3.5 w-3.5" />
                 DOWNLOAD BUNDLE
@@ -276,7 +278,7 @@ export default function EvidenceExportPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold">
-                        {isLegalPdf ? "Legal Evidence PDF" : "Evidence Archive"}
+                        {isLegalPdf ? "Evidence Summary PDF" : "Evidence Archive"}
                       </span>
                       <span className="intel-tag intel-tag-blue text-[8px]">
                         {isLegalPdf ? "PDF" : "ARCHIVE"}
@@ -298,6 +300,7 @@ export default function EvidenceExportPage() {
                     size="sm"
                     className="gap-1 font-mono text-[10px]"
                     onClick={() => r.file_path && handleDownload(r.file_path)}
+                    aria-label={`Download ${r.format.toUpperCase()} bundle`}
                   >
                     <Download className="h-3 w-3" />
                   </Button>

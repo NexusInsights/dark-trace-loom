@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,10 +57,10 @@ export default function OrganizationsPage() {
   const { data: orgs = [], isLoading } = useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("organizations")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data as Organization[];
     },
@@ -154,11 +155,11 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["org-members", org.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("organization_members")
         .select("*")
         .eq("organization_id", org.id)
-        .order("joined_at", { ascending: true });
+        .order("joined_at", { ascending: true }));
       if (error) throw error;
       return data as OrgMember[];
     },
@@ -167,11 +168,11 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
   const { data: orgCases = [] } = useQuery({
     queryKey: ["org-cases", org.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("cases")
         .select("id, title, created_at, owner_id")
         .eq("organization_id", org.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data;
     },
@@ -179,10 +180,10 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
 
   const removeMemberMutation = useMutation({
     mutationFn: async (memberId: string) => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("organization_members")
         .delete()
-        .eq("id", memberId);
+        .eq("id", memberId));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -193,10 +194,10 @@ function OrgDetail({ org, userId }: { org: Organization; userId?: string }) {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ memberId, role }: { memberId: string; role: "admin" | "investigator" | "viewer" }) => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("organization_members")
         .update({ role: role })
-        .eq("id", memberId);
+        .eq("id", memberId));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -426,11 +427,11 @@ function InvitationsList({ orgId }: { orgId: string }) {
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ["org-invitations", orgId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("organization_invitations")
         .select("*")
         .eq("organization_id", orgId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },
@@ -438,7 +439,7 @@ function InvitationsList({ orgId }: { orgId: string }) {
 
   const revoke = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("organization_invitations").delete().eq("id", id);
+      const { error } = await checkedDatabase(supabase.from("organization_invitations").delete().eq("id", id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -495,10 +496,10 @@ function OrgSettings({ org, isOwner }: { org: Organization; isOwner: boolean }) 
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
+      const { error } = await checkedDatabase(supabase
         .from("organizations")
         .update({ name, description })
-        .eq("id", org.id);
+        .eq("id", org.id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -510,7 +511,7 @@ function OrgSettings({ org, isOwner }: { org: Organization; isOwner: boolean }) 
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("organizations").delete().eq("id", org.id);
+      const { error } = await checkedDatabase(supabase.from("organizations").delete().eq("id", org.id));
       if (error) throw error;
     },
     onSuccess: () => {
@@ -580,32 +581,32 @@ function CreateOrgDialog({
       let slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       
       // Check for slug collision and append random suffix if needed
-      const { data: existing } = await supabase
+      const { data: existing } = await checkedDatabase(supabase
         .from("organizations")
         .select("id")
         .eq("slug", slug)
-        .maybeSingle();
+        .maybeSingle());
       if (existing) {
         slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
       }
 
       // Create org
-      const { data: org, error: orgError } = await supabase
+      const { data: org, error: orgError } = await checkedDatabase(supabase
         .from("organizations")
         .insert({ name, slug, owner_id: userId, description: description || null })
         .select()
-        .single();
+        .single());
       if (orgError) throw orgError;
 
       // Add creator as owner member
-      const { error: memberError } = await supabase
+      const { error: memberError } = await checkedDatabase(supabase
         .from("organization_members")
         .insert({
           organization_id: org.id,
           user_id: userId,
           role: "owner" as const,
           invited_by: userId,
-        });
+        }));
       if (memberError) throw memberError;
     },
     onSuccess: () => {

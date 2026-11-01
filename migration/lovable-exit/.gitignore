@@ -1,0 +1,9 @@
+private-exports/
+*.backup
+*.dump
+*.zip
+*.pgpass
+*.env
+*.pem
+*.key
+test-sdk/node_modules/

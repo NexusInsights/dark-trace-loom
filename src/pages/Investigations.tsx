@@ -1,3 +1,4 @@
+import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useState } from "react";
 import { GlassPanel, IntelCard, InvestigationTimeline, AnalysisPanel } from "@/components/intel";
 import { CaseCollaborators } from "@/components/collaboration/CaseCollaborators";
@@ -77,11 +78,11 @@ function EvidenceLogViewer({ artifactId }: { artifactId: string }) {
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["evidence_logs", artifactId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("evidence_logs")
         .select("*")
         .eq("artifact_id", artifactId)
-        .order("timestamp", { ascending: false });
+        .order("timestamp", { ascending: false }));
       if (error) throw error;
       return data ?? [];
     },
@@ -136,10 +137,10 @@ function NewCaseWithTemplates({
   const { data: templates = [] } = useQuery({
     queryKey: ["investigation-templates"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await checkedDatabase(supabase
         .from("investigation_templates")
         .select("*")
-        .order("name");
+        .order("name"));
       if (error) throw error;
       return data ?? [];
     },
@@ -286,7 +287,7 @@ export default function InvestigationsPage() {
   };
 
   const handleAcknowledgeLink = async (linkId: string) => {
-    await supabase.from("cross_case_links").update({ acknowledged: true }).eq("id", linkId);
+    await checkedDatabase(supabase.from("cross_case_links").update({ acknowledged: true }).eq("id", linkId));
     qc.invalidateQueries({ queryKey: ["cross_case_links"] });
     qc.invalidateQueries({ queryKey: ["cross_case_stats"] });
   };
@@ -306,7 +307,7 @@ export default function InvestigationsPage() {
   };
 
   const handleDismissSuggestion = async (id: string) => {
-    await supabase.from("investigation_suggestions").update({ dismissed: true }).eq("id", id);
+    await checkedDatabase(supabase.from("investigation_suggestions").update({ dismissed: true }).eq("id", id));
     qc.invalidateQueries({ queryKey: ["investigation_suggestions"] });
   };
 
@@ -686,7 +687,7 @@ export default function InvestigationsPage() {
               if (isFile) {
                 const fileMeta = JSON.parse(selectedArtifact.data!);
                 const handleDownload = async () => {
-                  const { data } = await supabase.storage.from("artifacts").createSignedUrl(fileMeta.storage_path, 60);
+                  const { data } = await checkedDatabase(supabase.storage.from("artifacts").createSignedUrl(fileMeta.storage_path, 60));
                   if (data?.signedUrl) window.open(data.signedUrl, "_blank");
                 };
                 return (

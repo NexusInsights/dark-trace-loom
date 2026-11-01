@@ -1,0 +1,159 @@
+{
+  "scope": "Actual manual helper, registry, exifr byte parser, safe-fetch guard, and pipeline engine. Synthetic transport/images and in-memory persistence only. No real photographs, network, browser UI, or live DB acceptance.",
+  "sourceFiles": [
+    {
+      "path": "src/components/tools/imageMetadata.ts",
+      "sha256": "748af97d0fa2857dff95a3e82feca5f041a0410788234c467047e5d33e1b8571"
+    },
+    {
+      "path": "src/components/tools/toolDefinitions.ts",
+      "sha256": "f035de79dfb0c35a97418542937912217cb9cb23356422472b50caec504515ed"
+    },
+    {
+      "path": "src/components/tools/executeTool.ts",
+      "sha256": "ae4d8cddceb257f771ca66dafebea338d7b703ee0ef24dd10ca86185ddcb2dbb"
+    },
+    {
+      "path": "src/lib/pipelineEngine.ts",
+      "sha256": "2bc9309614a43132b3ae8442e1bf1b64d12e36bf92fe8a3f30a6490059a58536"
+    },
+    {
+      "path": "supabase/functions/_shared/safeFetch.ts",
+      "sha256": "b3a5ed1389c2fd8007c872b1d9c2fdded8e0bcd9c30dca9e5b99d2dd0ec1ebf8"
+    },
+    {
+      "path": "src/test/fixtures/images/manifest.json",
+      "sha256": "f909728c85f5cbd2b150872189dd5fdda1b9e876b9d202fe5a87d3e3439dce78"
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "zero-gps",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "provenance": {
+        "source": "fetched image bytes",
+        "parser": "exifr",
+        "max_bytes": 5242880,
+        "timeout_ms": 10000,
+        "scope": "Container and metadata parsing only. GPS is embedded metadata, not a verified image location. No pixel decoding or authenticity verification."
+      },
+      "accepted": true
+    },
+    {
+      "scenario": "no-exif",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "provenance": {
+        "source": "fetched image bytes",
+        "parser": "exifr",
+        "max_bytes": 5242880,
+        "timeout_ms": 10000,
+        "scope": "Container and metadata parsing only. GPS is embedded metadata, not a verified image location. No pixel decoding or authenticity verification."
+      },
+      "accepted": true
+    },
+    {
+      "scenario": "png",
+      "manualStatus": "success",
+      "pipelineStatus": "completed",
+      "artifactsCreated": 1,
+      "provenance": {
+        "source": "fetched image bytes",
+        "parser": "exifr",
+        "max_bytes": 5242880,
+        "timeout_ms": 10000,
+        "scope": "Container and metadata parsing only. GPS is embedded metadata, not a verified image location. No pixel decoding or authenticity verification."
+      },
+      "accepted": true
+    },
+    {
+      "scenario": "invalid-gps",
+      "manualStatus": "partial",
+      "pipelineStatus": "partial",
+      "artifactsCreated": 0,
+      "provenance": {
+        "source": "fetched image bytes",
+        "parser": "exifr",
+        "max_bytes": 5242880,
+        "timeout_ms": 10000,
+        "scope": "Container and metadata parsing only. GPS is embedded metadata, not a verified image location. No pixel decoding or authenticity verification."
+      },
+      "accepted": true
+    },
+    {
+      "scenario": "http-error",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Image source HTTP 403",
+      "accepted": true
+    },
+    {
+      "scenario": "cors-error",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "SYNTHETIC CORS rejection",
+      "accepted": true
+    },
+    {
+      "scenario": "invalid-bytes",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Invalid, incomplete, or unsupported image container. Use a direct JPEG or PNG URL.",
+      "accepted": true
+    },
+    {
+      "scenario": "truncated-png",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Invalid, incomplete, or unsupported image container. Use a direct JPEG or PNG URL.",
+      "accepted": true
+    },
+    {
+      "scenario": "empty-jpeg",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Invalid, incomplete, or unsupported image container. Use a direct JPEG or PNG URL.",
+      "accepted": true
+    },
+    {
+      "scenario": "oversized",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Response body exceeded 5242880 bytes",
+      "accepted": true
+    },
+    {
+      "scenario": "private-redirect",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Blocked private or unresolved destination",
+      "accepted": true
+    },
+    {
+      "scenario": "private-dns",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Blocked private or unresolved destination",
+      "accepted": true
+    },
+    {
+      "scenario": "redirect-loop",
+      "manualStatus": "error",
+      "pipelineStatus": "failed",
+      "artifactsCreated": 0,
+      "reason": "Too many redirects",
+      "accepted": true
+    }
+  ]
+}

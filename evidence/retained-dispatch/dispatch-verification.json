@@ -1,0 +1,238 @@
+{
+  "scope": "Actual isolated dispatcher and fetch guard. Synthetic auth, policy responses, repository and network transport only; no sockets, SQL/RLS, production deployment or live acceptance. Owner checkout not accessed.",
+  "sourceSha256": "6ff3ad7c1e5044e4b79508e3e66355aca7179a34a741aaa17181e6d85a19ab0b",
+  "passed": 29,
+  "total": 29,
+  "checks": [
+    {
+      "name": "disabled",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "permission-error",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "permission-malformed",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "permission-value",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "foreign case",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "denied alternate alias cannot bypass canonical permission",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "case-missing",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "case-error",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "wrong-owner",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "owned case",
+      "passed": true,
+      "http": 200,
+      "status": "success",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "standalone",
+      "passed": true,
+      "http": 200,
+      "status": "success",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "revoked before save",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 0
+    },
+    {
+      "name": "insert error",
+      "passed": true,
+      "http": 500,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 0
+    },
+    {
+      "name": "insert exception",
+      "passed": true,
+      "http": 503,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 0
+    },
+    {
+      "name": "missing auth",
+      "passed": true,
+      "http": 401,
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "invalid auth",
+      "passed": true,
+      "http": 401,
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "auth exception",
+      "passed": true,
+      "http": 503,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "unsupported ID",
+      "passed": true,
+      "http": 422,
+      "status": "unknown_tool",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "SSL progress",
+      "passed": true,
+      "http": 200,
+      "status": "partial",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "SSL final",
+      "passed": true,
+      "http": 200,
+      "status": "success",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "SSL failed",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "SSL malformed",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "private URL https://127.0.0.1/private",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 1
+    },
+    {
+      "name": "private URL http://127.0.0.1/private",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 1
+    },
+    {
+      "name": "private URL https://[::1]/private",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 1
+    },
+    {
+      "name": "private DNS",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 1
+    },
+    {
+      "name": "private redirect",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "HTTP rejection",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "IP provider unavailable",
+      "passed": true,
+      "http": 200,
+      "status": "not_configured",
+      "syntheticProviderCalls": 0,
+      "savedRows": 1
+    }
+  ]
+}

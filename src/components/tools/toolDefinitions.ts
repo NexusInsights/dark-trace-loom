@@ -1,14 +1,19 @@
+import { runOsint } from "./runOsint";
+import { extractImageMetadata } from "./imageMetadata";
+import { ToolExecutionError, type ExecutionStatus } from "./executeTool";
+import { isBlockedAddress } from "../../../supabase/functions/_shared/safeFetch";
 import { ToolDefinition, ToolResult } from "./types";
+import { localPlateOcr } from './localPlateOcr';
+import { geofenceMonitor } from './marketplaceMonitorTools';
 import { Globe, User, Mail, Image, Clock } from "lucide-react";
 import { extraTools } from "./extraTools";
+import { marketplaceLocalTools } from "./marketplaceLocalTools";
+import { marketplaceRemoteTools } from "./marketplaceRemoteTools";
+import { publicRecordTools } from './publicRecordTools';
 import { supabase } from "@/integrations/supabase/client";
+import { lookupProfiles } from "@/lib/profileLookup";
 
-async function runOsint<T = Record<string, unknown>>(action: string, params: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("osint-tools", { body: { action, params } });
-  if (error) throw new Error(error.message || `${action} failed`);
-  if (data?.error) throw new Error(data.error);
-  return data as T;
-}
+
 
 // ─── 1. Username Search ───
 const usernamePlatforms = [
@@ -20,7 +25,7 @@ const usernamePlatforms = [
 const usernameSearch: ToolDefinition = {
   id: "username-search",
   name: "Username Search",
-  description: "Live-check a username across 15+ platforms via real HTTP probes",
+  description: "Retrieve exact public account records from GitHub, GitLab, DEV Community, Hacker News and Keybase with source links",
   icon: User,
   category: "Identity",
   fields: [
@@ -28,10 +33,11 @@ const usernameSearch: ToolDefinition = {
   ],
   process: async (inputs) => {
     const username = inputs.username.trim();
-    const data = await runOsint<{ total_found: number; total_checked: number }>("username-search", { username });
+    const data = await lookupProfiles(username.replace(/^@/, ""));
+    if (data.checks.every(c => c.status === "unavailable")) throw new Error("All profile providers are unavailable; no account existence was established");
     return {
-      summary: `Found "${username}" on ${data.total_found}/${data.total_checked} platforms`,
-      details: data, tags: ["identity", "username", "social-media"],
+      summary: `${data.profiles.length} public account records for "${username}"; ${data.checks.filter(c => c.status === "unavailable").length} unavailable providers. Shared handles do not prove shared ownership.`,
+      details: { ...data }, tags: ["identity", "username", "public-api"],
     };
   },
 };
@@ -40,27 +46,58 @@ const usernameSearch: ToolDefinition = {
 const domainIntel: ToolDefinition = {
   id: "domain-intel",
   name: "Domain Intelligence",
-  description: "Combined WHOIS/RDAP + DNS + IP geolocation for a domain",
+  description: "Combined WHOIS/RDAP + DNS with optional configured IP geolocation",
   icon: Globe,
   category: "Reconnaissance",
   fields: [
     { key: "domain", label: "Domain", placeholder: "e.g. example.com", required: true },
   ],
   process: async (inputs) => {
-    const domain = inputs.domain.trim().replace(/^https?:\/\//, "").split("/")[0];
+    let domain: string;
+    try {
+      const input = inputs.domain.trim();
+      const url = new URL(input.includes("://") ? input : "https://" + input);
+      domain = url.hostname.toLowerCase().replace(/\.$/, "");
+      if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || !domain.includes(".") || /^\d+(?:\.\d+){3}$/.test(domain)
+        || domain.length > 253 || domain.split(".").some(label => !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))) throw new Error();
+    } catch { throw new ToolExecutionError("Enter a DNS domain or an HTTP(S) URL without credentials"); }
+    type Source = { status: ExecutionStatus; data?: Record<string, unknown>; reason?: string };
+    const capture = async (action: string, params: Record<string, unknown>, validate: (data: Record<string, unknown>) => boolean): Promise<Source> => {
+      try {
+        const data = await runOsint<Record<string, unknown>>(action, params);
+        if (Array.isArray(data) || !validate(data)) throw new ToolExecutionError("Provider returned invalid " + action + " data");
+        return { data, status: data.status === "partial" ? "partial" : data.status === "demo" ? "demo" : "success" };
+      } catch (error) {
+        return { status: error instanceof ToolExecutionError ? error.status : "error", reason: error instanceof Error ? error.message : "Source unavailable" };
+      }
+    };
+    const dnsKeys = ["a", "aaaa", "mx", "txt", "ns", "cname", "soa"];
     const [whois, dns] = await Promise.all([
-      runOsint("whois", { domain }).catch((e) => ({ error: e.message })),
-      runOsint<{ a?: string[] }>("dns-query", { domain }).catch((e) => ({ error: (e as Error).message })),
+      capture("whois", { domain }, data => typeof data.domain === "string" && data.domain.toLowerCase() === domain
+        && [data.handle, data.registrar, data.registered, ...(Array.isArray(data.nameservers) ? data.nameservers : [])].some(value => typeof value === "string" && value.length > 0)),
+      capture("dns-query", { domain }, data => data.domain === domain && dnsKeys.every(key => Array.isArray(data[key]) && (data[key] as unknown[]).every(value => typeof value === "string"))),
     ]);
-    let hosting: unknown = null;
-    const a = (dns as { a?: string[] }).a;
-    if (a && a[0]) {
-      hosting = await runOsint("ip-geo", { ip: a[0] }).catch((e) => ({ error: (e as Error).message }));
+    let hosting: Source | { status: "skipped"; reason: string } = { status: "skipped", reason: dns.data ? "DNS returned no public A address" : "DNS unavailable" };
+    const addresses = Array.isArray(dns.data?.a) ? dns.data.a as string[] : [];
+    if (addresses.length) {
+      const ip = addresses.find(address => /^\d{1,3}(?:\.\d{1,3}){3}$/.test(address) && !isBlockedAddress(address));
+      hosting = ip ? await capture("ip-geo", { ip }, data => data.ip === ip && [data.country, data.isp, data.org, data.asn].some(value => typeof value === "string" && value.length > 0))
+        : { status: "error", reason: "DNS returned only non-public or invalid A addresses; hosting lookup was not sent" };
     }
+    const statuses = [whois.status, dns.status, ...(hosting.status === "skipped" ? [] : [hosting.status])];
+    const status: ExecutionStatus = statuses.includes("demo") ? "demo"
+      : statuses.every(value => value === "success") ? "success"
+      : statuses.some(value => value === "success" || value === "partial") ? "partial"
+      : statuses.every(value => value === "not_configured") ? "not_configured"
+      : statuses.every(value => value === "unknown_tool") ? "unknown_tool" : "error";
+    const value = (source: Source) => source.data ?? { status: source.status, error: source.reason };
     return {
-      summary: `Intelligence gathered for ${domain}`,
-      details: { domain, whois, dns, hosting },
-      tags: ["domain", "dns", "whois"],
+      status,
+      summary: `Domain lookup ${status} for ${domain}`,
+      details: { domain, whois: value(whois), dns: value(dns), hosting: hosting.status === "skipped" ? null : value(hosting),
+        source_statuses: { whois: { status: whois.status, reason: whois.reason }, dns: { status: dns.status, reason: dns.reason }, hosting: { status: hosting.status, reason: hosting.reason } },
+        ...(status === "demo" ? { demo: true } : {}) },
+      tags: ["domain", "dns", "whois", ...(status === "demo" ? ["demo"] : [])],
     };
   },
 };
@@ -77,7 +114,6 @@ const emailHeaderAnalysis: ToolDefinition = {
   ],
   process: async (inputs) => {
     const raw = inputs.headers.trim();
-    await new Promise((r) => setTimeout(r, 700));
 
     const lines = raw.split("\n");
     const fromMatch = raw.match(/From:\s*(.+)/i);
@@ -98,13 +134,14 @@ const emailHeaderAnalysis: ToolDefinition = {
         relay_hops: receivedCount,
         total_lines: lines.length,
         authentication: {
-          spf: spfPass ? "PASS" : "FAIL/MISSING",
-          dkim: dkimPass ? "PASS" : "FAIL/MISSING",
-          dmarc: dmarcPass ? "PASS" : "FAIL/MISSING",
+          spf: raw.match(/spf=(pass|fail|softfail|neutral|none|temperror|permerror)/i)?.[1] || "not reported",
+          dkim: raw.match(/dkim=(pass|fail|neutral|none|temperror|permerror)/i)?.[1] || "not reported",
+          dmarc: raw.match(/dmarc=(pass|fail|bestguesspass|none|temperror|permerror)/i)?.[1] || "not reported",
         },
+        note: "Reports authentication claims contained in the supplied headers. This parser does not independently verify SPF, DKIM signatures, sender ownership or DMARC.",
         risk_indicators: [
-          ...(!spfPass ? ["SPF check failed – possible spoofing"] : []),
-          ...(!dkimPass ? ["DKIM not verified"] : []),
+          ...(/spf=fail/i.test(raw) ? ["The supplied header reports SPF failure"] : []),
+          ...(/dkim=fail/i.test(raw) ? ["The supplied header reports DKIM failure"] : []),
           ...(receivedCount > 5 ? ["Unusually high relay count"] : []),
         ],
       },
@@ -117,7 +154,7 @@ const emailHeaderAnalysis: ToolDefinition = {
 const imageMetadata: ToolDefinition = {
   id: "image-metadata",
   name: "Image Metadata Extraction",
-  description: "Fetch an image and extract real EXIF metadata (camera, GPS, dates)",
+  description: "Fetch a public HTTPS JPEG or PNG and read embedded metadata (camera, GPS, dates)",
   icon: Image,
   category: "Media",
   fields: [
@@ -125,30 +162,7 @@ const imageMetadata: ToolDefinition = {
     { key: "notes", label: "Notes", type: "textarea", placeholder: "Additional context..." },
   ],
   process: async (inputs) => {
-    const url = inputs.image_url.trim();
-    // Fetch image bytes client-side and parse EXIF with exifr (lightweight)
-    const { default: exifr } = await import("exifr");
-    let buf: ArrayBuffer;
-    try {
-      const r = await fetch(url, { mode: "cors" });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      buf = await r.arrayBuffer();
-    } catch (e) {
-      throw new Error(`Could not fetch image: ${(e as Error).message}. The host may block CORS — try a direct image URL.`);
-    }
-    const meta = await exifr.parse(buf, { gps: true, tiff: true, exif: true, iptc: true, icc: false }).catch(() => null);
-    const size = buf.byteLength;
-    return {
-      summary: meta ? `EXIF extracted (${(size / 1024).toFixed(1)} KB)` : `No EXIF found (${(size / 1024).toFixed(1)} KB)`,
-      details: {
-        source_url: url,
-        size_bytes: size,
-        exif: meta || null,
-        geolocation: meta?.latitude ? { latitude: meta.latitude, longitude: meta.longitude } : null,
-        notes: inputs.notes || null,
-      },
-      tags: ["image", "exif", "metadata", ...(meta?.latitude ? ["geolocation"] : [])],
-    };
+    return extractImageMetadata(inputs);
   },
 };
 
@@ -173,7 +187,6 @@ const timestampDecoder: ToolDefinition = {
   ],
   process: async (inputs) => {
     const raw = inputs.timestamp.trim();
-    await new Promise((r) => setTimeout(r, 300));
 
     let date: Date;
     let detectedFormat = inputs.format || "auto";
@@ -238,10 +251,15 @@ function getRelativeTime(date: Date): string {
 }
 
 export const allTools: ToolDefinition[] = [
+  localPlateOcr,
+  geofenceMonitor,
   usernameSearch,
   domainIntel,
   emailHeaderAnalysis,
   imageMetadata,
   timestampDecoder,
   ...extraTools,
+  ...marketplaceLocalTools,
+  ...publicRecordTools,
+  ...marketplaceRemoteTools.filter(tool=>!['lpr','public-records','vehicle-lookup'].includes(tool.id)),
 ];
