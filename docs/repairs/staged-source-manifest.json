@@ -1,6 +1,6 @@
 {
   "scope": "Git-normalized staged application/configuration/CI source blobs. Excludes documentation and generated receipts. Allows exact source equality verification across documentation commits.",
-  "sha256": "54de6ea91a70a94f8200c15a34d14eed86ce3b9b9a5757f43748f9cb8fff4b0d",
+  "sha256": "712421503f84e84df20b9e017c0beb33b39b47aa9066603b951ce930f321c538",
   "entries": [
     {
       "path": ".env",
@@ -175,12 +175,12 @@
     {
       "path": "scripts/verify-dispatch-release.mjs",
       "mode": "100644",
-      "blob": "b2734215c0ae106b05ca70beffab0f2617376e2c"
+      "blob": "b0da51f0dbb7d21995f96808d50e1ded4af41d49"
     },
     {
       "path": "scripts/verify-github-route-parity.mjs",
       "mode": "100644",
-      "blob": "9b33fc33649455dd338f1d0ea584aea9e27b51d3"
+      "blob": "f98337a48d35bb76f06f05e71eff164a94427729"
     },
     {
       "path": "scripts/verify-marketplace-open.mjs",
@@ -1813,9 +1813,14 @@
       "blob": "89028bd48c97930fe4d2d8d49904fd7e165bdbd2"
     },
     {
+      "path": "src/test/dispatcherRequestBoundary.test.ts",
+      "mode": "100644",
+      "blob": "ea524819df6043503ca31b405ebe3750c11dc0a6"
+    },
+    {
       "path": "src/test/domainCompositeIntegration.test.ts",
       "mode": "100644",
-      "blob": "bd38f5cf7efbf658eb3f9c77dccfedbeef070e80"
+      "blob": "eb226d8da70fef32946e700831f0a9d4f71b4c6c"
     },
     {
       "path": "src/test/evidenceText.test.ts",
@@ -1920,7 +1925,7 @@
     {
       "path": "src/test/imageHashIntegration.test.ts",
       "mode": "100644",
-      "blob": "375e28342e1d3de225d49913fddb168062b817bc"
+      "blob": "39866ca510f5b50947a31b3f0b63305c0e18ef81"
     },
     {
       "path": "src/test/imageMetadataIntegration.test.ts",
@@ -1940,12 +1945,12 @@
     {
       "path": "src/test/legacyLookupAuthentication.test.ts",
       "mode": "100644",
-      "blob": "1d532cf0d6549c81364aadc09fb52784d238eb38"
+      "blob": "24dd9ebd046d678bfb2b2aec9cb21ac3c528cb75"
     },
     {
       "path": "src/test/legacyToolsAuth.test.ts",
       "mode": "100644",
-      "blob": "abd3b04b6a8826c1405ff5f9831f790f2230f62b"
+      "blob": "4d31f59c7e7fd02c1bb54eed90df33273b8c4b23"
     },
     {
       "path": "src/test/marketplaceAlternatives.test.ts",
@@ -1955,7 +1960,7 @@
     {
       "path": "src/test/marketplaceAuth.test.ts",
       "mode": "100644",
-      "blob": "38318ef7c3a847d1d2fc2fab80f38e2cec0e2300"
+      "blob": "23c5de2cd916b9099d484275328302dc575f54e4"
     },
     {
       "path": "src/test/marketplaceConnected.test.ts",
@@ -1995,7 +2000,7 @@
     {
       "path": "src/test/osintHandler.test.ts",
       "mode": "100644",
-      "blob": "eb5bf7f4d0d7c8dc69e73519544cc072fe1aebc6"
+      "blob": "b5605ff03e2315fa17793126d17b425df6028b7e"
     },
     {
       "path": "src/test/ownershipIntegration.test.tsx",
@@ -2010,12 +2015,12 @@
     {
       "path": "src/test/providerAcceptanceRegression.test.ts",
       "mode": "100644",
-      "blob": "3d1e83624c139cf87ea15894e566432e53c73edc"
+      "blob": "4d3995543ba61c1ca601c47fdaafebce405cef01"
     },
     {
       "path": "src/test/security.test.ts",
       "mode": "100644",
-      "blob": "c893055bc39d3f6e1f043bba2e9f0b850df403fc"
+      "blob": "5485fae5d36372b943e18c9d2b57c6fdfe8c48bc"
     },
     {
       "path": "src/test/setup.ts",
@@ -2045,7 +2050,7 @@
     {
       "path": "supabase/functions/_shared/authenticateUser.ts",
       "mode": "100644",
-      "blob": "76b3ea3f116a3fbe390e9416df3cf4b8bde25ce2"
+      "blob": "9de9a1201b83a9eecd60cdbe26ee8cbe7ca88ba2"
     },
     {
       "path": "supabase/functions/_shared/billingConfiguration.ts",
@@ -2080,12 +2085,17 @@
     {
       "path": "supabase/functions/_shared/safeFetch.ts",
       "mode": "100644",
-      "blob": "6fd304c41100b752be3aba9b50e94ba75d616689"
+      "blob": "c855d3e0e68dae4b6a501d5d7437c8542879f321"
     },
     {
       "path": "supabase/functions/_shared/stripeSubscription.ts",
       "mode": "100644",
       "blob": "556825f16ae80672d992a7b9b7cd0372bfcdd584"
+    },
+    {
+      "path": "supabase/functions/_shared/toolPermission.ts",
+      "mode": "100644",
+      "blob": "20869b717f7652a4494d82270be9dc47de68fd81"
     },
     {
       "path": "supabase/functions/accept-invite/index.ts",
@@ -2145,7 +2155,7 @@
     {
       "path": "supabase/functions/image-hash/index.ts",
       "mode": "100644",
-      "blob": "53ca9f6099855998ff5e3e397513b4ac89bbb711"
+      "blob": "ae9199b0f01860caa2fcaf7f23301ed269e632f7"
     },
     {
       "path": "supabase/functions/intelligence-provider-status/handler.ts",
@@ -2175,12 +2185,12 @@
     {
       "path": "supabase/functions/osint-dispatch/index.ts",
       "mode": "100644",
-      "blob": "014af5821f189590c12e02a6c2d806916d04a591"
+      "blob": "c2431a2c8a491d17eacec2d98732140f4fbad2bc"
     },
     {
       "path": "supabase/functions/osint-tools/index.ts",
       "mode": "100644",
-      "blob": "d059650a1582845b573f8eeaf0a9b3940c79efdc"
+      "blob": "ff639be8c64ab690bede98d2d48b0f3779150339"
     },
     {
       "path": "supabase/functions/osint-tools/index_test.ts",
@@ -2195,7 +2205,7 @@
     {
       "path": "supabase/functions/osint-tools/marketplaceAuth.ts",
       "mode": "100644",
-      "blob": "4ba50c5a942b125c9d97dfc6820d67b966758339"
+      "blob": "b80084f6f73b99e7a36a106795de1e2feaefabbe"
     },
     {
       "path": "supabase/functions/osint-tools/marketplaceConnected.ts",

@@ -9,26 +9,29 @@ import {describe,it,expect,vi,afterEach} from 'vitest';
 // contact Auth, WiGLE or image hosts and are not production acceptance evidence.
 const transpile=(file:string)=>ts.transpileModule(readFileSync(file,'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 const sharedJs=transpile('supabase/functions/_shared/authenticateUser.ts');
+const permissionJs=transpile('supabase/functions/_shared/toolPermission.ts');
 const owner='11111111-1111-4111-8111-111111111111';
 const validUser={id:owner,role:'authenticated',is_anonymous:false};
 function fixture(kind:'wigle-lookup'|'image-hash',authResponse:Response|Error=new Response(JSON.stringify(validUser)),envOverride?:Record<string,string>){
   const authFetch=authResponse instanceof Error?vi.fn().mockRejectedValue(authResponse):vi.fn().mockResolvedValue(authResponse);
   const timeout=vi.fn(()=>new AbortController().signal);
   const env=envOverride??{SUPABASE_URL:'https://owned-backend.example.test',SUPABASE_ANON_KEY:'public-fixture',WIGLE_API_NAME:'provider-name-fixture',WIGLE_API_KEY:'provider-key-fixture'};
-  const shared=new Function('Deno','fetch','AbortSignal',`${sharedJs};return {authenticateUser,boundedJsonBody,RequestAuthenticationError};`)({env:{get:(key:string)=>env[key]}},authFetch,{timeout});
+  const permissionFetch=vi.fn().mockImplementation(async()=>new Response('[]'));
+  const network=(url:string,options:RequestInit)=>url.includes('/rest/v1/tool_permissions')?permissionFetch(url,options):authFetch(url,options);
+  const shared=new Function('Deno','fetch','AbortSignal',`${sharedJs};${permissionJs};return {authenticateUser,authorizeTool,boundedJsonBody,RequestAuthenticationError};`)({env:{get:(key:string)=>env[key]}},network,{timeout});
   const safeFetch=kind==='wigle-lookup'
     ? vi.fn().mockResolvedValue(new Response(JSON.stringify({results:[{ssid:'fixture-network',trilat:1,trilong:2}]})))
     : vi.fn().mockImplementation(async()=>new Response(readFileSync('src/test/fixtures/image-hash/ascending.png')));
   const decode=vi.fn().mockResolvedValue({width:9,height:8,bitmap:new Uint8ClampedArray(9*8*4)});
   let handler:(req:Request)=>Promise<Response>;
-  new Function('serve','z','safeFetch','decode','Deno','authenticateUser','boundedJsonBody','RequestAuthenticationError','inspectImage','hashDecodedImage','IMAGE_HASH_MAX_BYTES','IMAGE_HASH_MAX_PIXELS','IMAGE_HASH_MAX_SIDE','crypto',transpile(`supabase/functions/${kind}/index.ts`))(
-    (h:typeof handler)=>{handler=h;},z,safeFetch,decode,{env:{get:(key:string)=>env[key]}},shared.authenticateUser,shared.boundedJsonBody,shared.RequestAuthenticationError,hashing.inspectImage,hashing.hashDecodedImage,hashing.IMAGE_HASH_MAX_BYTES,hashing.IMAGE_HASH_MAX_PIXELS,hashing.IMAGE_HASH_MAX_SIDE,webcrypto);
+  new Function('serve','z','safeFetch','decode','Deno','authenticateUser','boundedJsonBody','RequestAuthenticationError','inspectImage','hashDecodedImage','IMAGE_HASH_MAX_BYTES','IMAGE_HASH_MAX_PIXELS','IMAGE_HASH_MAX_SIDE','crypto','authorizeTool',transpile(`supabase/functions/${kind}/index.ts`))(
+    (h:typeof handler)=>{handler=h;},z,safeFetch,decode,{env:{get:(key:string)=>env[key]}},shared.authenticateUser,shared.boundedJsonBody,shared.RequestAuthenticationError,hashing.inspectImage,hashing.hashDecodedImage,hashing.IMAGE_HASH_MAX_BYTES,hashing.IMAGE_HASH_MAX_PIXELS,hashing.IMAGE_HASH_MAX_SIDE,webcrypto,shared.authorizeTool);
   const request=(headers:Record<string,string>={Authorization:'Bearer valid-session-token'},body:unknown=kind==='wigle-lookup'?{bssid:'AA:BB:CC:DD:EE:FF'}:{url:'https://images.example.test/photo.png'})=>{
     const req=new Request('https://app.example.test',{method:'POST',headers,body:JSON.stringify(body)});
     const originalBody=req.body;let bodyReads=0;Object.defineProperty(req,'body',{get(){bodyReads++;return originalBody;}});
     return {req,get bodyReads(){return bodyReads;}};
   };
-  return {handler:handler!,request,authFetch,safeFetch,decode,timeout,...shared};
+  return {handler:handler!,request,authFetch,permissionFetch,safeFetch,decode,timeout,...shared};
 }
 afterEach(()=>vi.useRealTimers());
 describe.each(['wigle-lookup','image-hash'] as const)('%s authenticated request boundary',kind=>{
@@ -68,6 +71,11 @@ describe.each(['wigle-lookup','image-hash'] as const)('%s authenticated request 
   });
 });
 describe('bounded shared request body',()=>{
+  it.each([new Response('[{"allowed":false}]'),new Response('{}'),new Response('[{"allowed":"false"}]'),new Response('private diagnostic',{status:500}),new Response('x'.repeat(70000))])('image endpoint enforces permissions directly before body/image work %#',async response=>{
+    const f=fixture('image-hash');f.permissionFetch.mockResolvedValue(response);const r=f.request();const result=await f.handler(r.req);
+    expect([403,503]).toContain(result.status);expect(await result.text()).not.toContain('private diagnostic');expect(r.bodyReads).toBe(0);expect(f.safeFetch).not.toHaveBeenCalled();expect(f.decode).not.toHaveBeenCalled();
+    expect(f.permissionFetch.mock.calls[0][0]).toContain('tool_id=eq.reverse-image-hash');expect(f.permissionFetch.mock.calls[0][1].redirect).toBe('error');
+  });
   it('cancels a stalled request at the read deadline without provider/image work',async()=>{
     vi.useFakeTimers();const f=fixture('image-hash');const stream=new ReadableStream<Uint8Array>({start(){}});
     const req={headers:new Headers(),body:stream} as unknown as Request;

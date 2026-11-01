@@ -4,7 +4,7 @@ import { isBlockedAddress, safeFetch } from "../../supabase/functions/_shared/sa
 import { requireUser } from "../../supabase/functions/_shared/requireUser";
 let network: ReturnType<typeof vi.fn>;
 beforeEach(() => { network = vi.fn(); vi.stubGlobal("fetch", network); vi.stubGlobal("Deno", { env: { get: (name: string) => name === "SUPABASE_URL" ? "https://project.supabase.co" : name === "SUPABASE_ANON_KEY" ? "unit-test-placeholder" : undefined } }); });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 const response = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
 const dns = () => response({ Answer: [{ type: 5, data: "alias.example" }, { type: 1, data: "93.184.215.14" }] });
 describe("authentication", () => {
@@ -47,5 +47,57 @@ describe("bounded fetch", () => {
   it("enforces redirect limits", async () => {
     network.mockImplementation(async (url: string) => url.includes("cloudflare-dns") ? dns() : new Response(null, { status: 302, headers: { location: "/loop" } }));
     await expect(safeFetch("https://example.com", { maxRedirects: 1 })).rejects.toThrow("Too many");
+  });
+  it("rejects an advertised oversized resolver body before reading it", async () => {
+    const cancel = vi.fn();
+    network.mockImplementation(async () => new Response(new ReadableStream({ cancel }), { headers: { "Content-Length": "65537" } }));
+    await expect(safeFetch("https://example.com")).rejects.toThrow("DNS resolver response exceeded 65536 bytes");
+    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(network.mock.calls.every(([url]) => String(url).includes("cloudflare-dns.com"))).toBe(true);
+  });
+  it("bounds actual resolver bytes without Content-Length and cancels oversized streams", async () => {
+    const cancel = vi.fn();
+    network.mockImplementation(async () => new Response(new ReadableStream({
+      start(controller) { controller.enqueue(new Uint8Array(32768)); controller.enqueue(new Uint8Array(32769)); }, cancel,
+    })));
+    await expect(safeFetch("https://example.com")).rejects.toThrow("DNS resolver response exceeded 65536 bytes");
+    expect(cancel).toHaveBeenCalledTimes(2); expect(network).toHaveBeenCalledTimes(2);
+  });
+  it("accepts a valid resolver response exactly at its separate byte cap", async () => {
+    const body = JSON.stringify({ Status: 0, Answer: [{ type: 1, data: "93.184.215.14" }] }).padEnd(65536, " ");
+    network.mockImplementation(async (url: string) => url.includes("cloudflare-dns") ? new Response(body, { headers: { "Content-Length": "65536" } }) : response({ ok: true }));
+    expect(await (await safeFetch("https://example.com", { maxBytes: 20 })).json()).toEqual({ ok: true });
+    expect(network).toHaveBeenCalledTimes(3);
+  });
+  it.each(["not JSON", "null", "[]", '{"Answer":{}}', '{"Answer":[null]}', '{"Answer":[{"type":1,"data":42}]}', '{"Status":2,"Answer":[{"type":1,"data":"93.184.215.14"}]}', '{"Status":3,"Answer":[{"type":1,"data":"93.184.215.14"}]}'])("rejects malformed or failed resolver data before destination access: %s", async body => {
+    network.mockImplementation(async () => new Response(body));
+    await expect(safeFetch("https://example.com")).rejects.toThrow(/DNS resolver/);
+    expect(network).toHaveBeenCalledTimes(2);
+  });
+  it("rejects invalid UTF-8 resolver bytes instead of parsing replacement characters", async () => {
+    network.mockImplementation(async () => new Response(new Uint8Array([0xff, 0xfe])));
+    await expect(safeFetch("https://example.com")).rejects.toThrow("DNS resolver returned invalid JSON");
+    expect(network).toHaveBeenCalledTimes(2);
+  });
+  it("uses the absolute request deadline for a stalled DNS body without waiting for stalled cancellation", async () => {
+    const cancel = vi.fn(() => new Promise<void>(() => undefined));
+    network.mockImplementation(async () => new Response(new ReadableStream({ cancel })));
+    await expect(safeFetch("https://example.com", { timeoutMs: 20 })).rejects.toMatchObject({ name: "TimeoutError" });
+    expect(cancel).toHaveBeenCalledTimes(2); expect(network).toHaveBeenCalledTimes(2);
+  });
+  it("propagates caller cancellation into pending DNS reads and their fetch signals", async () => {
+    const caller = new AbortController(), cancelled = new Error("SYNTHETIC caller cancelled");
+    const cancel = vi.fn();
+    network.mockImplementation(async () => new Response(new ReadableStream({ cancel })));
+    const result = safeFetch("https://example.com", { signal: caller.signal });
+    const rejected = expect(result).rejects.toBe(cancelled);
+    await Promise.resolve(); caller.abort(cancelled); await rejected;
+    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(network.mock.calls.every(([, options]) => options.signal.aborted)).toBe(true);
+  });
+  it("does no resolver or destination work after caller cancellation", async () => {
+    const caller = new AbortController(); caller.abort(new Error("SYNTHETIC pre-aborted"));
+    await expect(safeFetch("https://example.com", { signal: caller.signal })).rejects.toThrow("SYNTHETIC pre-aborted");
+    expect(network).not.toHaveBeenCalled();
   });
 });

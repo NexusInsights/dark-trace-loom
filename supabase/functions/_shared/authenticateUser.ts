@@ -77,7 +77,7 @@ export async function authenticateUser(req: Request, options?: { requireEmail: t
   }
 }
 
-export async function boundedRawBody(req: Request, maxBytes = 16 * 1024, timeoutMs = 15000): Promise<string> {
+export async function boundedRawBody(req: Pick<Request, "headers" | "body">, maxBytes = 16 * 1024, timeoutMs = 15000): Promise<string> {
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 15000) throw new RequestAuthenticationError(500, "invalid_body_deadline_configuration");
   const declared = req.headers.get("Content-Length");
   if (declared && /^\d+$/.test(declared) && Number(declared) > maxBytes) throw new RequestAuthenticationError(413, "request_too_large");

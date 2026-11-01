@@ -7,12 +7,12 @@ import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 let handler: (req: Request) => Promise<Response>;
 let auth: ReturnType<typeof vi.fn>, provider: ReturnType<typeof vi.fn>;
 beforeEach(() => {
-  auth = vi.fn(async () => new Response(JSON.stringify({id:"fixture-user"}))); provider = vi.fn();
-  const source = fs.readFileSync("supabase/functions/osint-tools/index.ts", "utf8").replace(/^import .*;\r?\n/gm, "");
+  auth = vi.fn(async () => new Response(JSON.stringify({id:"11111111-1111-4111-8111-111111111111"}))); provider = vi.fn();
+  const source = fs.readFileSync("supabase/functions/_shared/authenticateUser.ts", "utf8").replace(/^export /gm, "") + "\n" + fs.readFileSync("supabase/functions/osint-tools/index.ts", "utf8").replace(/^import .*;\r?\n/gm, "");
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
   new vm.Script(code).runInContext(vm.createContext({
     Deno: { env: { get: (name: string) => name === "SUPABASE_URL" ? "https://fixture-auth.invalid" : name === "SUPABASE_ANON_KEY" ? "synthetic-public-key" : undefined }, serve: (fn: typeof handler) => { handler = fn; } },
-    parsePhoneNumberFromString: (phone: string, options: { extract?: boolean }) => parsePhoneNumberFromString(phone, { ...options }), boundedFetch: provider, requireUser: auth, fetch: (url: string, init: RequestInit) => { if (url.startsWith("https://fixture-auth.invalid/auth/")) { return auth(); } if (url.startsWith("https://fixture-auth.invalid/rest/")) return new Response("[]"); return provider(url, init); }, TextDecoder, TextEncoder, Uint8Array, AbortController, Request, Response, Headers, URL, URLSearchParams, FormData, AbortSignal, Error, setTimeout, clearTimeout,
+    parsePhoneNumberFromString: (phone: string, options: { extract?: boolean }) => parsePhoneNumberFromString(phone, { ...options }), boundedFetch: provider, fetch: (url: string, init: RequestInit) => { if (url.startsWith("https://fixture-auth.invalid/auth/")) { return auth(); } if (url.startsWith("https://fixture-auth.invalid/rest/")) return new Response("[]"); return provider(url, init); }, TextDecoder, TextEncoder, Uint8Array, AbortController, Request, Response, Headers, URL, URLSearchParams, FormData, AbortSignal, Error, setTimeout, clearTimeout,
   }));
 });
 const request = (action: string, params = {}) => new Request("https://local-handler.invalid", { method: "POST", headers: {Authorization:"Bearer synthetic-session"}, body: JSON.stringify({ action, params }) });

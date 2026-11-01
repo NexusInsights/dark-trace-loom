@@ -10,6 +10,12 @@ const actor = "00000000-0000-4000-8000-000000000001", ownCase = "00000000-0000-4
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
 const transport = async input => {
   const url = new URL(input); calls.push(url.toString());
+  if (url.hostname === "synthetic.invalid") {
+    if (mode === "auth-throws") throw new Error("SYNTHETIC private Auth failure");
+    if (mode === "invalid-auth") return json({}, 401);
+    if (mode === "auth-oversized") return new Response("x".repeat(70000));
+    return json({ id: mode === "auth-malformed" ? "invalid-uuid" : actor, role: "authenticated", is_anonymous: mode === "anonymous" });
+  }
   if (url.hostname === "cloudflare-dns.com") return json({ Answer: [{ type: 1, data: mode === "private-dns" ? "127.0.0.1" : "93.184.215.14" }] });
   if (url.hostname === "rdap.org") return json({ handle: "SYNTHETIC-RDAP" });
   if (url.hostname === "api.ssllabs.com") return mode === "ssl-malformed" ? json([]) : mode === "ssl-failed" ? json({ status: "ERROR" }) : json({ status: mode === "ssl-ready" ? "READY" : "IN_PROGRESS", endpoints: mode === "ssl-ready" ? [{ grade: "A" }] : [] });
@@ -48,7 +54,10 @@ function createClient(_url, key) {
   } };
 }
 const source = await fs.readFile("supabase/functions/osint-dispatch/index.ts", "utf8");
-new vm.Script(compile(source.replace(/^import .*;\r?\n/gm, ""), ts.ModuleKind.ESNext)).runInNewContext({ ...context, z, safeFetch: exports.safeFetch, createClient, serve: fn => { handler = fn; }, Deno: { env: { get: name => ({ SUPABASE_URL: "https://synthetic.invalid", SUPABASE_ANON_KEY: "synthetic-user", SUPABASE_SERVICE_ROLE_KEY: "synthetic-admin-must-never-be-read" })[name] } } });
+const runtime = { env: { get: name => ({ SUPABASE_URL: "https://synthetic.invalid", SUPABASE_ANON_KEY: "synthetic-user", SUPABASE_SERVICE_ROLE_KEY: "synthetic-admin-must-never-be-read" })[name] } };
+const auth = {};
+new vm.Script(compile(await fs.readFile("supabase/functions/_shared/authenticateUser.ts", "utf8"))).runInNewContext({ ...context, exports: auth, Deno: runtime });
+new vm.Script(compile(source.replace(/^import .*;\r?\n/gm, ""), ts.ModuleKind.ESNext)).runInNewContext({ ...context, ...auth, z, safeFetch: exports.safeFetch, createClient, serve: fn => { handler = fn; }, Deno: runtime });
 const checks = [];
 async function run(name, selectedMode, body, expectedStatus, expectedHttp, noProvider = false) {
   mode = selectedMode; queries = []; writes = []; calls = []; clients = []; permissionReads = 0;
@@ -58,16 +67,16 @@ async function run(name, selectedMode, body, expectedStatus, expectedHttp, noPro
     const data = await response.json();
     assert.equal(data.status ?? (response.status === 401 ? "error" : undefined), expectedStatus); assert.equal(response.status, expectedHttp);
     assert.ok(clients.every(key => key === "synthetic-user"));
-    if (noProvider) { assert.equal(calls.length, 0); assert.equal(writes.length, 0); }
+    if (noProvider) { assert.equal(calls.filter(url => new URL(url).hostname !== "synthetic.invalid").length, 0); assert.equal(writes.length, 0); }
     if (selectedMode === "insert-error") { assert.equal(data.saved, false); assert.equal(data.computation.status, "success"); assert.equal(writes.length, 0); }
     if (["disabled", "permission-error", "permission-malformed", "permission-value"].includes(selectedMode)) assert.equal(JSON.stringify(queries[0].filters.tool_id), JSON.stringify(["domain_whois", "whois-history"]));
     if (selectedMode === "revoked") { assert.equal(writes.length, 0); assert.equal(permissionReads, 2); }
     if (expectedStatus === "success") { assert.equal(data.saved, true); assert.equal(writes.length, 1); assert.equal(writes[0].payload.user_id, actor); }
     if (expectedStatus === "partial") { assert.equal(writes[0].payload.status, "partial"); assert.equal(data.result.status, "IN_PROGRESS"); }
     if (selectedMode.startsWith("private")) assert.ok(calls.every(url => !new URL(url).hostname.startsWith("127.")));
-    if (body.tool === "ip_geolocation") assert.equal(calls.length, 0);
+    if (body.tool === "ip_geolocation") assert.equal(calls.filter(url => new URL(url).hostname !== "synthetic.invalid").length, 0);
     if (body.tool === "subdomain_finder") assert.equal(JSON.stringify(queries[0].filters.tool_id), JSON.stringify(["subdomain_finder", "subdomain-enum", "subdomain_enum"]));
-    checks.push({ name, passed: true, http: response.status, status: data.status, syntheticProviderCalls: calls.filter(url => new URL(url).hostname !== "cloudflare-dns.com").length, savedRows: writes.length });
+    checks.push({ name, passed: true, http: response.status, status: data.status, syntheticProviderCalls: calls.filter(url => !["cloudflare-dns.com", "synthetic.invalid"].includes(new URL(url).hostname)).length, savedRows: writes.length });
   } catch (error) { failure = error.message; checks.push({ name, passed: false, reason: failure }); }
 }
 const domain = { tool: "domain_whois", params: { domain: "example.invalid" } };
@@ -83,6 +92,10 @@ await run("insert exception", "insert-throws", domain, "error", 503);
 await run("missing auth", "normal", domain, "error", 401, true);
 await run("invalid auth", "invalid-auth", domain, "error", 401, true);
 await run("auth exception", "auth-throws", domain, "error", 503, true);
+await run("anonymous Auth", "anonymous", domain, "error", 403, true);
+await run("malformed Auth", "auth-malformed", domain, "error", 502, true);
+await run("oversized Auth", "auth-oversized", domain, "error", 503, true);
+await run("bounded dispatcher body", "normal", { ...domain, params: { domain: "x".repeat(17000) } }, "error", 413, true);
 await run("unsupported ID", "normal", { tool: "social_analyzer", params: {} }, "unknown_tool", 422, true);
 await run("SSL progress", "ssl-progress", { tool: "ssl_inspection", params: { host: "example.invalid" } }, "partial", 200);
 await run("SSL final", "ssl-ready", { tool: "ssl_inspection", params: { host: "example.invalid" } }, "success", 200);

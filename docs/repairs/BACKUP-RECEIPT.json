@@ -32,5 +32,7 @@
     "sourceShaOfExistingDirectUpload": "unknown; owner non-Git source, not this commit",
     "unknownExternalHooksNotCertified": true
   },
-  "documentationFollowup": "This receipt is saved by a later documentation-only commit. The exact application/configuration/CI blobs stay equal to staged-source-manifest.json; derive the current tip and remote equality from Git refs. CI on that final tip is verified separately before completion."
+  "documentationFollowup": "This receipt is saved by a later documentation-only commit. The exact application/configuration/CI blobs stay equal to staged-source-manifest.json; derive the current tip and remote equality from Git refs. CI on that final tip is verified separately before completion.",
+  "scope": "Historical successful70494d9 application/94d7699 documentation checkpoint. See SECURITY-FOLLOWUP.json for the later tested repair source.",
+  "sourceManifest": "staged-source-manifest-70494d9.json"
 }

@@ -8,6 +8,7 @@ import sharp from "sharp";
 import { z } from "zod";
 import { safeFetch } from "../../supabase/functions/_shared/safeFetch";
 import { authenticateUser, boundedJsonBody, RequestAuthenticationError } from "../../supabase/functions/_shared/authenticateUser";
+import { authorizeTool } from "../../supabase/functions/_shared/toolPermission";
 import * as hashing from "../../supabase/functions/_shared/imageHash";
 const state = vi.hoisted(() => ({
   scenario: "ascending.png", handler: null as unknown as (request: Request) => Promise<Response>, invoke: vi.fn(), decoder: vi.fn(), traffic: [] as string[],
@@ -38,7 +39,7 @@ beforeEach(() => {
   vi.stubGlobal("Deno", { env: { get: (name: string) => name === "SUPABASE_URL" ? "https://fixture-auth.invalid" : name === "SUPABASE_ANON_KEY" ? "synthetic-placeholder" : undefined } });
   const transport = vi.fn(async (input: string) => {
     state.traffic.push(input); const url = new URL(input);
-    if (url.hostname === "fixture-auth.invalid") return json({ id: "11111111-1111-4111-8111-111111111111", role: "authenticated", is_anonymous: false });
+    if (url.hostname === "fixture-auth.invalid") return json(url.pathname.startsWith("/rest/") ? [] : { id: "11111111-1111-4111-8111-111111111111", role: "authenticated", is_anonymous: false });
     if (url.hostname === "cloudflare-dns.com") return json({ Answer: [{ type: 1, data: state.scenario === "private-dns" ? "127.0.0.1" : "93.184.215.14" }] });
     if (url.hostname !== "hash-images.example.invalid") throw new Error("Fixture transport rejects all unlisted hosts; no network exists");
     if (state.scenario === "private-redirect") return new Response(null, { status: 302, headers: { Location: "https://127.0.0.1/private" } });
@@ -68,7 +69,7 @@ beforeEach(() => {
   });
   const source = fs.readFileSync("supabase/functions/image-hash/index.ts", "utf8").replace(/^import .*;\r?\n/gm, "");
   new vm.Script(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText).runInContext(vm.createContext({
-    serve: (handler: typeof state.handler) => { state.handler = handler; }, z, safeFetch, authenticateUser, boundedJsonBody, RequestAuthenticationError, ...hashing, decode: state.decoder, crypto: crypto.webcrypto,
+    serve: (handler: typeof state.handler) => { state.handler = handler; }, z, safeFetch, authenticateUser, authorizeTool, boundedJsonBody, RequestAuthenticationError, ...hashing, decode: state.decoder, crypto: crypto.webcrypto,
     Request, Response, Headers, URL, Uint8Array, Error,
   }));
   state.invoke.mockImplementation(async (_gateway: string, { body }: { body: unknown }) => {
@@ -119,7 +120,7 @@ describe("Image perceptual hash acceptance", () => {
   });
   it.each(["http://hash-images.example.invalid/x", "https://127.0.0.1/x", "https://[::1]/x", "https://fixture:placeholder@hash-images.example.invalid/x"])("blocks unsafe URL %s", async url => {
     const manual = await executeTool(tool, { url }); expect(manual.status).toBe("error"); expect(state.decoder).not.toHaveBeenCalled();
-    expect(state.traffic.every(item => item === "https://fixture-auth.invalid/auth/v1/user")).toBe(true);
+    expect(state.traffic.every(item => item.startsWith("https://fixture-auth.invalid/"))).toBe(true);
   });
   it("matches an independent direct 2D DCT oracle for a decoded checkerboard", async () => {
     state.scenario = "checker.png"; const result = await executeTool(tool, state.inputs);

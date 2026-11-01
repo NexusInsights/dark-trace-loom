@@ -3,6 +3,7 @@ import { z } from "npm:zod@3.23.8";
 import { decode } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import { safeFetch } from "../_shared/safeFetch.ts";
 import { authenticateUser, boundedJsonBody, RequestAuthenticationError } from "../_shared/authenticateUser.ts";
+import { authorizeTool } from "../_shared/toolPermission.ts";
 import { inspectImage, hashDecodedImage, IMAGE_HASH_MAX_BYTES, IMAGE_HASH_MAX_PIXELS, IMAGE_HASH_MAX_SIDE } from "../_shared/imageHash.ts";
 
 const corsHeaders = {
@@ -19,7 +20,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (req.method !== "POST") return json({ status: "error", reason: "method_not_allowed" }, 405);
   let body: unknown;
-  try { await authenticateUser(req); body = await boundedJsonBody(req); }
+  try { const user = await authenticateUser(req); await authorizeTool(req, user.id, "reverse-image-hash"); body = await boundedJsonBody(req); }
   catch (error) { return json({ status: "error", reason: error instanceof RequestAuthenticationError ? error.code : "request_preparation_failed" }, error instanceof RequestAuthenticationError ? error.status : 503); }
   const parsed = Body.safeParse(body);
   if (!parsed.success) return json({ status: "error", reason: "invalid_body" }, 400);

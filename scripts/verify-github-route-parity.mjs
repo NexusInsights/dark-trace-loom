@@ -14,7 +14,7 @@ let mode, calls, saved;
 const actor = "00000000-0000-4000-8000-000000000001";
 const transport = async input => {
   const url = new URL(input); calls.push(url.toString());
-  if (url.hostname === "synthetic-auth.invalid") return json(url.pathname.startsWith("/rest/") ? [] : { id: actor });
+  if (url.hostname === "synthetic-auth.invalid") return json(url.pathname.startsWith("/rest/") ? [] : { id: actor, role: "authenticated", is_anonymous: false });
   if (url.hostname === "cloudflare-dns.com") return json({ Answer: [{ type: 1, data: "140.82.112.6" }] });
   assert.equal(url.hostname, "api.github.com", "Only synthetic GitHub fixture destinations allowed");
   if (url.pathname.endsWith("/events/public")) return json([]);
@@ -34,10 +34,11 @@ const globals = { Request, Response, Headers, URL, URLSearchParams, AbortControl
 const compile = (source, module = ts.ModuleKind.ESNext) => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module } }).outputText;
 const paths = ["supabase/functions/_shared/safeFetch.ts", "supabase/functions/osint-tools/index.ts", "supabase/functions/osint-dispatch/index.ts"];
 const files = await Promise.all(paths.map(p => fs.readFile(p, "utf8")));
+const strictAuthSource = (await fs.readFile("supabase/functions/_shared/authenticateUser.ts", "utf8")).replace(/^export /gm, "");
 const exports = {};
 new vm.Script(compile(files[0], ts.ModuleKind.CommonJS)).runInNewContext({ ...globals, exports });
 let manual, dispatch;
-new vm.Script(compile(files[1].replace(/^import .*;\r?\n/gm, ""))).runInNewContext({ ...globals, boundedFetch: exports.safeFetch, parsePhoneNumberFromString: () => { throw new Error("Unrelated fixture route prohibited"); }, Deno: { env: { get: name => ({ SUPABASE_URL: "https://synthetic-auth.invalid", SUPABASE_ANON_KEY: "synthetic-user" })[name] }, serve: fn => { manual = fn; } } });
+new vm.Script(compile(strictAuthSource + "\n" + files[1].replace(/^import .*;\r?\n/gm, ""))).runInNewContext({ ...globals, boundedFetch: exports.safeFetch, parsePhoneNumberFromString: () => { throw new Error("Unrelated fixture route prohibited"); }, Deno: { env: { get: name => ({ SUPABASE_URL: "https://synthetic-auth.invalid", SUPABASE_ANON_KEY: "synthetic-user" })[name] }, serve: fn => { manual = fn; } } });
 const sdk = (_url, key) => {
   assert.equal(key, "synthetic-user", "No elevated fixture writer may be constructed");
   return { auth: { getUser: async () => ({ data: { user: { id: actor } }, error: null }) }, from(table) {
@@ -46,7 +47,7 @@ const sdk = (_url, key) => {
     }, insert: async payload => { assert.equal(table, "tool_results"); saved.push(payload); return { error: null }; } }; return q;
   } };
 };
-new vm.Script(compile(files[2].replace(/^import .*;\r?\n/gm, ""))).runInNewContext({ ...globals, z, safeFetch: exports.safeFetch, createClient: sdk, serve: fn => { dispatch = fn; }, Deno: { env: { get: name => ({ SUPABASE_URL: "https://synthetic-auth.invalid", SUPABASE_ANON_KEY: "synthetic-user" })[name] } } });
+new vm.Script(compile(strictAuthSource + "\n" + files[2].replace(/^import .*;\r?\n/gm, ""))).runInNewContext({ ...globals, z, safeFetch: exports.safeFetch, createClient: sdk, serve: fn => { dispatch = fn; }, Deno: { env: { get: name => ({ SUPABASE_URL: "https://synthetic-auth.invalid", SUPABASE_ANON_KEY: "synthetic-user" })[name] } } });
 const cases = ["repos-429", "repos-503", "repos-network", "repos-object", "repos-json", "repos-empty", "repos-positive", "profile-404", "profile-malformed", "user-input-alias"];
 const checks = [];
 for (const scenario of cases) {

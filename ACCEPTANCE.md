@@ -1,3 +1,15 @@
+# Security follow-up and authorized source inspection — November 1, 2026
+
+The logged-in Lovable Git settings show NexusInsights/dark-trace-loom/main Connected. The project reader reports9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86; all8 exported affected files match that pinned repository source. This does not establish immutable deployed Edge bundle equality. No code or security setting was changed in Lovable.
+
+Additional isolated fixes now share strict remote Auth across manual and dispatcher routes, bound dispatcher request bodies, enforce direct image-hash permissions, and cap/validate DNS response bodies with cancellation/deadline handling. Combined local validation passed **1064 app tests in 82 files**, the existing212 other test executions, **33 dispatcher +10 paired GitHub checks**, lint (0 errors/16 existing warnings), types and build. These are fixture/runtime contract checks; no new live-provider acceptance is claimed. See docs/repairs/SECURITY-FOLLOWUP.json and LOVABLE-SOURCE-COMPARISON.json.
+
+Live SQL metadata inspection was blocked because the existing Lovable connector lacks projects:write even for SELECT. That action stopped; no reauthorization or browser SQL workaround occurred. Actual deployed bundles, live schema/RLS, reviewed migration application, authenticated persistence and exact ImageScript runtime remain release gates.
+
+---
+
+# Earlier reconciliation checkpoint
+
 # Current reconciliation evidence — November 1, 2026
 
 Exact Lovable project ddb190d3-9e1f-408e-9b17-113c51f6576f; production Supabase zisrsttmjeipkmllqubi. The independent staging backend is preserved. Repository baseline 9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86 is not a Git SHA for the later non-Git expansion. Canonical/prepared source identity and stopped writer coordination were confirmed before this isolated port. See docs/repairs/canonical-snapshot.json and WORK-STATE.json.

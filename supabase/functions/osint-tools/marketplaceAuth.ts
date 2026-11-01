@@ -1,18 +1,21 @@
-// All marketplace requests verify the session at the auth service, not by decoding a token.
+import { authenticateUser, RequestAuthenticationError } from "../_shared/authenticateUser.ts";
+
+// All marketplace requests use the same strict remote Auth boundary as image tools.
 class MarketplaceHttpError extends Error {
   constructor(message: string, readonly status: number) { super(message); }
 }
 async function marketplaceUser(req: Request): Promise<{ id: string; authorization: string; url: string; key: string }> {
   const authorization = req.headers.get("authorization") || "";
-  if (authorization.length > 8192 || !/^Bearer \S+$/i.test(authorization)) throw new MarketplaceHttpError("Sign in to run tools.", 401);
-  const url = Deno.env.get("SUPABASE_URL"); const key = Deno.env.get("SUPABASE_ANON_KEY");
-  if (!url || !key) throw new Error("Backend authentication configuration is unavailable.");
-  const r = await fetch(`${url}/auth/v1/user`, { headers: { Authorization: authorization, apikey: key }, signal: AbortSignal.timeout(10000) });
-  if (r.status === 401 || r.status === 403) throw new MarketplaceHttpError("Your session expired. Sign in again.", 401);
-  if (!r.ok) throw new Error(`Session verification failed (HTTP ${r.status}).`);
-  const user = await r.json();
-  if (typeof user.id !== "string" || !user.id) throw new MarketplaceHttpError("A verified user session is required.", 401);
-  return { id: user.id, authorization, url, key };
+  try {
+    const user = await authenticateUser(req);
+    // authenticateUser validates the origin/public key before any request. Retain
+    // that verified actor and the caller token for the existing RLS permission read.
+    const url = new URL(Deno.env.get("SUPABASE_URL")!).origin;
+    const key = (Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY"))!;
+    return { id: user.id, authorization, url, key };
+  } catch (error) {
+    throw new MarketplaceHttpError(error instanceof RequestAuthenticationError ? error.code : "authentication_unavailable", error instanceof RequestAuthenticationError ? error.status : 503);
+  }
 }
 async function marketplaceRequestBody(req: Request): Promise<Record<string, unknown>> {
   const maximum = 1024 * 1024;

@@ -6,7 +6,6 @@ import crypto from "node:crypto";
 import ts from "typescript";
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { safeFetch } from "../../supabase/functions/_shared/safeFetch";
-import { requireUser } from "../../supabase/functions/_shared/requireUser";
 const state = vi.hoisted(() => ({
   scenario: "success", handler: null as unknown as (request: Request) => Promise<Response>,
   writes: [] as { table: string; operation: string; payload: Record<string, unknown> }[],
@@ -15,12 +14,12 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   functions: { invoke: state.invoke },
-  auth: { getUser: async () => ({ data: { user: { id: "fixture-user" } }, error: null }) },
+  auth: { getUser: async () => ({ data: { user: { id: "11111111-1111-4111-8111-111111111111" } }, error: null }) },
   from: (table: string) => {
     let operation = "read";
     const result = () => ({ error: null, data: table === "pipelines" && operation === "read"
-      ? { user_id: "fixture-user", tool_sequence: [state.selectedTool], input_params: state.inputs, target_case_id: "fixture-case" }
-      : table === "cases" && operation === "read" ? { id: "fixture-case", owner_id: "fixture-user" } : operation === "read" ? null : { id: "fixture-run" } });
+      ? { user_id: "11111111-1111-4111-8111-111111111111", tool_sequence: [state.selectedTool], input_params: state.inputs, target_case_id: "fixture-case" }
+      : table === "cases" && operation === "read" ? { id: "fixture-case", owner_id: "11111111-1111-4111-8111-111111111111" } : operation === "read" ? null : { id: "fixture-run" } });
     const query = { select: () => query, eq: () => query,
       insert: (payload: Record<string, unknown>) => { operation = "insert"; state.writes.push({ table, operation, payload }); return query; },
       update: (payload: Record<string, unknown>) => { operation = "update"; state.writes.push({ table, operation, payload }); return query; },
@@ -41,7 +40,7 @@ beforeEach(() => {
   const network = vi.fn(async (input: string) => {
     state.traffic.push(input);
     const url = new URL(input);
-    if (url.hostname === "fixture-auth.invalid") return json(url.pathname.startsWith("/rest/") ? [] : { id: "fixture-user" });
+    if (url.hostname === "fixture-auth.invalid") return json(url.pathname.startsWith("/rest/") ? [] : { id: "11111111-1111-4111-8111-111111111111" });
     if (url.hostname === "cloudflare-dns.com") return json({ Answer: [{ type: 1, data: state.scenario === "private-dns" && url.searchParams.get("name") === "rdap.org" ? "127.0.0.1" : "93.184.215.14" }] });
     if (url.hostname === "rdap.org") {
       if (["rdap-failure", "all-failure"].includes(state.scenario)) return json({}, 503);
@@ -60,12 +59,12 @@ beforeEach(() => {
     throw new Error("Fixture transport blocks all unlisted hosts; no real network exists");
   });
   vi.stubGlobal("fetch", network);
-  const source = fs.readFileSync("supabase/functions/osint-tools/index.ts", "utf8").replace(/^import .*;\r?\n/gm, "");
+  const source = fs.readFileSync("supabase/functions/_shared/authenticateUser.ts", "utf8").replace(/^export /gm, "") + "\n" + fs.readFileSync("supabase/functions/osint-tools/index.ts", "utf8").replace(/^import .*;\r?\n/gm, "");
   new vm.Script(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText)
     .runInContext(vm.createContext({
       Deno: { serve: (handler: typeof state.handler) => { state.handler = handler; }, env: { get: (name: string) => name === "SUPABASE_URL" ? "https://fixture-auth.invalid" : name === "SUPABASE_ANON_KEY" ? "synthetic-public-key" : undefined } },
       parsePhoneNumberFromString: (phone: string, options: { extract?: boolean }) => parsePhoneNumberFromString(phone, { ...options }),
-      boundedFetch: safeFetch, requireUser, fetch: network, TextDecoder, TextEncoder, Uint8Array, AbortController, Request, Response, Headers, URL, URLSearchParams, FormData, AbortSignal, Error, Date, setTimeout, clearTimeout,
+      boundedFetch: safeFetch, fetch: network, TextDecoder, TextEncoder, Uint8Array, AbortController, Request, Response, Headers, URL, URLSearchParams, FormData, AbortSignal, Error, Date, setTimeout, clearTimeout,
     }));
   state.invoke.mockImplementation(async (_gateway: string, { body }: { body: unknown }) => {
     if (state.scenario === "not-configured") return { data: null, error: { message: "Synthetic HTTP 424", context: json({ status: "not_configured", reason: "SYNTHETIC gateway configuration absent" }, 424) } };
@@ -117,7 +116,7 @@ describe("Domain Intelligence manual and pipeline integration", () => {
     state.scenario = scenario;
     const manual = await executeTool(tool, state.inputs);
     expect(manual.status).toBe(manualStatus);
-    const run = await executePipeline("fixture-pipeline", "fixture-user");
+    const run = await executePipeline("fixture-pipeline", "11111111-1111-4111-8111-111111111111");
     expect(run.status).toBe(runStatus); expect(run.artifactsCreated).toBe(artifacts);
     expect(state.writes.filter(write => write.table === "artifacts")).toHaveLength(artifacts);
     const saved = state.writes.find(write => write.table === "tool_results")!.payload;
@@ -140,7 +139,7 @@ describe("Domain Intelligence manual and pipeline integration", () => {
     const input = { domain: "https://EXAMPLE.COM./public?fixture=1" };
     const manual = await executeTool(tool, input);
     state.inputs = { "domain-intel": input };
-    const run = await executePipeline("fixture-pipeline", "fixture-user");
+    const run = await executePipeline("fixture-pipeline", "11111111-1111-4111-8111-111111111111");
     expect(manual.details.domain).toBe("example.com"); expect(run.status).toBe("completed");
     expect(state.invoke.mock.calls.every(([, options]) => options.body.params.domain === "example.com" || options.body.action === "ip-geo")).toBe(true);
   });
@@ -156,7 +155,7 @@ describe("Domain Intelligence manual and pipeline integration", () => {
     expect(manual.summary).toContain("approved HTTPS");
     expect(state.traffic.filter(url => !url.includes("fixture-auth.invalid"))).toEqual([]);
     state.traffic = []; state.selectedTool = "ip-geolocation"; state.inputs = { ip: "8.8.8.8" };
-    const pipeline = await executePipeline("fixture-pipeline", "fixture-user");
+    const pipeline = await executePipeline("fixture-pipeline", "11111111-1111-4111-8111-111111111111");
     expect(pipeline.status).toBe("not_configured"); expect(pipeline.artifactsCreated).toBe(0);
     expect(state.writes.find(write => write.table === "tool_results")!.payload.status).toBe("not_configured");
     expect(state.traffic.filter(url => !url.includes("fixture-auth.invalid"))).toEqual([]);

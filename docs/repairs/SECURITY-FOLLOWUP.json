@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-01",
+  "basedOn": "94d76991978e3e91180aa5ef4f370a8e0451f7e0",
+  "scope": "Additional security repairs in isolated current expansion branch. Every Auth/provider/database response is synthetic; local loopback, Sharp and embedded PostgreSQL scope remains separately recorded. No live acceptance, installs, credential changes, new permissions, merge or deployment.",
+  "changes": [
+    "Manual marketplace/built-in routes now share strict remote authenticateUser: reject anonymous/role/UUID errors, forbid Auth redirects, bound Auth response and retain publishable-key fallback",
+    "Dispatcher shares strict Auth and bounded 16 KiB JSON/15-second body reader; existing pre/post permission/case/persistence gates preserved",
+    "Image-hash enforces canonical reverse-image-hash permission at the server before request-body/image work; permission errors/body bounds fail closed",
+    "DNS resolver JSON is capped at64 KiB, strictly parsed, failed DNS status rejected and streamed reads obey absolute deadline and caller cancellation"
+  ],
+  "localValidation": {
+    "appTests": 1064,
+    "appFiles": 82,
+    "worker": 36,
+    "cloudflarePackaging": 19,
+    "intelligenceClient": 15,
+    "intelligenceSql": 11,
+    "research": 107,
+    "monitors": 23,
+    "ownershipSqlAndRollback": 1,
+    "dispatcherChecks": 33,
+    "pairedGithubChecks": 10,
+    "lint": "0 errors,16 existing warnings",
+    "typecheck": "passed",
+    "build": "passed; existing chunk/import warnings",
+    "aggregateCommand": "npm test (exit0)",
+    "validationLogSha256": "e5dec01edd1bd73b10a8f696d9afe57e602d7d2b3934851faa2c08050f4d86d6",
+    "checkLogSha256": "e0fe2d8fd432957608f614c576eb2f53da6479a519f003cf87cf727b549ed8eb"
+  },
+  "sourceComparison": "LOVABLE-SOURCE-COMPARISON.json",
+  "ciVerification": "Read the Source validation run for the current branch-tip SHA; final remote equality/CI are checked after backup, without changing this source.",
+  "remaining": [
+    "Lovable main still9546fc8; no repaired source was published there",
+    "Actual deployed Edge bundle hashes and live schema/policies remain unverified",
+    "Live metadata SQL needs connector reauthorization with projects:write; no permission expansion was performed",
+    "Exact Deno/ImageScript runtime setup and reviewed live migration/application/authenticated persistence acceptance remain gated",
+    "DNS address validation does not pin the socket address; uncooperative destination transports remain outside DNS-body fixture acceptance"
+  ]
+}

@@ -31,13 +31,63 @@ export function isBlockedAddress(address: string): boolean {
     || (words[0] & 0xff00) === 0xff00;
 }
 export interface SafeFetchOptions extends RequestInit { allowHttp?: boolean; maxBytes?: number; timeoutMs?: number; maxRedirects?: number; }
+const DNS_RESPONSE_MAX_BYTES = 64 * 1024;
+
+// Resolver responses need their own small bound before JSON parsing. Race the
+// stream with the same absolute deadline used by the request; a stalled cancel
+// callback must not keep the lookup or its caller pending.
+async function readDnsAnswers(response: Response, signal: AbortSignal): Promise<string[]> {
+  if (Number(response.headers.get("content-length")) > DNS_RESPONSE_MAX_BYTES) {
+    void response.body?.cancel().catch(() => undefined);
+    throw new Error("DNS resolver response exceeded " + DNS_RESPONSE_MAX_BYTES + " bytes");
+  }
+  if (!response.body) throw new Error("DNS resolver returned no response body");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0, complete = false;
+  let rejectAbort: (reason: unknown) => void;
+  const aborted = new Promise<never>((_, reject) => { rejectAbort = reject; });
+  const onAbort = () => {
+    rejectAbort(signal.reason ?? new Error("DNS resolver request aborted"));
+    void reader.cancel().catch(() => undefined);
+  };
+  signal.addEventListener("abort", onAbort, { once: true });
+  try {
+    signal.throwIfAborted();
+    for (;;) {
+      const next = await Promise.race([reader.read(), aborted]);
+      if (next.done) { complete = true; break; }
+      total += next.value.byteLength;
+      if (total > DNS_RESPONSE_MAX_BYTES) throw new Error("DNS resolver response exceeded " + DNS_RESPONSE_MAX_BYTES + " bytes");
+      chunks.push(next.value);
+    }
+  } finally {
+    signal.removeEventListener("abort", onAbort);
+    if (!complete) void reader.cancel().catch(() => undefined);
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  let parsed: unknown;
+  try { parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
+  catch { throw new Error("DNS resolver returned invalid JSON"); }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("DNS resolver returned an invalid response");
+  const data = parsed as { Status?: unknown; Answer?: unknown };
+  if (data.Status !== undefined && data.Status !== 0) throw new Error("DNS resolver query failed");
+  if (data.Answer === undefined) return [];
+  if (!Array.isArray(data.Answer) || data.Answer.some(answer => !answer || typeof answer !== "object" || Array.isArray(answer) || typeof answer.type !== "number" || typeof answer.data !== "string")) throw new Error("DNS resolver returned invalid answers");
+  return data.Answer.filter(answer => answer.type === 1 || answer.type === 28).map(answer => answer.data);
+}
 export async function safeFetch(url: string, options: SafeFetchOptions = {}): Promise<Response> {
   const { allowHttp = false, maxBytes = 5 * 1024 * 1024, timeoutMs = 10000, maxRedirects = 3, ...rest } = options;
-  const signal = AbortSignal.timeout(timeoutMs);
+  const deadline = AbortSignal.timeout(timeoutMs);
+  const signal = rest.signal ? AbortSignal.any([deadline, rest.signal]) : deadline;
   const headers = new Headers(rest.headers);
   if (!headers.has("User-Agent")) headers.set("User-Agent", "InsightNexus-OSINT/1.0");
   let current = new URL(url);
   for (let hops = 0; ; hops++) {
+    signal.throwIfAborted();
     if (current.username || current.password) throw new Error("URL credentials are not allowed");
     if (current.protocol !== "https:" && !(allowHttp && current.protocol === "http:")) throw new Error("Blocked non-HTTPS URL");
     const host = current.hostname.replace(/^\[|\]$/g, "");
@@ -46,8 +96,7 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
       const answers = await Promise.all(["A", "AAAA"].map(async type => {
         const r = await fetch("https://cloudflare-dns.com/dns-query?name=" + encodeURIComponent(host) + "&type=" + type, { headers: { Accept: "application/dns-json" }, redirect: "error", signal });
         if (!r.ok) throw new Error("DNS resolver HTTP " + r.status);
-        const data = await r.json();
-        return (data.Answer ?? []).filter((a: { type: number }) => a.type === 1 || a.type === 28).map((a: { data: string }) => a.data);
+        return readDnsAnswers(r, signal);
       }));
       addresses = answers.flat();
     }

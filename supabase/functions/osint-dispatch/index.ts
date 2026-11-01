@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { z } from "npm:zod@3.23.8";
 import { safeFetch } from "../_shared/safeFetch.ts";
+import { authenticateUser, boundedJsonBody, RequestAuthenticationError } from "../_shared/authenticateUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -266,21 +267,20 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization") ?? "";
-  if (!authHeader) return json({ error: "Missing Authorization" }, 401);
+  let userId: string;
+  try { userId = (await authenticateUser(req)).id; }
+  catch (error) { return json({ status: "error", reason: error instanceof RequestAuthenticationError ? error.code : "authentication_unavailable", saved: false }, error instanceof RequestAuthenticationError ? error.status : 503); }
 
   const supabaseUrl = env("SUPABASE_URL");
-  const anonKey = env("SUPABASE_ANON_KEY");
+  const anonKey = env("SUPABASE_ANON_KEY") || env("SUPABASE_PUBLISHABLE_KEY");
 
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
-  const { data: userData, error: userErr } = await userClient.auth.getUser();
-  if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
-  const userId = userData.user.id;
-
   let body: unknown;
-  try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
+  try { body = await boundedJsonBody(req); }
+  catch (error) { return json({ status: "error", reason: error instanceof RequestAuthenticationError ? error.code : "invalid_body", saved: false }, error instanceof RequestAuthenticationError ? error.status : 400); }
   const parsed = BodySchema.safeParse(body);
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
 

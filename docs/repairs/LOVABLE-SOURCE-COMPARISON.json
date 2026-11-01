@@ -1,0 +1,66 @@
+{
+  "project": "ddb190d3-9e1f-408e-9b17-113c51f6576f",
+  "ref": "9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86",
+  "scope": "Project repository source from authorized Lovable read_file; not immutable deployed Edge bundles; newline normalization only",
+  "files": [
+    {
+      "path": "supabase/functions/osint-dispatch/index.ts",
+      "sha256": "486e6c4051eac6a927e724c11a787241476c747327533643e84738cba45dc7d8",
+      "matchesPinnedRepositorySource": true
+    },
+    {
+      "path": "supabase/functions/osint-tools/index.ts",
+      "sha256": "979d8a95750a0304dd2be860996af1050e85a280483270ff89aae7d82467a329",
+      "matchesPinnedRepositorySource": true
+    },
+    {
+      "path": "supabase/functions/image-hash/index.ts",
+      "sha256": "eb7ad8b218df01f35eb4e39e9ead58f51fec3678a0ff89ac25ed355586bd0ff2",
+      "matchesPinnedRepositorySource": true
+    },
+    {
+      "path": "supabase/functions/_shared/safeFetch.ts",
+      "sha256": "fd0ef279a4ccf9f35a2c0956d1b808ded37ee166fba8001e022e2d4b1d0c9915",
+      "matchesPinnedRepositorySource": true
+    },
+    {
+      "path": "src/lib/pipelineEngine.ts",
+      "sha256": "5d5eadd27f90a6ec7a8c36e7f9e7f1ae0219fdd1a1932466abbc9351a11c15a7",
+      "matchesPinnedRepositorySource": true
+    },
+    {
+      "path": "src/lib/agentEngine.ts",
+      "sha256": "fcd12863084ab8a96156be69b96c2cd63e9fe0b725fc2ff1f798c469649cbe85",
+      "matchesPinnedRepositorySource": true
+    },
+    {
+      "path": "src/components/tools/ToolRunner.tsx",
+      "sha256": "edd08ea273b253e374b76fb87676bcea5d5be5b9e9e2fcf06d102eee774ee257",
+      "matchesPinnedRepositorySource": true
+    },
+    {
+      "path": "src/components/tools/toolDefinitions.ts",
+      "sha256": "96280ef33991020365fad4a090c48b2898150b0e2793097d466e3f938bb87669",
+      "matchesPinnedRepositorySource": true
+    }
+  ],
+  "sourceExportLocalRoot": "C:/Users/gloss/Documents/Codex/2026-10-12/task-2/insight-nexus-live-export-20261101",
+  "browserObserved": {
+    "surface": "Existing logged-in Edge tab on the connected Windows computer; Safari was not exposed by inventory",
+    "project": "ddb190d3-9e1f-408e-9b17-113c51f6576f",
+    "gitRepository": "NexusInsights/dark-trace-loom",
+    "selectedBranch": "main",
+    "state": "Connected"
+  },
+  "databaseStatus": {
+    "enabled": true,
+    "stack": "supabase"
+  },
+  "liveSqlMetadata": {
+    "performed": false,
+    "reason": "Lovable query_database requires projects:write; current connector authorization lacks that scope. No retry, permission expansion, credential extraction or browser SQL workaround was used."
+  },
+  "deployedFunctionBundleEquality": "unverified: View code opens the project repository editor, not an immutable deployment bundle",
+  "credentialsExported": false,
+  "sourceHelperMissingAtPinnedRef": "src/components/tools/executeTool.ts (404 file_not_found; helper belongs to repair branch)"
+}

@@ -1,8 +1,8 @@
 {
   "scope": "Actual isolated dispatcher and fetch guard. Synthetic auth, policy responses, repository and network transport only; no sockets, SQL/RLS, production deployment or live acceptance. Owner checkout not accessed.",
-  "sourceSha256": "6ff3ad7c1e5044e4b79508e3e66355aca7179a34a741aaa17181e6d85a19ab0b",
-  "passed": 29,
-  "total": 29,
+  "sourceSha256": "0a23149f079379b1691895997a824860c7e5db10a62da603d5e3f444762e337b",
+  "passed": 33,
+  "total": 33,
   "checks": [
     {
       "name": "disabled",
@@ -120,6 +120,7 @@
       "name": "missing auth",
       "passed": true,
       "http": 401,
+      "status": "error",
       "syntheticProviderCalls": 0,
       "savedRows": 0
     },
@@ -127,6 +128,7 @@
       "name": "invalid auth",
       "passed": true,
       "http": 401,
+      "status": "error",
       "syntheticProviderCalls": 0,
       "savedRows": 0
     },
@@ -134,6 +136,38 @@
       "name": "auth exception",
       "passed": true,
       "http": 503,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "anonymous Auth",
+      "passed": true,
+      "http": 403,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "malformed Auth",
+      "passed": true,
+      "http": 502,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "oversized Auth",
+      "passed": true,
+      "http": 503,
+      "status": "error",
+      "syntheticProviderCalls": 0,
+      "savedRows": 0
+    },
+    {
+      "name": "bounded dispatcher body",
+      "passed": true,
+      "http": 413,
       "status": "error",
       "syntheticProviderCalls": 0,
       "savedRows": 0
