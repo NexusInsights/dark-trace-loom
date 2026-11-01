@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-01",
+  "repository": "https://github.com/NexusInsights/dark-trace-loom",
+  "branch": "codex/reconcile-insight-repairs-20261101",
+  "localSourceCommit": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+  "remoteRef": "refs/heads/codex/reconcile-insight-repairs-20261101",
+  "remoteCommitAtVerification": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+  "remoteRefVerifiedBy": "Installed GitHub connector GET /git/ref/heads/codex/reconcile-insight-repairs-20261101",
+  "workingTreeAtSourceCommit": "clean",
+  "sourceTreeHash": "54de6ea91a70a94f8200c15a34d14eed86ce3b9b9a5757f43748f9cb8fff4b0d",
+  "ci": {
+    "id": 41354979121,
+    "job": 124992998326,
+    "url": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41354979121",
+    "headSha": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+    "event": "push",
+    "name": "Source validation",
+    "conclusion": "success",
+    "steps": [
+      "npm ci --ignore-scripts --no-fund",
+      "npm run lint",
+      "npx --no-install tsc --noEmit --project tsconfig.app.json",
+      "npm test",
+      "npm run build"
+    ],
+    "allStepsPassed": true
+  },
+  "deployment": {
+    "mainNotPushed": true,
+    "merged": false,
+    "deployed": false,
+    "sourceShaOfExistingDirectUpload": "unknown; owner non-Git source, not this commit",
+    "unknownExternalHooksNotCertified": true
+  },
+  "documentationFollowup": "This receipt is saved by a later documentation-only commit. The exact application/configuration/CI blobs stay equal to staged-source-manifest.json; derive the current tip and remote equality from Git refs. CI on that final tip is verified separately before completion."
+}

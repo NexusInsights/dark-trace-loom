@@ -31,9 +31,11 @@
       "restoredGitFsck": "passed"
     }
   ],
-  "remoteBackupCommit": null,
-  "remoteBranchCreated": false,
+  "remoteBackupCommit": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+  "remoteBranchCreated": true,
   "publicationGate": "Known configurations permit a codex/* backup push; no main push, merge or deployment",
   "activeWriterCoordination": "Human approval received; owner confirmed canonical/prepared source and released files",
-  "currentState": "../../repairs/WORK-STATE.json"
+  "currentState": "../../repairs/WORK-STATE.json",
+  "remoteBackupBranch": "codex/reconcile-insight-repairs-20261101",
+  "sourceCi": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41354979121"
 }

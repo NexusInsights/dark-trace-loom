@@ -47,5 +47,26 @@
   "build": "passed; existing mixed-import/large-chunk warnings",
   "archives": "Both Git bundles reverified; byte hashes equal capture; earlier restore/fsck receipts preserved",
   "ownerSnapshotDrift": [],
-  "liveAcceptance": false
+  "liveAcceptance": false,
+  "sourceCi": {
+    "id": 41354979121,
+    "job": 124992998326,
+    "url": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41354979121",
+    "headSha": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+    "event": "push",
+    "name": "Source validation",
+    "conclusion": "success",
+    "steps": [
+      "npm ci --ignore-scripts --no-fund",
+      "npm run lint",
+      "npx --no-install tsc --noEmit --project tsconfig.app.json",
+      "npm test",
+      "npm run build"
+    ],
+    "allStepsPassed": true
+  },
+  "backup": "refs/heads/codex/reconcile-insight-repairs-20261101",
+  "testExecutions": 1224,
+  "gatewayContractChecks": 39,
+  "deployed": false
 }

@@ -2,6 +2,8 @@
 
 Exact Lovable project ddb190d3-9e1f-408e-9b17-113c51f6576f; production Supabase zisrsttmjeipkmllqubi. The independent staging backend is preserved. Repository baseline 9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86 is not a Git SHA for the later non-Git expansion. Canonical/prepared source identity and stopped writer coordination were confirmed before this isolated port. See docs/repairs/canonical-snapshot.json and WORK-STATE.json.
 
+The reconciled application is committed and backed up at 70494d922cde4152d873bcc4b40a1bca49830e0d on codex/reconcile-insight-repairs-20261101. [Exact-source CI passed](https://github.com/NexusInsights/dark-trace-loom/actions/runs/41354979121) dependency restore, lint, type checking, the full aggregate test command and build. No merge/deployment occurred. See docs/repairs/BACKUP-RECEIPT.json.
+
 The earlier matrix below is preserved as historical evidence. Its earlier public-provider passes are not new acceptance of this source. This continuation makes no live provider requests, adds no credentials, installs no software and changes no live policies/settings.
 
 | Current module or boundary | Newly verified scope | Live/release status |

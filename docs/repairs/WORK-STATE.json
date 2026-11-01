@@ -15,8 +15,6 @@
   },
   "retainedHistory": "d5de90df667ecb3cef9c237f2d332847e154b54a",
   "stoppedPort": "d253b2fff08828c52e42d4dac8a91b7d745b6883",
-  "localCommit": null,
-  "remoteCommit": null,
   "tests": {
     "app": {
       "tests": 1012,
@@ -50,15 +48,43 @@
   },
   "boundaries": {
     "noCredentialsAdded": true,
-    "noInstallPerformed": true,
     "noProviderCallsPerformed": true,
     "noOwnerSourceWritten": true,
-    "noLiveSettingsOrPoliciesChanged": true
+    "noLiveSettingsOrPoliciesChanged": true,
+    "noLocalInstallPerformed": true,
+    "ciDependencyRestore": "Existing source workflow restored locked dependencies in ephemeral CI; no local installation was performed"
   },
   "remaining": [
-    "Commit and back up nonproduction branch; verify remote SHA and exact-SHA CI",
     "Separate release review: actual deployed functions, live schema/RLS and authenticated browser acceptance remain unverified",
     "Exact Deno/ImageScript runtime setup remains unapproved; Sharp fixture decoding is not ImageScript acceptance"
   ],
-  "ownerSnapshotDrift": []
+  "ownerSnapshotDrift": [],
+  "sourceCommit": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+  "remoteSourceCommitAtVerification": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+  "remoteBackupVerified": true,
+  "sourceCi": {
+    "id": 41354979121,
+    "job": 124992998326,
+    "url": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41354979121",
+    "headSha": "70494d922cde4152d873bcc4b40a1bca49830e0d",
+    "event": "push",
+    "name": "Source validation",
+    "conclusion": "success",
+    "steps": [
+      "npm ci --ignore-scripts --no-fund",
+      "npm run lint",
+      "npx --no-install tsc --noEmit --project tsconfig.app.json",
+      "npm test",
+      "npm run build"
+    ],
+    "allStepsPassed": true
+  },
+  "currentTipLocator": "git rev-parse HEAD; git rev-parse @{upstream}; compare the current remote Git ref through the GitHub connector",
+  "sourceTreeHash": "54de6ea91a70a94f8200c15a34d14eed86ce3b9b9a5757f43748f9cb8fff4b0d",
+  "nextSteps": [
+    "Do not repeat source reconciliation: current complete expansion + retained fixes are committed and backed up on the codex branch; source CI is green",
+    "Before a separately authorized release, compare actual deployed function bodies/live schema, review and apply the tested additive policy migration, and execute authenticated browser/persistence acceptance",
+    "Exact Deno/ImageScript runtime remains unapproved and unaccepted; existing Sharp byte decoding does not substitute for it",
+    "Preserve canonical C/D folders and the independent staging backend; no main push, merge or deploy is authorized by this backup continuation"
+  ]
 }

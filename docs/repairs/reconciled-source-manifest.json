@@ -1,5 +1,5 @@
 {
-  "scope": "Working source hashes before commit; generated test evidence/documentation can be refreshed separately",
+  "scope": "Historical working-source hashes at the port checkpoint, before final changes and Git line-ending normalization. For exact committed application/configuration/CI blobs use staged-source-manifest.json.",
   "fingerprints": [
     {
       "path": "ACCEPTANCE.md",
@@ -3466,5 +3466,6 @@
       "bytes": 395,
       "sha256": "2c64550d05cdec49d120f28afd53056372945035b13d54cbd16f8027329f2a84"
     }
-  ]
+  ],
+  "supersededBy": "staged-source-manifest.json"
 }
