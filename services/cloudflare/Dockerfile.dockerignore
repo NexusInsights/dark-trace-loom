@@ -1,0 +1,11 @@
+**
+!services/
+!services/intelligence/
+!services/intelligence/*.mjs
+!services/cloudflare/
+!services/cloudflare/package.json
+!services/cloudflare/package-lock.json
+!services/cloudflare/container/
+!services/cloudflare/container/**
+!services/cloudflare/src/
+!services/cloudflare/src/controller.mjs

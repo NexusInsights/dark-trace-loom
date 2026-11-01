@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "insightnexus-intelligence",
+  "account_id": "da9871f264f6e4268fd904015f5703df",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "containers": [{
+    "name": "insightnexus-intelligence-browser",
+    "class_name": "IntelligenceContainer",
+    "scheduling_policy": "default",
+    "max_instances": 1,
+    "image": "./Dockerfile",
+    "image_build_context": "../..",
+    "instance_type": "standard-1",
+    "observability": { "enabled": true }
+  }],
+  "durable_objects": {
+    "bindings": [{ "name": "INTELLIGENCE_CONTAINER", "class_name": "IntelligenceContainer" }]
+  },
+  "exports": {
+    "IntelligenceContainer": {
+      "type": "durable-object",
+      "storage": "sqlite",
+      "container": "insightnexus-intelligence-browser"
+    }
+  }
+}
