@@ -176,6 +176,8 @@ export default function IntelligenceLab() {
           <GlassPanel key={tool.action} className="p-5 space-y-4 min-w-0">
             <h2 className="font-display font-semibold flex items-center gap-2"><tool.icon className="h-4 w-4 text-primary" />{tool.title}</h2>
             <p className="text-sm text-muted-foreground">{tool.description}</p>
+            {tool.action === "breach" && <p className="text-sm text-muted-foreground">Breach data supplied by <a className="underline" href="https://haveibeenpwned.com/" target="_blank" rel="noreferrer">Have I Been Pwned</a>.</p>}
+            {tool.action === "ipinfo" && <p className="text-sm text-muted-foreground">IP address data supplied by <a className="underline" href="https://ipinfo.io/" target="_blank" rel="noreferrer">IPinfo</a>.</p>}
             <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); execute(tool.action, () => runIntelligenceAction(tool.action, { [tool.field]: inputs[tool.action]?.trim() || "" }), false); }}>
               <label htmlFor={`intelligence-${tool.action}`} className="block text-sm">{tool.label}</label>
               <input id={`intelligence-${tool.action}`} type={tool.action === "breach" ? "email" : "text"} required maxLength={2048} value={inputs[tool.action] || ""} disabled={locked} placeholder={tool.placeholder} onChange={(event) => setInputs((current) => ({ ...current, [tool.action]: event.target.value }))} className="w-full min-w-0 rounded border border-border bg-secondary px-3 py-2 text-sm" />
