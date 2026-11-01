@@ -1,0 +1,22 @@
+{
+  "name": "insightnexus-intelligence-cloudflare",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check:bundle": "wrangler deploy --dry-run --containers-rollout=none --outdir .wrangler/bundle",
+    "prepare:prebuilt": "node scripts/prepare-prebuilt.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "puppeteer-core": "25.16.0",
+    "puppeteer-extra": "3.3.6",
+    "puppeteer-extra-plugin-stealth": "2.11.2"
+  },
+  "devDependencies": {
+    "wrangler": "4.156.0"
+  },
+  "engines": { "node": ">=24 <25" }
+}

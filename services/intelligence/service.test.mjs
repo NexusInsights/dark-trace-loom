@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { request as httpRequest } from 'node:http';
 import { EventEmitter } from 'node:events';
 import { createConnection } from 'node:net';
-import { dispatchAction, IntelligenceError, toErrorResult, validateAction } from './service.mjs';
+import { dispatchAction, IntelligenceError, toErrorResult, validateAction, checkHIBPSubscription } from './service.mjs';
 import { createIntelligenceWorker } from './worker.mjs';
+import { ProviderError, dispatchHTTPProvider, validatePublicIP } from './provider-http.mjs';
+import { getProviderReadiness } from './provider-readiness.mjs';
 
 const env = { HIBP_API_KEY: 'test-key-not-a-real-credential', IPINFO_TOKEN: 'test-token', TOR_SOCKS_PROXY: 'socks5://127.0.0.1:9050' };
 const json = (value, status = 200, headers = {}) => new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json', ...headers } });
@@ -60,6 +62,129 @@ test('IPinfo uses a fixed provider host, explicit IP and server-only bearer toke
   } });
   assert.equal(result.scope, 'explicit_ip');
   assert.equal(result.city, 'Fixture city');
+  assert.equal(result.apiMode, 'legacy');
+  assert.equal(result.loc, '1,2');
+  assert.equal(result.latitude, 1); assert.equal(result.longitude, 2);
+});
+
+test('IPinfo Lite uses its explicit endpoint and actual country/continent/ASN schema without city inference', async () => {
+  let calls = 0;
+  const result = await dispatchAction('ipinfo', { ip: '8.8.8.8' }, { env: { ...env, IPINFO_API_MODE: 'lite' }, fetchImpl: async (url, options) => {
+    calls++;
+    assert.equal(url, 'https://api.ipinfo.io/lite/8.8.8.8');
+    assert.equal(options.headers.Authorization, `Bearer ${env.IPINFO_TOKEN}`);
+    assert.equal(options.redirect, 'error');
+    return json({ ip: '8.8.8.8', asn: 'AS15169', as_name: 'Google LLC', as_domain: 'google.com', country_code: 'US', country: 'United States', continent_code: 'NA', continent: 'North America', city: 'Ignore unsupported Lite extra', loc: '1,2' });
+  } });
+  assert.equal(calls, 1);
+  assert.equal(result.apiMode, 'lite'); assert.equal(result.country, 'US'); assert.equal(result.countryCode, 'US'); assert.equal(result.countryName, 'United States');
+  assert.equal(result.continent, 'North America'); assert.equal(result.continentCode, 'NA');
+  assert.equal(result.asn, 'AS15169'); assert.equal(result.asName, 'Google LLC'); assert.equal(result.asDomain, 'google.com');
+  for (const field of ['city', 'region', 'loc', 'latitude', 'longitude', 'timezone', 'postal']) assert.equal(result[field], null);
+  assert.deepEqual(result.coverage, { apiMode: 'lite', plan: 'lite', geolocation: 'country_continent', cityAvailable: false, coordinatesAvailable: false });
+});
+
+test('IPinfo lookup normalizes documented nested geo/as without claiming the exact paid account plan', async () => {
+  const result = await dispatchAction('ipinfo', { ip: '8.8.8.8' }, { env: { ...env, IPINFO_API_MODE: 'lookup' }, fetchImpl: async (url) => {
+    assert.equal(url, 'https://api.ipinfo.io/lookup/8.8.8.8');
+    return json({ ip: '8.8.8.8', hostname: 'dns.google', geo: { city: 'Mountain View', region: 'California', country: 'United States', country_code: 'US', continent: 'North America', continent_code: 'NA', latitude: 37.4056, longitude: -122.0775, timezone: 'America/Los_Angeles', postal_code: '94043' }, as: { asn: 'AS15169', name: 'Google LLC', domain: 'google.com', type: 'hosting' } });
+  } });
+  assert.equal(result.city, 'Mountain View'); assert.equal(result.country, 'US'); assert.equal(result.countryName, 'United States');
+  assert.equal(result.loc, '37.4056,-122.0775'); assert.equal(result.latitude, 37.4056); assert.equal(result.longitude, -122.0775);
+  assert.equal(result.asType, 'hosting'); assert.equal(result.org, 'AS15169 Google LLC'); assert.equal(result.postal, '94043');
+  assert.equal(result.coverage.plan, 'account_dependent'); assert.equal(result.coverage.coordinatesAvailable, true);
+});
+
+test('IPinfo invalid modes, mismatched IPs, and malformed new schemas fail without endpoint fallback', async () => {
+  await rejectsCode(dispatchAction('ipinfo', { ip: '8.8.8.8' }, { env: { ...env, IPINFO_API_MODE: 'auto-paid-fallback' }, fetchImpl: () => assert.fail('must not fetch') }), 'CONFIGURATION_REQUIRED');
+  for (const body of [{ ip: '1.1.1.1' }, { ip: '8.8.8.8', geo: [] }, { ip: '8.8.8.8', geo: { latitude: '37.4', longitude: -122 } }, { ip: '8.8.8.8', as: { name: 123 } }]) {
+    let calls = 0;
+    await rejectsCode(dispatchAction('ipinfo', { ip: '8.8.8.8' }, { env: { ...env, IPINFO_API_MODE: 'lookup' }, fetchImpl: async () => { calls++; return json(body); } }), 'INVALID_PROVIDER_RESPONSE');
+    assert.equal(calls, 1);
+  }
+  let calls = 0;
+  await rejectsCode(dispatchAction('ipinfo', { ip: '8.8.8.8' }, { env: { ...env, IPINFO_API_MODE: 'lite' }, fetchImpl: async () => { calls++; return json({}, 403); } }), 'PROVIDER_ACCESS_DENIED');
+  assert.equal(calls, 1);
+  for (const loc of ['unknown', '1,', '91,0', '0,181']) await rejectsCode(dispatchAction('ipinfo', { ip: '8.8.8.8' }, { env, fetchImpl: async () => json({ ip: '8.8.8.8', loc }) }), 'INVALID_PROVIDER_RESPONSE');
+});
+
+test('official X API requires its explicit mode, existing token name, and exact included-access approval before calls', async () => {
+  const noCall = { fetchImpl: () => assert.fail('unapproved provider call'), launchBrowser: () => assert.fail('no paid or browser fallback') };
+  await rejectsCode(dispatchAction('profile', { username: 'example' }, { env: { X_API_MODE: 'api' }, ...noCall }), 'CONFIGURATION_REQUIRED');
+  for (const approval of [undefined, 'false', 'TRUE', true]) {
+    await rejectsCode(dispatchAction('profile', { username: 'example' }, { env: { X_API_MODE: 'api', X_API_BEARER_TOKEN: 'fixture-token', X_INCLUDED_ACCESS_VERIFIED: approval }, ...noCall }), 'ALLOWANCE_REQUIRED');
+  }
+  await rejectsCode(dispatchAction('profile', { username: 'example' }, { env: { X_API_MODE: 'automatic' }, ...noCall }), 'CONFIGURATION_REQUIRED');
+});
+
+test('official X API returns separate name/bio/location using one fixed-host request and no browser fallback', async () => {
+  let calls = 0;
+  const result = await dispatchAction('profile', { username: '@Example' }, { env: { X_API_MODE: 'api', X_API_BEARER_TOKEN: 'fixture-token', X_INCLUDED_ACCESS_VERIFIED: 'true' }, launchBrowser: () => assert.fail('must not launch'), fetchImpl: async (url, options) => {
+    calls++; assert.equal(url, 'https://api.x.com/2/users/by/username/Example?user.fields=description,location');
+    assert.equal(options.headers.Authorization, 'Bearer fixture-token'); assert.equal(options.redirect, 'error'); assert.ok(options.signal);
+    return json({ data: { id: '123456789', username: 'example', name: 'Fixture Name', description: 'Fixture Bio', location: 'Fixture Location' } });
+  } });
+  assert.equal(calls, 1); assert.equal(result.provider, 'x_api'); assert.equal(result.bio, 'Fixture Bio'); assert.equal(result.location, 'Fixture Location');
+  assert.equal(result.name, 'Fixture Name'); assert.equal(result.url, 'https://x.com/example'); assert.ok(!JSON.stringify(result).includes('fixture-token'));
+});
+
+test('official X credential, credit, forbidden, missing-profile and rate errors remain distinct without retry', async () => {
+  const cases = [[401, 'PROVIDER_AUTHENTICATION_FAILED'], [402, 'PROVIDER_PAYMENT_REQUIRED'], [403, 'PROVIDER_FORBIDDEN'], [404, 'PROFILE_NOT_FOUND'], [429, 'RATE_LIMITED']];
+  for (const [status, code] of cases) {
+    let calls = 0;
+    await assert.rejects(dispatchAction('profile', { username: 'example' }, { env: { X_API_MODE: 'api', X_API_BEARER_TOKEN: 'fixture-token', X_INCLUDED_ACCESS_VERIFIED: 'true' }, launchBrowser: () => assert.fail('must not fallback'), fetchImpl: async () => {
+      calls++; return json({ detail: 'Never expose fixture-token or upstream internals' }, status, { 'retry-after': '21' });
+    } }), (error) => {
+      assert.ok(error instanceof IntelligenceError); assert.equal(error.code, code); assert.equal(error.status, status);
+      assert.ok(!error.message.includes('fixture-token'));
+      if (status === 429) assert.equal(error.retryAfter, 21);
+      return true;
+    });
+    assert.equal(calls, 1);
+  }
+});
+
+test('official X malformed or different-account profile data cannot become a successful match', async () => {
+  for (const body of [{ errors: [{ detail: 'unavailable' }] }, { data: { id: '123', username: 'other', name: 'Wrong account' } }, { data: { id: '123', username: 'example', name: 'Example', description: 99 } }]) {
+    await rejectsCode(dispatchAction('profile', { username: 'example' }, { env: { X_API_MODE: 'api', X_API_BEARER_TOKEN: 'fixture-token', X_INCLUDED_ACCESS_VERIFIED: 'true' }, fetchImpl: async () => json(body) }), 'INVALID_PROVIDER_RESPONSE');
+  }
+});
+
+test('portable HTTP core validates public IPs and uses injected server-secret reads without Node environment access', async () => {
+  assert.equal(validatePublicIP('8.8.8.8'), '8.8.8.8'); assert.equal(validatePublicIP('2001:4860:4860::8888'), '2001:4860:4860::8888');
+  for (const value of ['127.0.0.1', '10.0.0.1', '192.168.1.1', '198.18.0.1', '203.0.113.2', '2001:db8::1', '::1', '::ffff:808:808', '01.2.3.4', '8.8.8.8/secret']) assert.throws(() => validatePublicIP(value), ProviderError);
+  const settings = { IPINFO_TOKEN: 'fixture-internal-token', IPINFO_API_MODE: 'lite' };
+  const result = await dispatchHTTPProvider('ipinfo', { ip: '8.8.8.8' }, { getEnv: (name) => settings[name], fetchImpl: async (url, options) => {
+    assert.equal(url, 'https://api.ipinfo.io/lite/8.8.8.8'); assert.equal(options.headers.Authorization, 'Bearer fixture-internal-token'); return json({ ip: '8.8.8.8', country_code: 'US' });
+  } });
+  assert.equal(result.countryCode, 'US'); assert.equal(result.countryName, null);
+  await assert.rejects(dispatchHTTPProvider('onion', { url: 'http://invalid.onion' }, { fetchImpl: () => assert.fail('must not call') }), (error) => error instanceof ProviderError && error.code === 'INVALID_ACTION');
+});
+
+test('provider readiness returns only configuration enums/booleans and never upgrades presence to live or entitlement proof', () => {
+  const defaults = getProviderReadiness();
+  assert.equal(defaults.metadataOnly, true); assert.equal(defaults.liveChecksPerformed, false);
+  assert.equal(defaults.ipinfo.mode, 'legacy'); assert.equal(defaults.x.mode, 'browser');
+  const result = getProviderReadiness({ IPINFO_TOKEN: 'never-print-ipinfo-secret', HIBP_API_KEY: 'never-print-hibp-secret', X_API_BEARER_TOKEN: 'never-print-x-secret', TOR_SOCKS_PROXY: 'never-print-proxy-secret', IPINFO_API_MODE: 'never-print-invalid-mode', X_API_MODE: 'api', X_INCLUDED_ACCESS_VERIFIED: true, INTELLIGENCE_IPINFO_ALLOWANCE_VERIFIED: 'true' });
+  assert.equal(result.ipinfo.mode, null); assert.equal(result.ipinfo.modeValid, false); assert.equal(result.ipinfo.tokenConfigured, true);
+  assert.equal(result.ipinfo.includedAccessVerified, true); assert.equal(result.hibp.keyConfigured, true); assert.equal(result.hibp.includedAccessVerified, false);
+  assert.equal(result.x.bearerConfigured, true); assert.equal(result.x.includedAccessVerified, false); assert.equal(result.onion.proxyConfigured, true);
+  assert.ok(!JSON.stringify(result).includes('never-print'));
+});
+
+test('explicit HIBP subscription check reads only account metadata with safe headers and does not approve allowance', async () => {
+  let calls = 0;
+  const result = await checkHIBPSubscription({ env, fetchImpl: async (url, options) => {
+    calls++; assert.equal(url, 'https://haveibeenpwned.com/api/v3/subscription/status');
+    assert.equal(options.headers['hibp-api-key'], env.HIBP_API_KEY); assert.ok(options.headers['User-Agent']); assert.ok(options.signal); assert.equal(options.redirect, 'error');
+    return json({ SubscriptionName: 'Core fixture', SubscribedUntil: '2027-01-01T00:00:00Z', Rpm: 10, Description: 'private-account-detail-not-returned', ApiKey: env.HIBP_API_KEY });
+  } });
+  assert.equal(calls, 1); assert.equal(result.scope, 'account_metadata'); assert.equal(result.subscriptionName, 'Core fixture'); assert.equal(result.rpm, 10); assert.equal(result.allowanceVerifiedByCheck, false);
+  assert.ok(!JSON.stringify(result).includes(env.HIBP_API_KEY)); assert.ok(!JSON.stringify(result).includes('private-account-detail'));
+  await rejectsCode(checkHIBPSubscription({ env: {}, fetchImpl: () => assert.fail('must not call') }), 'CONFIGURATION_REQUIRED');
+  await rejectsCode(checkHIBPSubscription({ env, fetchImpl: async () => json({ SubscriptionName: 'bad', SubscribedUntil: 'invalid', Rpm: 10 }) }), 'INVALID_PROVIDER_RESPONSE');
+  const expired = await checkHIBPSubscription({ env, fetchImpl: async () => json({ SubscriptionName: 'Expired fixture', SubscribedUntil: '2000-01-01T00:00:00Z', Rpm: 0 }) });
+  assert.equal(expired.rpm, 0); assert.equal(expired.allowanceVerifiedByCheck, false);
 });
 
 function browserFixture({ failNavigation = false } = {}) {

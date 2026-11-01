@@ -1,0 +1,41 @@
+name: Intelligence container preparation
+on:
+  pull_request:
+    paths:
+      - 'services/cloudflare/**'
+      - 'services/intelligence/**'
+      - '.github/workflows/intelligence-container.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'services/cloudflare/**'
+      - 'services/intelligence/**'
+      - '.github/workflows/intelligence-container.yml'
+permissions:
+  contents: read
+env:
+  WRANGLER_SEND_METRICS: 'false'
+jobs:
+  verify-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: services/cloudflare/package-lock.json
+      - name: Install the pinned worker package
+        working-directory: services/cloudflare
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify gateway, startup supervision and readiness boundaries
+        working-directory: services/cloudflare
+        run: npm test
+      - name: Validate Worker bundle and container configuration without deployment
+        working-directory: services/cloudflare
+        run: npm run check:bundle
+      - name: Build the Linux image without publishing or Cloudflare credentials
+        run: docker build --platform linux/amd64 --file services/cloudflare/Dockerfile --tag insightnexus-intelligence-ci .
+      - name: Verify actual sandboxed Chromium and scoped browser collection in the image
+        run: docker run --rm --init --cap-add=SYS_ADMIN --entrypoint node insightnexus-intelligence-ci services/cloudflare/container/image-smoke.mjs

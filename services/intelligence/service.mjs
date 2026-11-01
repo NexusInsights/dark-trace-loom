@@ -1,9 +1,10 @@
 import { existsSync } from 'node:fs';
 import { isIP } from 'node:net';
 import { startScopedSocksProxy } from './socks-gate.mjs';
+import { getProviderReadiness } from './provider-readiness.mjs';
+import { ProviderError, dispatchHTTPProvider, checkHIBPSubscription as checkHTTPSubscription } from './provider-http.mjs';
 
 const ACTIONS = new Set(['ipinfo', 'breach', 'profile', 'onion']);
-const MAX_PROVIDER_BYTES = 1024 * 1024;
 const MAX_DOCUMENT_BYTES = 512 * 1024;
 let activeBrowserOperations = 0;
 
@@ -86,89 +87,22 @@ function configured(env, name, description) {
   return value.trim();
 }
 
-function retryAfter(response) {
-  const value = response.headers.get('retry-after');
-  if (!value) return undefined;
-  const seconds = /^\d+$/.test(value) ? Number(value) : Math.ceil((Date.parse(value) - Date.now()) / 1000);
-  return Number.isFinite(seconds) ? Math.max(1, Math.min(3600, seconds)) : undefined;
-}
-
-async function boundedBody(response, limit) {
-  const declared = Number(response.headers.get('content-length'));
-  if (declared > limit) {
-    await response.body?.cancel().catch(() => {});
-    throw new IntelligenceError('RESPONSE_TOO_LARGE', 'The provider response exceeded the size limit.', 502);
-  }
-  if (!response.body) return '';
-  const reader = response.body.getReader();
-  const chunks = [];
-  let length = 0;
+async function callHTTPProvider(action, input, context) {
   try {
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      length += value.byteLength;
-      if (length > limit) throw new IntelligenceError('RESPONSE_TOO_LARGE', 'The provider response exceeded the size limit.', 502);
-      chunks.push(Buffer.from(value));
-    }
-    return Buffer.concat(chunks, length).toString('utf8');
+    return await dispatchHTTPProvider(action, input, { getEnv: name => context.env[name], fetchImpl: context.fetchImpl });
   } catch (error) {
-    await reader.cancel().catch(() => {});
+    if (error instanceof ProviderError) throw new IntelligenceError(error.code, error.message, error.status, error.retryAfter, error);
     throw error;
-  } finally { reader.releaseLock(); }
+  }
 }
 
-async function providerJSON(url, headers, context, provider, allowNotFound = false) {
-  let response;
+export async function checkHIBPSubscription(options = {}) {
   try {
-    response = await context.fetchImpl(url, { headers, redirect: 'error', signal: AbortSignal.timeout(12000) });
-    if (allowNotFound && response.status === 404) { await response.body?.cancel().catch(() => {}); return null; }
-    if (response.status === 429) {
-      await response.body?.cancel().catch(() => {});
-      throw new IntelligenceError('RATE_LIMITED', `${provider} rate limit reached. Wait before trying again.`, 429, retryAfter(response));
-    }
-    if (response.status === 401 || response.status === 403) {
-      await response.body?.cancel().catch(() => {});
-      throw new IntelligenceError('PROVIDER_ACCESS_DENIED', `${provider} rejected the configured credentials or account access.`, 503);
-    }
-    if (!response.ok) {
-      await response.body?.cancel().catch(() => {});
-      throw new IntelligenceError('UPSTREAM_ERROR', `${provider} returned HTTP ${response.status}.`, 502);
-    }
-    const text = await boundedBody(response, MAX_PROVIDER_BYTES);
-    try { return JSON.parse(text); }
-    catch { throw new IntelligenceError('INVALID_PROVIDER_RESPONSE', `${provider} returned an invalid JSON response.`, 502); }
+    return await checkHTTPSubscription({ getEnv: options.getEnv || (name => (options.env || process.env)[name]), fetchImpl: options.fetchImpl || globalThis.fetch });
   } catch (error) {
-    if (error instanceof IntelligenceError) throw error;
-    if (['AbortError', 'TimeoutError'].includes(error?.name)) throw new IntelligenceError('TIMEOUT', `${provider} did not respond in time.`, 504);
-    throw new IntelligenceError('UPSTREAM_UNAVAILABLE', `${provider} could not be reached.`, 502, undefined, error);
+    if (error instanceof ProviderError) throw new IntelligenceError(error.code, error.message, error.status, error.retryAfter, error);
+    throw error;
   }
-}
-
-async function lookupIP(input, context) {
-  const token = configured(context.env, 'IPINFO_TOKEN', 'IPinfo access');
-  const data = await providerJSON(`https://ipinfo.io/${encodeURIComponent(input.ip)}/json`, { Authorization: `Bearer ${token}`, Accept: 'application/json' }, context, 'IPinfo');
-  if (!data || Array.isArray(data) || typeof data !== 'object' || typeof data.ip !== 'string' || data.error) {
-    throw new IntelligenceError('INVALID_PROVIDER_RESPONSE', 'IPinfo returned an unexpected response.', 502);
-  }
-  return { provider: 'ipinfo', ip: data.ip, hostname: data.hostname ?? null, city: data.city ?? null,
-    region: data.region ?? null, country: data.country ?? null, loc: data.loc ?? null,
-    org: data.org ?? null, timezone: data.timezone ?? null, postal: data.postal ?? null,
-    scope: 'explicit_ip', queriedAt: new Date().toISOString() };
-}
-
-async function lookupBreach(input, context) {
-  const key = configured(context.env, 'HIBP_API_KEY', 'Have I Been Pwned access');
-  const data = await providerJSON(`https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(input.email)}?truncateResponse=false`,
-    { 'hibp-api-key': key, 'User-Agent': context.env.HIBP_USER_AGENT || 'TJK-Intelligence-Tools/1.0', Accept: 'application/json' }, context, 'Have I Been Pwned', true);
-  if (data !== null && (!Array.isArray(data) || data.some(item => !item || typeof item.Name !== 'string'))) {
-    throw new IntelligenceError('INVALID_PROVIDER_RESPONSE', 'Have I Been Pwned returned an unexpected response.', 502);
-  }
-  return { provider: 'hibp', email: input.email, matched: !!data?.length,
-    breaches: (data || []).map(item => ({ name: item.Name, domain: item.Domain ?? null,
-      breachDate: item.BreachDate ?? null, verified: item.IsVerified ?? null,
-      dataClasses: Array.isArray(item.DataClasses) ? item.DataClasses : [] })),
-    coverage: 'public_records', queriedAt: new Date().toISOString() };
 }
 
 export function browserExecutable(env = process.env) {
@@ -347,8 +281,11 @@ async function onionDocument(input, context) {
 export async function dispatchAction(action, input, options = {}) {
   const validated = validateAction(action, input);
   const context = { env: options.env || process.env, fetchImpl: options.fetchImpl || globalThis.fetch, launchBrowser: options.launchBrowser, onRequest: options.onRequest };
-  if (action === 'ipinfo') return lookupIP(validated, context);
-  if (action === 'breach') return lookupBreach(validated, context);
-  if (action === 'profile') return publicProfile(validated, context);
+  if (action === 'ipinfo' || action === 'breach') return callHTTPProvider(action, validated, context);
+  if (action === 'profile') {
+    const mode = getProviderReadiness(context.env).x.mode;
+    if (!mode) throw new IntelligenceError('CONFIGURATION_REQUIRED', 'Set X_API_MODE to browser or api.', 503);
+    return mode === 'api' ? callHTTPProvider(action, validated, context) : publicProfile(validated, context);
+  }
   return onionDocument(validated, context);
 }

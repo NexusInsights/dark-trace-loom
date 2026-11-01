@@ -1,3 +1,5 @@
+import { dispatchHTTPProvider, ProviderError, validateHTTPInput } from "../_shared/provider-http.mjs";
+
 type Environment = (name: string) => string | undefined;
 type Dependencies = { getEnv: Environment; fetchImpl?: typeof fetch };
 type Action = "ipinfo" | "breach" | "profile" | "onion";
@@ -13,10 +15,11 @@ class HttpError extends Error {
   constructor(public status: number, public code: string, message: string, public retryAfter?: number) { super(message); }
 }
 
-function reply(body: unknown, status = 200) {
+function reply(body: unknown, status = 200, retryAfter?: number) {
+  const retry = Number.isFinite(retryAfter) && Number(retryAfter) > 0 ? Math.ceil(Math.min(Number(retryAfter), 86400)) : null;
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
+    headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store", ...(retry ? { "Retry-After": String(retry) } : {}) },
   });
 }
 
@@ -99,12 +102,33 @@ export function createIntelligenceHandler({ getEnv, fetchImpl = fetch }: Depende
       if (!session.ok) throw new HttpError(503, "AUTH_UNAVAILABLE", "The user session could not be verified.");
       const user = await readJson(session, 65536);
       if (typeof user.id !== "string" || !user.id) throw new HttpError(401, "UNAUTHORIZED", "A verified user session is required.");
-      const { action, input } = await parseBody(req);
+      const { action, input: suppliedInput } = await parseBody(req);
+      let input: Record<string, string>;
+      if (action === "onion") {
+        let target: URL;
+        try { target = new URL(suppliedInput.url); }
+        catch { throw new HttpError(400, "INVALID_INPUT", "Enter a valid HTTP or HTTPS v3 onion URL."); }
+        if (!["http:", "https:"].includes(target.protocol) || !/^[a-z2-7]{56}\.onion$/i.test(target.hostname) || target.username || target.password || (target.port && !["80", "443"].includes(target.port))) {
+          throw new HttpError(400, "INVALID_INPUT", "Use a v3 onion hostname with HTTP/HTTPS and port 80 or 443.");
+        }
+        target.hash = "";
+        input = { url: target.href };
+      } else {
+        input = validateHTTPInput(action, suppliedInput);
+      }
       const allowanceFlag = action === "breach" ? "MARKETPLACE_HIBP_FREE_ALLOWANCE_VERIFIED" : action === "ipinfo" ? "INTELLIGENCE_IPINFO_ALLOWANCE_VERIFIED" : null;
       if (allowanceFlag && getEnv(allowanceFlag) !== "true") {
         throw new HttpError(503, "ALLOWANCE_REQUIRED", `Verified included provider access is required (${allowanceFlag}). No provider request was made.`);
       }
-      const worker = workerConfiguration(getEnv);
+      const profileMode = getEnv("X_API_MODE") || "browser";
+      if (action === "profile" && !["browser", "api"].includes(profileMode)) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Set X_API_MODE to browser or api.");
+      const directHTTP = action === "ipinfo" || action === "breach" || (action === "profile" && profileMode === "api");
+      if (action === "profile" && profileMode === "api" && getEnv("X_INCLUDED_ACCESS_VERIFIED") !== "true") {
+        throw new HttpError(503, "ALLOWANCE_REQUIRED", "Verify included X API access before enabling this provider. No provider request was made.");
+      }
+      // HTTP providers use this project's secret store. Browser jobs alone need
+      // the Cloudflare runtime, so provider keys never enter the browser VM.
+      const worker = directHTTP ? null : workerConfiguration(getEnv);
       const rpc = async (name: string, payload: Record<string, unknown>) => {
         const response = await fetchImpl(`${backend}/rest/v1/rpc/${name}`, { method: "POST", headers: authHeaders, body: JSON.stringify(payload), signal: AbortSignal.timeout(10000), redirect: "error" });
         if (!response.ok) throw new HttpError(503, "ACCOUNTING_UNAVAILABLE", "Intelligence permissions and usage could not be verified. Apply the intelligence migration before enabling this function.");
@@ -121,28 +145,37 @@ export function createIntelligenceHandler({ getEnv, fetchImpl = fetch }: Depende
         if (settled.ok !== true) throw new HttpError(503, "ACCOUNTING_UNAVAILABLE", "Tool usage could not be recorded. Try again after two minutes.");
         reservation = null;
       };
-      const response = await fetchImpl(worker.url, {
-        method: "POST", headers: { Authorization: `Bearer ${worker.token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ action, input }), signal: AbortSignal.timeout(60000), redirect: "error",
-      });
-      const result = await readJson(response);
-      if (!response.ok || result.ok !== true) {
-        const error = result.error && typeof result.error === "object" ? result.error as Record<string, unknown> : {};
-        const code = typeof error.code === "string" && /^[A-Z0-9_]{1,80}$/.test(error.code) ? error.code : "WORKER_ERROR";
-        // Worker messages are deliberately fixed, credential-free user diagnostics.
-        const message = typeof error.message === "string" ? error.message.slice(0, 500) : "The intelligence worker could not complete this request.";
-        throw new HttpError([400, 401, 403, 429, 502, 503].includes(response.status) ? response.status : 502, code, message, typeof error.retryAfter === "number" ? error.retryAfter : undefined);
+      let data: Record<string, unknown>;
+      if (directHTTP) {
+        data = await dispatchHTTPProvider(action, input, { getEnv, fetchImpl });
+      } else {
+        const response = await fetchImpl(worker!.url, {
+          method: "POST", headers: { Authorization: `Bearer ${worker!.token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ action, input }), signal: AbortSignal.timeout(60000), redirect: "error",
+        });
+        const result = await readJson(response);
+        if (response.status === 202) {
+          const error = result.error && typeof result.error === "object" ? result.error as Record<string, unknown> : {};
+          throw new HttpError(503, "WORKER_STARTING", "The browser worker is starting. Retry after it becomes ready; no lookup was performed.", typeof error.retryAfter === "number" ? error.retryAfter : 5);
+        }
+        if (!response.ok || result.ok !== true) {
+          const error = result.error && typeof result.error === "object" ? result.error as Record<string, unknown> : {};
+          const code = typeof error.code === "string" && /^[A-Z0-9_]{1,80}$/.test(error.code) ? error.code : "WORKER_ERROR";
+          const message = typeof error.message === "string" ? error.message.slice(0, 500) : "The intelligence worker could not complete this request.";
+          throw new HttpError([400, 401, 402, 403, 404, 429, 502, 503, 504].includes(response.status) ? response.status : 502, code, message, typeof error.retryAfter === "number" ? error.retryAfter : undefined);
+        }
+        if (!result.data || typeof result.data !== "object" || Array.isArray(result.data)) throw new HttpError(502, "INVALID_RESPONSE", "The worker returned an invalid result.");
+        data = result.data as Record<string, unknown>;
       }
-      if (!result.data || typeof result.data !== "object" || Array.isArray(result.data)) throw new HttpError(502, "INVALID_RESPONSE", "The worker returned an invalid result.");
       await finish(true);
-      return reply({ ok: true, data: result.data });
+      return reply({ ok: true, data });
     } catch (error) {
       if (reservation && finish) {
         try { await finish(false); }
         catch { return reply({ ok: false, error: { code: "ACCOUNTING_UNAVAILABLE", message: "Tool usage could not be released. Try again after two minutes." } }, 503); }
       }
-      const known = error instanceof HttpError ? error : new HttpError(502, "SERVICE_UNAVAILABLE", "The intelligence service did not respond. Check worker connectivity and retry.");
-      return reply({ ok: false, error: { code: known.code, message: known.message, ...(known.retryAfter ? { retryAfter: known.retryAfter } : {}) } }, known.status);
+      const known = error instanceof HttpError ? error : error instanceof ProviderError ? new HttpError(error.status, error.code, error.message, error.retryAfter) : new HttpError(502, "SERVICE_UNAVAILABLE", "The intelligence service did not respond. Check worker connectivity and retry.");
+      return reply({ ok: false, error: { code: known.code, message: known.message, ...(known.retryAfter ? { retryAfter: known.retryAfter } : {}) } }, known.status, known.retryAfter);
     }
   };
 }

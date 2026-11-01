@@ -33,3 +33,8 @@ verify_jwt = false
 [functions.intelligence-tools]
 # The handler verifies the user with Supabase Auth before checking tool access.
 verify_jwt = false
+
+[functions.intelligence-provider-status]
+# Operator-only: the handler verifies the exact server-side service-role secret.
+# User JWTs and public API keys do not authorize this metadata endpoint.
+verify_jwt = false

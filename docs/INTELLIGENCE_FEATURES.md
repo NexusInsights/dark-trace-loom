@@ -29,47 +29,66 @@ The new page records operation counts, not the fingerprint or training dataset.
 ## Provider features and execution path
 
 ```
-Signed-in page → Supabase intelligence-tools → authenticated Node worker
-  → IPinfo / HIBP / public X browser extraction / Tor onion browser
+Signed-in page → authenticated Supabase intelligence-tools
+  ├─ direct HTTPS → IPinfo / HIBP / approved official X API
+  └─ authenticated browser worker → public X extraction / Tor onion browser
 ```
 
 Supabase Edge functions cannot launch a local Chromium process or connect to
-the user's computer's Tor proxy. The checked-in Node worker is therefore a
-required execution service for provider tools. It is an actual service, not an
-index-search substitute for onion retrieval. Its authenticated `/health` route
-reports liveness only; it does not establish provider readiness.
+the user's computer's Tor proxy. Only browser-mode X and onion actions require
+the external browser worker. HTTP providers execute through the portable
+`supabase/functions/_shared/provider-http.mjs` module in Supabase, using that
+project's existing secret store. Their keys are never forwarded to the browser
+worker. Missing browser-worker configuration does not block a configured direct
+HTTP action.
 
-1. Run Node.js 24 or a version supported by the pinned Puppeteer dependency.
-   Install with `npm ci --ignore-scripts`; Puppeteer Core does not download a
-   browser. Use an installed compatible Chrome/Chromium executable.
-2. Configure the worker's environment through the deployment's approved secret
-   manager. Keep `INTELLIGENCE_WORKER_TOKEN` private and at least 32 characters.
-   Start the worker with `npm run intelligence:worker`.
-3. Put the worker behind HTTPS in a hosted deployment. Its default listener is
-   `127.0.0.1:43410`; configure bind host/port only as needed for that deployment.
-4. Apply `supabase/migrations/20261031234500_intelligence_execution_gate.sql`,
-   then deploy `supabase/functions/intelligence-tools`. The Edge function needs
-   the worker's HTTPS origin in `INTELLIGENCE_WORKER_URL` and the matching
-   `INTELLIGENCE_WORKER_TOKEN`, both server-side secrets. Never prefix either
-   with `VITE_` or put them in browser code.
-   HIBP additionally retains the existing
-   `MARKETPLACE_HIBP_FREE_ALLOWANCE_VERIFIED=true` gate. IPinfo requires
-   `INTELLIGENCE_IPINFO_ALLOWANCE_VERIFIED=true` after the operator independently
-   verifies included account access. Missing flags fail closed before quota
-   reservation or any worker/provider request; a configured key is insufficient.
-5. For an entirely local Supabase/worker setup only,
-   `INTELLIGENCE_ALLOW_LOOPBACK=true` permits an HTTP loopback worker origin.
-   The adapter also checks that `SUPABASE_URL` is loopback. A hosted Edge function
-   cannot use a loopback address to reach a worker on a user's computer.
+| Provider | Server configuration | Explicit allowance gate |
+| --- | --- | --- |
+| IPinfo | `IPINFO_TOKEN`; `IPINFO_API_MODE=legacy` (default), `lite` or `lookup` | `INTELLIGENCE_IPINFO_ALLOWANCE_VERIFIED=true` |
+| HIBP email breaches | `HIBP_API_KEY`; optional `HIBP_USER_AGENT` | `MARKETPLACE_HIBP_FREE_ALLOWANCE_VERIFIED=true` |
+| Official X API | `X_API_MODE=api`; `X_API_BEARER_TOKEN` | `X_INCLUDED_ACCESS_VERIFIED=true` |
+| Public X browser extraction | `X_API_MODE=browser` (default); browser-worker configuration | Existing app authentication, permission and quota checks |
+| Onion browser | Browser-worker configuration and a working Tor client in that runtime | Existing app authentication, permission and quota checks |
 
-The worker requires provider configuration: `IPINFO_TOKEN` for IPinfo,
-`HIBP_API_KEY` for breach lookups (with optional `HIBP_USER_AGENT`),
-`PUPPETEER_EXECUTABLE_PATH` if a compatible installed browser is not detected,
-and `TOR_SOCKS_PROXY` for onion browsing. Use a reachable SOCKS5 listener such as
-the operator's existing Tor service. This change does not install or replace Tor.
-A key's presence alone does not establish authorized included usage. The new
-Edge adapter preserves the existing HIBP allowance flag and adds the explicit
-IPinfo allowance flag; other marketplace gates remain unchanged.
+IPinfo `legacy` uses `ipinfo.io/{ip}/json`; `lite` and `lookup` use the
+corresponding `api.ipinfo.io/{mode}/{ip}` endpoint. Select the mode that matches
+the account. Lite returns country/continent and basic ASN coverage; it does not
+invent city or coordinates. HIBP 404 is normalized to a successful no-match
+result. The official X API mode is optional and requires separately verified
+included account access; it is not assumed to be free.
+
+All allowance flags require the literal value `true` after an operator verifies
+the relevant account entitlement and approved allowance. A configured key,
+subscription response or successful fixture is insufficient. Missing flags fail
+closed before quota reservation or provider work. This change does not approve
+paid provider use, purchase credit, enable overages or modify other marketplace
+gates.
+
+Deploy `supabase/functions/intelligence-tools` with its shared modules and the
+scoped accounting migration. The hosted browser route needs an HTTPS origin in
+`INTELLIGENCE_WORKER_URL` and the matching private `INTELLIGENCE_WORKER_TOKEN`
+(at least 32 characters). Never prefix these values with `VITE_` or put them in
+browser code. For an entirely local Supabase/worker setup only,
+`INTELLIGENCE_ALLOW_LOOPBACK=true` permits HTTP loopback when `SUPABASE_URL` is
+also loopback. A hosted Edge function cannot reach a user's local worker through
+its own loopback address.
+
+The Cloudflare Containers deployment package, account/billing gate, Linux image
+validation, instance limits, secret setup and rollback instructions are in
+[the Cloudflare worker README](../services/cloudflare/README.md). Its authenticated
+`GET /health` is liveness only and does not start a container. `GET /ready` checks
+real sandboxed Chromium and Tor bootstrap. During cold start the worker returns
+HTTP 202 `WORKER_STARTING` with `Retry-After: 5`; the Edge adapter converts this
+to HTTP 503 with the same retry information, releases the reservation and makes
+no automatic retry. No lookup is dispatched by that starting response.
+
+The standalone local Node worker remains available through
+`npm run intelligence:worker` on default `127.0.0.1:43410`. Use Node 24,
+`npm ci --ignore-scripts`, an installed Chrome/Chromium executable (or
+`PUPPETEER_EXECUTABLE_PATH`) and a reachable `TOR_SOCKS_PROXY` for onion work.
+Puppeteer Core does not download a browser. The hosted Cloudflare package
+supplies a separate Chromium/Tor runtime; it does not use or replace the user's
+local Tor service.
 
 IPinfo looks up the explicit public IP submitted by the user, rather than
 silently returning the backend server's location. X extraction is restricted to
@@ -81,6 +100,55 @@ reach other hosts are blocked before the operator's Tor proxy. Browser
 navigation may upgrade HTTP to HTTPS only on that same onion hostname; it may
 not redirect to a different host. The gate and browser are closed after each
 operation.
+
+## Operator-only provider diagnostic
+
+`supabase/functions/intelligence-provider-status` is a separate operator endpoint,
+with no product UI route. It accepts POST with at most 4 KiB of JSON and only the
+optional boolean `checkHibpSubscription`. Authentication compares SHA-256 digests
+of the supplied Bearer credential and the project's existing server-side
+`SUPABASE_SERVICE_ROLE_KEY`, using a fixed-length comparison before reading
+configuration or performing any provider work. Ordinary user JWTs and public
+keys do not authorize it. Its per-function `verify_jwt=false` setting delegates
+this specific authentication check to the handler; it does not make the handler
+public.
+
+POST `{}` returns presence booleans, normalized provider modes, configured
+allowance-flag assertions and execution-runtime metadata. It returns neither
+secret values nor the browser-worker URL and makes no network request. A nested
+configuration snapshot is explicitly metadata-only; it does not prove valid
+credentials, entitlement, connectivity or readiness.
+
+POST `{"checkHibpSubscription":true}` additionally makes one read-only request to
+HIBP's fixed `/api/v3/subscription/status` endpoint using the existing stored
+HIBP key. It returns only the subscription name, expiry, RPM, check timestamp
+and fixed provider/scope fields, or a sanitized error/status/retry delay. Unknown
+body fields are rejected. It never queries an email, calls another provider,
+retries, reserves user quota, writes account data or approves an allowance flag;
+`allowanceVerifiedByCheck` remains false. All responses use `Cache-Control:
+no-store`, with no public CORS route. Invoke it only from a trusted backend
+facility that can supply the existing service credential without exporting it
+into chat, browser code or a public client.
+
+## Deployment state recorded November 1, 2026
+
+The production backend bound to the published `dark-trace-loom.lovable.app`
+application is `zisrsttmjeipkmllqubi`. The exact
+`20261031234500_intelligence_execution_gate.sql` migration was applied and its
+matching version/name/source explicitly registered after live schema verification.
+Both RPC bodies/access controls and journal RLS were independently checked; no
+provider request or customer-data lookup was part of that migration verification.
+Do not reapply the migration or bind the app to a different namesake project.
+
+At this recorded checkpoint, the new Edge functions and feature frontend have
+not been deployed/published, and Cloudflare browser/Tor activation has not been
+completed. The Cloudflare account requires a paid-plan eligibility/billing gate;
+no purchase is implied by the preparation files. Existing HIBP key presence has
+been observed without revealing its value, but subscription status and approved
+provider allowance remain unverified. IPinfo/X configuration and the new worker
+route/allowance flags have not been activated. Update this dated state only from
+actual deployment and workflow evidence; passing source tests does not establish
+production activation.
 
 ## Authentication and usage
 
@@ -115,7 +183,9 @@ npx tsc --noEmit -p tsconfig.app.json
 npm run build
 ```
 
-The Edge-adapter tests inject isolated Auth, database-RPC and worker responses;
+The Edge-adapter tests inject isolated Auth, database-RPC, HTTP provider and worker responses;
+the operator-status tests verify service authentication, request bounds, safe
+metadata, a single explicit account request and sanitized error handling;
 the UI tests exercise consent, cookie removal, app API invocation, quota errors,
 training orchestration and prediction. These tests make no live personal lookups.
 Real-provider and deployed Edge/database verification require the configured
