@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-01",
+  "preservedCandidate": "3a893eb8ebe288de4366b3d425f3a3a19315febc",
+  "module": "Legacy dispatcher DNS result parity with manual osint-tools",
+  "defect": "HTTP200 DNS failure/missing status became success with empty records; aliases and other answer types leaked into every requested record list.",
+  "before": {
+    "pairedTests": 10,
+    "failed": 4,
+    "passed": 6,
+    "sourceCommit": "3a893eb8ebe288de4366b3d425f3a3a19315febc",
+    "sourceSha256": "0a23149f079379b1691895997a824860c7e5db10a62da603d5e3f444762e337b",
+    "failureLogSha256": "19f7fe47b7981ccfbb53bc447919dcd44ec05e4d699bca94b88aa0b8feadd90f"
+  },
+  "after": {
+    "pairedTests": 10,
+    "passed": 10,
+    "focusedCombinedTests": 40,
+    "focusedFiles": 3,
+    "dispatcherHandlerChecks": 37,
+    "pairedGithubChecks": 10,
+    "sourceSha256": "f175b145d846cd5ebb9f46f7ee88585699dbf43c895a4573dda5b0d9334b8125",
+    "lint": "0 errors,16 existing warnings",
+    "typecheck": "passed",
+    "build": "passed; existing import/chunk warnings",
+    "whitespace": "passed"
+  },
+  "coverage": [
+    "Actual manual dnsQuery and legacy dnsLookup/dispatch declarations execute with synthetic transport",
+    "DNS failure statuses2/5 and missing status remain error, with no result object",
+    "Verified empty statuses0/3 remain success with empty records",
+    "Mixed answers are filtered to requested A/AAAA/MX/TXT/NS types, matching the five shared manual/dispatcher record types",
+    "HTTP, network, malformed JSON and invalid answer-container failures remain error",
+    "Actual full dispatcher handler plus actual safeFetch and strict Auth sources execute against synthetic transport/SDK; failed DNS outcomes are persisted with error status, and verified negative/mixed positive outcomes retain success status"
+  ],
+  "scope": "Offline source contract and fixture execution only. The manual route supports two additional RR types; full route equality, live DNS/provider/authentication/RLS acceptance are not claimed. No provider request, runtime installation, live-policy retry, scope expansion, credential/settings change, main push or deployment occurred.",
+  "ci": "Existing nonproduction branch Source validation is checked on the exact new commit after backup. The prior3a893eb green candidate remains preserved as an ancestor.",
+  "remainingGates": "Unchanged; see WORK-STATE.json and SECURITY-FOLLOWUP.json. This run did not retry or alter any gated environment."
+}

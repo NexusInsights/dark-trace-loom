@@ -32,7 +32,20 @@
     "build": "passed; existing chunk/import warnings",
     "aggregateCommand": "npm test (exit0)",
     "validationLogSha256": "e5dec01edd1bd73b10a8f696d9afe57e602d7d2b3934851faa2c08050f4d86d6",
-    "checkLogSha256": "e0fe2d8fd432957608f614c576eb2f53da6479a519f003cf87cf727b549ed8eb"
+    "checkLogSha256": "e0fe2d8fd432957608f614c576eb2f53da6479a519f003cf87cf727b549ed8eb",
+    "dnsParity": {
+      "pairedTests": 10,
+      "passed": 10,
+      "focusedCombinedTests": 40,
+      "focusedFiles": 3,
+      "dispatcherHandlerChecks": 37,
+      "pairedGithubChecks": 10,
+      "sourceSha256": "f175b145d846cd5ebb9f46f7ee88585699dbf43c895a4573dda5b0d9334b8125",
+      "lint": "0 errors,16 existing warnings",
+      "typecheck": "passed",
+      "build": "passed; existing import/chunk warnings",
+      "whitespace": "passed"
+    }
   },
   "publication": {
     "cloudflarePagesGitProvider": "No, verified by owner",
@@ -61,7 +74,7 @@
   "remoteSourceCommitAtVerification": "70494d922cde4152d873bcc4b40a1bca49830e0d",
   "currentTipLocator": "git rev-parse HEAD; git rev-parse @{upstream}; compare the current remote Git ref through the GitHub connector",
   "nextSteps": [
-    "Read current Git ref and exact-tip Source validation before continuation; latest local source is fully tested and backup is the existing codex branch",
+    "Read current branch ref and exact-tip Source validation; do not rerun unchanged DNS fixtures as activity. DNS-PARITY.json records the new local slice; SECURITY-FOLLOWUP.json preserves the prior aggregate.",
     "Do not rerun unchanged exports/tests as activity: all8 Lovable exports match pinned9546fc8 and original snapshot/repair history is preserved",
     "Resolve the precise Lovable metadata-reader scope before further SQL inspection; do not bypass this authorization gap",
     "Before a separately authorized release, inspect immutable deployed function bundles/live schema, review/apply the tested migration and verify authenticated persistence",
@@ -87,7 +100,10 @@
   },
   "reconciliationBackupVerified": true,
   "previousSourceTreeHash": "54de6ea91a70a94f8200c15a34d14eed86ce3b9b9a5757f43748f9cb8fff4b0d",
-  "currentValidationReceipt": "SECURITY-FOLLOWUP.json",
+  "currentValidationReceipt": "DNS-PARITY.json",
   "currentSourceManifest": "staged-source-manifest.json",
-  "sourceComparison": "LOVABLE-SOURCE-COMPARISON.json"
+  "sourceComparison": "LOVABLE-SOURCE-COMPARISON.json",
+  "previousValidationReceipt": "SECURITY-FOLLOWUP.json",
+  "currentModule": "DNS outcome parity (bounded local follow-up)",
+  "currentModuleParent": "3a893eb8ebe288de4366b3d425f3a3a19315febc"
 }

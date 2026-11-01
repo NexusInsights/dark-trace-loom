@@ -1,8 +1,8 @@
 {
   "scope": "Actual isolated dispatcher and fetch guard. Synthetic auth, policy responses, repository and network transport only; no sockets, SQL/RLS, production deployment or live acceptance. Owner checkout not accessed.",
-  "sourceSha256": "0a23149f079379b1691895997a824860c7e5db10a62da603d5e3f444762e337b",
-  "passed": 33,
-  "total": 33,
+  "sourceSha256": "f175b145d846cd5ebb9f46f7ee88585699dbf43c895a4573dda5b0d9334b8125",
+  "passed": 37,
+  "total": 37,
   "checks": [
     {
       "name": "disabled",
@@ -266,6 +266,38 @@
       "http": 200,
       "status": "not_configured",
       "syntheticProviderCalls": 0,
+      "savedRows": 1
+    },
+    {
+      "name": "dns-servfail",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "dns-missing-status",
+      "passed": true,
+      "http": 200,
+      "status": "error",
+      "syntheticProviderCalls": 1,
+      "savedRows": 1
+    },
+    {
+      "name": "dns-negative",
+      "passed": true,
+      "http": 200,
+      "status": "success",
+      "syntheticProviderCalls": 5,
+      "savedRows": 1
+    },
+    {
+      "name": "dns-mixed",
+      "passed": true,
+      "http": 200,
+      "status": "success",
+      "syntheticProviderCalls": 5,
       "savedRows": 1
     }
   ]

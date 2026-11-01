@@ -16,7 +16,17 @@ const transport = async input => {
     if (mode === "auth-oversized") return new Response("x".repeat(70000));
     return json({ id: mode === "auth-malformed" ? "invalid-uuid" : actor, role: "authenticated", is_anonymous: mode === "anonymous" });
   }
-  if (url.hostname === "cloudflare-dns.com") return json({ Answer: [{ type: 1, data: mode === "private-dns" ? "127.0.0.1" : "93.184.215.14" }] });
+  if (url.hostname === "cloudflare-dns.com") {
+    if (url.searchParams.get("name") === "example.invalid" && mode.startsWith("dns-")) {
+      if (mode === "dns-servfail") return json({ Status: 2 });
+      if (mode === "dns-missing-status") return json({});
+      if (mode === "dns-negative") return json({ Status: 3 });
+      const records = { A: [1, "192.0.2.1"], AAAA: [28, "2001:db8::1"], MX: [15, "10 mail.example.invalid."], TXT: [16, '"SYNTHETIC"'], NS: [2, "ns.example.invalid."] };
+      const [type, data] = records[url.searchParams.get("type")];
+      return json({ Status: 0, Answer: [{ type: 5, data: "alias.example.invalid." }, { type, data }] });
+    }
+    return json({ Status: 0, Answer: [{ type: 1, data: mode === "private-dns" ? "127.0.0.1" : "93.184.215.14" }] });
+  }
   if (url.hostname === "rdap.org") return json({ handle: "SYNTHETIC-RDAP" });
   if (url.hostname === "api.ssllabs.com") return mode === "ssl-malformed" ? json([]) : mode === "ssl-failed" ? json({ status: "ERROR" }) : json({ status: mode === "ssl-ready" ? "READY" : "IN_PROGRESS", endpoints: mode === "ssl-ready" ? [{ grade: "A" }] : [] });
   if (url.hostname === "example.invalid") {
@@ -76,7 +86,13 @@ async function run(name, selectedMode, body, expectedStatus, expectedHttp, noPro
     if (selectedMode.startsWith("private")) assert.ok(calls.every(url => !new URL(url).hostname.startsWith("127.")));
     if (body.tool === "ip_geolocation") assert.equal(calls.filter(url => new URL(url).hostname !== "synthetic.invalid").length, 0);
     if (body.tool === "subdomain_finder") assert.equal(JSON.stringify(queries[0].filters.tool_id), JSON.stringify(["subdomain_finder", "subdomain-enum", "subdomain_enum"]));
-    checks.push({ name, passed: true, http: response.status, status: data.status, syntheticProviderCalls: calls.filter(url => !["cloudflare-dns.com", "synthetic.invalid"].includes(new URL(url).hostname)).length, savedRows: writes.length });
+    if (body.tool === "dns_lookup") {
+      assert.equal(writes.length, 1); assert.equal(writes[0].payload.status, expectedStatus); assert.equal(writes[0].payload.result_data.status, expectedStatus);
+      if (expectedStatus === "error") { assert.match(data.reason, /DNS status/); assert.equal(data.result, undefined); }
+      if (selectedMode === "dns-negative") assert.deepEqual(data.result.a, []);
+      if (selectedMode === "dns-mixed") { assert.deepEqual(data.result.a, ["192.0.2.1"]); assert.deepEqual(data.result.aaaa, ["2001:db8::1"]); }
+    }
+    checks.push({ name, passed: true, http: response.status, status: data.status, syntheticProviderCalls: calls.filter(value => { const url = new URL(value); return url.hostname !== "synthetic.invalid" && (url.hostname !== "cloudflare-dns.com" || body.tool === "dns_lookup" && url.searchParams.get("name") === "example.invalid"); }).length, savedRows: writes.length });
   } catch (error) { failure = error.message; checks.push({ name, passed: false, reason: failure }); }
 }
 const domain = { tool: "domain_whois", params: { domain: "example.invalid" } };
@@ -106,6 +122,7 @@ await run("private DNS", "private-dns", { tool: "http_port_probe", params: { url
 await run("private redirect", "private-redirect", { tool: "http_port_probe", params: { url: "https://example.invalid" } }, "error", 200);
 await run("HTTP rejection", "probe-denied", { tool: "http_port_probe", params: { url: "https://example.invalid" } }, "error", 200);
 await run("IP provider unavailable", "normal", { tool: "ip_geolocation", params: { ip: "8.8.8.8" } }, "not_configured", 200);
+for (const mode of ["dns-servfail", "dns-missing-status", "dns-negative", "dns-mixed"]) await run(mode, mode, { tool: "dns_lookup", params: { domain: "example.invalid" } }, ["dns-servfail", "dns-missing-status"].includes(mode) ? "error" : "success", 200);
 const evidence = { scope: "Actual isolated dispatcher and fetch guard. Synthetic auth, policy responses, repository and network transport only; no sockets, SQL/RLS, production deployment or live acceptance. Owner checkout not accessed.", sourceSha256: crypto.createHash("sha256").update(source).digest("hex"), passed: checks.filter(c => c.passed).length, total: checks.length, checks };
 await fs.mkdir("evidence/retained-dispatch", { recursive: true });
 await fs.writeFile("evidence/retained-dispatch/dispatch-verification.json", JSON.stringify(evidence, null, 2));

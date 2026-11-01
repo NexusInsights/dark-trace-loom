@@ -1,6 +1,6 @@
 {
   "scope": "Limited credential-shaped literal and service-role JWT scan of the complete staged tree; no guarantee about arbitrary sensitive data. Binary Git bundles have separate captured blob-scan/restore receipts.",
-  "stagedFiles": 718,
+  "stagedFiles": 720,
   "findings": [],
-  "sourceTreeHash": "712421503f84e84df20b9e017c0beb33b39b47aa9066603b951ce930f321c538"
+  "sourceTreeHash": "b839bb9e529e8ce71af7ef2f0da0c7b7eee8edd9de4a74bb65f0f6f508aee8a9"
 }

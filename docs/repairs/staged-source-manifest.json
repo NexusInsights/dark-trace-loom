@@ -1,6 +1,6 @@
 {
   "scope": "Git-normalized staged application/configuration/CI source blobs. Excludes documentation and generated receipts. Allows exact source equality verification across documentation commits.",
-  "sha256": "712421503f84e84df20b9e017c0beb33b39b47aa9066603b951ce930f321c538",
+  "sha256": "b839bb9e529e8ce71af7ef2f0da0c7b7eee8edd9de4a74bb65f0f6f508aee8a9",
   "entries": [
     {
       "path": ".env",
@@ -175,7 +175,7 @@
     {
       "path": "scripts/verify-dispatch-release.mjs",
       "mode": "100644",
-      "blob": "b0da51f0dbb7d21995f96808d50e1ded4af41d49"
+      "blob": "c0381805fe5fc07535bfc708422d7ee046cff4bc"
     },
     {
       "path": "scripts/verify-github-route-parity.mjs",
@@ -1818,6 +1818,11 @@
       "blob": "ea524819df6043503ca31b405ebe3750c11dc0a6"
     },
     {
+      "path": "src/test/dnsRouteParity.test.ts",
+      "mode": "100644",
+      "blob": "a603e86bb0ebb9c7f7b0118d7d3edeb35f74c7ec"
+    },
+    {
       "path": "src/test/domainCompositeIntegration.test.ts",
       "mode": "100644",
       "blob": "eb226d8da70fef32946e700831f0a9d4f71b4c6c"
@@ -2185,7 +2190,7 @@
     {
       "path": "supabase/functions/osint-dispatch/index.ts",
       "mode": "100644",
-      "blob": "c2431a2c8a491d17eacec2d98732140f4fbad2bc"
+      "blob": "5239d9c4eb378a9d2e1bd2ec17ee28406fafd017"
     },
     {
       "path": "supabase/functions/osint-tools/index.ts",

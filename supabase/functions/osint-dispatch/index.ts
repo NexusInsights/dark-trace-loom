@@ -45,6 +45,7 @@ async function dnsLookup(params: Record<string, unknown>): Promise<DispatchOutco
   const domain = String(params.domain ?? params.target ?? "").trim();
   if (!domain) return { status: "error", reason: "missing 'domain' parameter" };
   const out: Record<string, unknown> = { domain };
+  const recordTypes: Record<string, number> = { A: 1, AAAA: 28, MX: 15, TXT: 16, NS: 2 };
   for (const t of ["A", "AAAA", "MX", "TXT", "NS"]) {
     const r = await safeFetch(
       `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${t}`,
@@ -52,7 +53,10 @@ async function dnsLookup(params: Record<string, unknown>): Promise<DispatchOutco
     );
     if (!r.ok) return { status: "error", reason: `Cloudflare DoH HTTP ${r.status} for ${t}` };
     const j = await r.json();
-    out[t.toLowerCase()] = (j.Answer ?? []).map((a: { data: string }) => a.data);
+    if (!j || typeof j !== "object" || Array.isArray(j) || (j.Status !== 0 && j.Status !== 3)) return { status: "error", reason: `Cloudflare DoH DNS status ${j?.Status} for ${t}` };
+    const answers = j.Answer ?? [];
+    if (!Array.isArray(answers) || answers.some(answer => !answer || typeof answer !== "object" || Array.isArray(answer))) return { status: "error", reason: `Cloudflare DoH returned invalid answers for ${t}` };
+    out[t.toLowerCase()] = answers.filter((answer: { type: number; data: unknown }) => answer.type === recordTypes[t] && typeof answer.data === "string").map((answer: { data: string }) => answer.data);
   }
   return { status: "success", result: out };
 }

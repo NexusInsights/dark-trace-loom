@@ -1,3 +1,13 @@
+# DNS outcome parity follow-up — November 1, 2026
+
+Candidate3a893eb is preserved as the parent of this bounded follow-up. Four of ten new paired DNS tests reproduced false success/record contamination before the fix; all ten pass after it. The focused combined suite passes40 tests in3 files; actual dispatcher-handler checks pass37/37, paired GitHub checks10/10, lint0 errors/16 existing warnings, types/build and whitespace checks pass.
+
+The legacy dispatcher now rejects failed or missing DNS statuses inside HTTP200 and filters each requested RR type, matching the manual route for their five shared record types. Full handler fixtures verify that DNS failures are saved as error, while verified empty and positive fixtures retain success. These are synthetic source/handler checks, with no new live acceptance. See docs/repairs/DNS-PARITY.json. The original expansion and all release/access boundaries remain unchanged.
+
+---
+
+# Previous security checkpoint
+
 # Security follow-up and authorized source inspection — November 1, 2026
 
 The logged-in Lovable Git settings show NexusInsights/dark-trace-loom/main Connected. The project reader reports9546fc851c8f2605c9f4bfcedfdb9b990cfc6a86; all8 exported affected files match that pinned repository source. This does not establish immutable deployed Edge bundle equality. No code or security setting was changed in Lovable.

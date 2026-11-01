@@ -11,7 +11,7 @@
     },
     {
       "path": "supabase/functions/osint-dispatch/index.ts",
-      "sha256": "0a23149f079379b1691895997a824860c7e5db10a62da603d5e3f444762e337b"
+      "sha256": "f175b145d846cd5ebb9f46f7ee88585699dbf43c895a4573dda5b0d9334b8125"
     }
   ],
   "passed": 10,
