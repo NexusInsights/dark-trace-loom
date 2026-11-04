@@ -1,4 +1,20 @@
-# DNS outcome parity follow-up — November 1, 2026
+# Production frontend release - November 4, 2026
+
+Source **750ec469ba0390b2369f10e326fa4792c03637d3** is now deployed to [production](https://dark-trace-loom.pages.dev), Cloudflare deployment **a2e6328b-b45a-47b5-9a34-d9d11d2fc114**, completed **05:16:29 UTC**. The [immutable release](https://a2e6328b.dark-trace-loom.pages.dev) and [prior rollback deployment](https://3ee9ded0.dark-trace-loom.pages.dev) are recorded in [the release receipt](docs/repairs/PRODUCTION-RELEASE-20261104.json). This section supersedes historical statements below that this frontend has never been deployed; it does not promote backend fixtures to live acceptance.
+
+| Boundary | New verified evidence | Acceptance limit |
+|---|---|---|
+| Build and release identity | Production build and Pages packaging exited 0; deploy exited 0; 22 frontend files; production/immutable assets match the prepared build exactly | Frontend release with retained Pages source/configuration; no Supabase function deployment |
+| Regression checks | 104/104 focused synthetic tests in 10 files; exact source CI run 41357682924 succeeded | Offline fixtures and CI are distinct from live provider acceptance |
+| Public HTTP routes/assets/authentication | 28/28 checks on each of the production and immutable origins: 9 SPA responses, 14 exact asset hashes, 5 anonymous API rejections | Anonymous API rejection does not prove authorized case permissions or persistence |
+| Signed-in browser | Research Workbench loaded; existing production-site monitor history displayed a successful 05:19:26 UTC receipt with verified stored SHA-256; no browser error logs | Read of existing monitor evidence; no new monitor or provider execution; old DNS URL redirects to Sources and DNS was not exercised |
+| Backend and private export | Production zisrsttmjeipkmllqubi and separate staging ocliymtdvtxfxczxgbjr retained | Supabase repairs, RLS/migration/persistence and exact ImageScript runtime remain unaccepted; export notice does not establish object integrity or compatibility |
+
+No credentials, access scopes, billing settings, migrations, monitor release, Git main merge/push or software installation changed. Local build artifacts, logs, checksums, screenshot and rollback evidence are preserved in the sibling `insight-nexus-live-release-20261104` directory. Existing module rows and their historical evidence below remain preserved.
+
+---
+
+# DNS outcome parity follow-up - November 1, 2026
 
 Candidate3a893eb is preserved as the parent of this bounded follow-up. Four of ten new paired DNS tests reproduced false success/record contamination before the fix; all ten pass after it. The focused combined suite passes40 tests in3 files; actual dispatcher-handler checks pass37/37, paired GitHub checks10/10, lint0 errors/16 existing warnings, types/build and whitespace checks pass.
 
