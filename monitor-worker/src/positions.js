@@ -1,7 +1,9 @@
 import { HttpError, text, number, readJson, nowSeconds, timestamp, canonical, sha256 } from "./core.js";
 import { pointInPolygon, validatePolygon } from "./geometry.js";
+import { migrationSession } from './migration-hold.js';
 
 export async function createFeed(db, userId, body, env, requestUrl) {
+  db = await migrationSession(db);
   if (body.authorization_confirmed !== true) throw new HttpError("Explicit authorization for this device/entity position feed is required");
   const label = text(body.label, "feed label", 100); const id = crypto.randomUUID();
   const count = await db.prepare("SELECT COUNT(*) AS count FROM position_feeds WHERE user_id=? AND enabled=1").bind(userId).first("count");
@@ -13,6 +15,7 @@ export async function createFeed(db, userId, body, env, requestUrl) {
   return { id, label, token, receiver_url: `${base.replace(/\/$/, "")}/v1/feeds/${id}/positions`, authorization_header_format: "Feed <one-time token>", token_storage: "Only a SHA-256 hash is stored; this token is shown once. Revoking the feed stops ingestion.", position_contract: { event_id: "unique source event ID", observed_at: "ISO UTC timestamp", latitude: "number", longitude: "number", accuracy_m: "reported accuracy in meters" } };
 }
 export async function createRule(db, userId, body) {
+  db = await migrationSession(db);
   if (body.authorization_confirmed !== true) throw new HttpError("Explicit authorization for tracking this entity through the selected feed is required");
   const feedId = text(body.feed_id, "position feed ID", 80);
   const feed = await db.prepare("SELECT id FROM position_feeds WHERE id=? AND user_id=? AND enabled=1").bind(feedId, userId).first();
@@ -26,6 +29,7 @@ export async function createRule(db, userId, body) {
   return { id, feed_id: feedId, label, entity_label: entity, polygon, max_accuracy_m: accuracy, boundary_rule: "inside", baseline: "The first valid position establishes inside/outside state without claiming a prior crossing. Later observed transitions create enter/exit alerts." };
 }
 export async function ingestPosition(db, request, feedId) {
+  db = await migrationSession(db);
   const authorization = request.headers.get("authorization") || "";
   if (!/^Feed [a-f0-9]{64}$/.test(authorization)) throw new HttpError("A valid authorized feed token is required", 401);
   const tokenHash = await sha256(authorization.slice(5));

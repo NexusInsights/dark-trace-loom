@@ -2,19 +2,20 @@ import { HttpError, LIMITS, text, integer, plain, readJson, sourceRequest, json,
 import { KINDS, validateParams, needsBridge } from "./pollers.js";
 import { checkJob, publicJob, coveredJob } from "./engine.js";
 import { createFeed, createRule, ingestPosition } from "./positions.js";
+import { migrationSession, migrationFetch, MigrationHoldError, migrationResponse } from './migration-hold.js';
 
-async function owner(request, env) {
+async function owner(request, env, db) {
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) throw new HttpError("Monitor authentication configuration is unavailable", 503);
   const authorization = request.headers.get("authorization") || "";
   if (!/^Bearer [A-Za-z0-9._-]{20,5000}$/.test(authorization)) throw new HttpError("A verified sign-in session is required", 401);
-  const { response, body } = await sourceRequest(`${String(env.SUPABASE_URL).replace(/\/$/, "")}/auth/v1/user`, { headers: { Authorization: authorization, apikey: env.SUPABASE_PUBLISHABLE_KEY } });
+  const { response, body } = await sourceRequest(`${String(env.SUPABASE_URL).replace(/\/$/, "")}/auth/v1/user`, { headers: { Authorization: authorization, apikey: env.SUPABASE_PUBLISHABLE_KEY } }, migrationFetch(db));
   if (!response.ok) throw new HttpError("Sign-in session could not be verified", response.status === 401 || response.status === 403 ? 401 : 502);
   let user; try { user = JSON.parse(body); } catch { throw new HttpError("Authentication provider returned invalid JSON", 502); }
   if (!plain(user) || !/^[a-f0-9-]{36}$/i.test(user.id || "")) throw new HttpError("Authentication provider supplied no valid account identity", 401);
   return user;
 }
-async function verifyPlan(request, env, kind, verifiedUserId) {
-  const { response, body } = await sourceRequest(`${String(env.SUPABASE_URL).replace(/\/$/, "")}/functions/v1/check-subscription`, { headers: { Authorization: request.headers.get("authorization"), apikey: env.SUPABASE_PUBLISHABLE_KEY } });
+async function verifyPlan(request, env, kind, verifiedUserId, db) {
+  const { response, body } = await sourceRequest(`${String(env.SUPABASE_URL).replace(/\/$/, "")}/functions/v1/check-subscription`, { headers: { Authorization: request.headers.get("authorization"), apikey: env.SUPABASE_PUBLISHABLE_KEY } }, migrationFetch(db));
   if (!response.ok) throw new HttpError("Account plan could not be verified; monitor mutation was blocked", 502);
   let data; try { data = JSON.parse(body); } catch { throw new HttpError("Account plan provider returned invalid JSON", 502); }
   const plans = ["free", "professional", "team", "enterprise"];
@@ -27,7 +28,7 @@ async function verifyPlan(request, env, kind, verifiedUserId) {
   if (!verifiedUserId) throw new HttpError("Account identity is unavailable for the tool-permission check", 502);
   const url = new URL(`${String(env.SUPABASE_URL).replace(/\/$/, "")}/rest/v1/tool_permissions`);
   url.searchParams.set("user_id", `eq.${verifiedUserId}`); url.searchParams.set("tool_id", `eq.${toolId}`); url.searchParams.set("select", "allowed"); url.searchParams.set("limit", "1");
-  const permission = await sourceRequest(url.href, { headers: { Authorization: request.headers.get("authorization"), apikey: env.SUPABASE_PUBLISHABLE_KEY } });
+  const permission = await sourceRequest(url.href, { headers: { Authorization: request.headers.get("authorization"), apikey: env.SUPABASE_PUBLISHABLE_KEY } }, migrationFetch(db));
   if (!permission.response.ok) throw new HttpError("Admin tool permissions could not be verified; the monitor operation was blocked", 502);
   let rows; try { rows = JSON.parse(permission.body); } catch { throw new HttpError("Admin tool-permission response was invalid; the monitor operation was blocked", 502); }
   if (!Array.isArray(rows) || rows.length > 1 || rows.some(row => !plain(row) || typeof row.allowed !== "boolean")) throw new HttpError("Admin tool-permission response was invalid; the monitor operation was blocked", 502);
@@ -43,11 +44,25 @@ export async function handleApi(request, db, env, runtime = {}) {
   let cors = {};
   try {
     cors = headers(request, env);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+    const session = await migrationSession(db);
+    const response = await handleActiveApi(request, session, env, runtime);
+    session.assertGuard();
+    return response;
+  } catch (error) {
+    if (error instanceof MigrationHoldError) return migrationResponse(error, cors);
+    return json({ error: error instanceof HttpError ? error.message : 'Monitor migration state could not be verified.' }, error instanceof HttpError ? error.status : 503, cors);
+  }
+}
+async function handleActiveApi(request, db, env, runtime = {}) {
+  let cors = {};
+  try {
+    cors = headers(request, env);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     const url = new URL(request.url); const path = url.pathname.replace(/\/$/, "");
     const positionMatch = path.match(/^\/v1\/feeds\/([a-f0-9-]{36})\/positions$/i);
     if (positionMatch && request.method === "POST") return json(await ingestPosition(db, request, positionMatch[1]), 200, cors);
-    const user = await owner(request, env); const id = user.id;
+    const user = await owner(request, env, db); const id = user.id;
     if (path === "/v1/status" && request.method === "GET") {
       const tick = await db.prepare("SELECT * FROM scheduler_ticks ORDER BY scheduled_at DESC LIMIT 1").first();
       const nextAlarm = runtime.getNextAlarm ? await runtime.getNextAlarm() : null;
@@ -58,7 +73,7 @@ export async function handleApi(request, db, env, runtime = {}) {
       const body = await readJson(request);
       if (body.polling_authorized !== true) throw new HttpError("Explicit authorization for continuing source polling is required");
       const kind = text(body.kind, "monitor kind", 30); if (!KINDS.includes(kind)) throw new HttpError("Monitor kind is unsupported");
-      await verifyPlan(request, env, kind, id);
+      await verifyPlan(request, env, kind, id, db);
       const params = validateParams(kind, body.params, env);
       const interval = integer(body.interval_seconds, "interval_seconds", 300, 604800, 3600);
       const allowance = integer(body.paid_daily_budget, "approved daily provider allowance", 0, 24, 0);
@@ -78,7 +93,7 @@ export async function handleApi(request, db, env, runtime = {}) {
     if (jobMatch) {
       const job = await db.prepare("SELECT * FROM monitor_jobs WHERE id=? AND user_id=? AND archived=0").bind(jobMatch[1], id).first();
       if (!job) throw new HttpError("Monitor job was not found", 404);
-      if (jobMatch[2] === "check" && request.method === "POST") { await verifyPlan(request, env, job.kind, id); return json(await checkJob(db, job.id, env, { userId: id, force: true }), 200, cors); }
+      if (jobMatch[2] === "check" && request.method === "POST") { await verifyPlan(request, env, job.kind, id, db); return json(await checkJob(db, job.id, env, { userId: id, force: true }), 200, cors); }
       if (jobMatch[2] === "history" && request.method === "GET") {
         const summary = await coveredJob(db, job);
         const limit = integer(url.searchParams.has("limit") ? Number(url.searchParams.get("limit")) : undefined, "history limit", 1, 100, 100);
@@ -89,7 +104,7 @@ export async function handleApi(request, db, env, runtime = {}) {
       if (!jobMatch[2] && request.method === "GET") return json(await coveredJob(db, job), 200, cors);
       if (!jobMatch[2] && request.method === "PATCH") {
         const body = await readJson(request); if (typeof body.enabled !== "boolean") throw new HttpError("PATCH requires enabled:true or enabled:false");
-        if (body.enabled) await verifyPlan(request, env, job.kind, id);
+        if (body.enabled) await verifyPlan(request, env, job.kind, id, db);
         const now = nowSeconds();
         await db.prepare("UPDATE monitor_jobs SET enabled=?,revision=revision+1,lease_token=NULL,lease_until=0,next_due=?,updated_at=? WHERE id=? AND user_id=?").bind(body.enabled ? 1 : 0, now, now, job.id, id).run();
         return json({ id: job.id, enabled: body.enabled }, 200, cors);
@@ -109,11 +124,11 @@ export async function handleApi(request, db, env, runtime = {}) {
       return json({ id: alertMatch[1], delivery_state: body.state === "read" ? "read_by_client" : "received_by_client" }, 200, cors);
     }
     if (path === "/v1/feeds" && request.method === "GET") return json({ feeds: (await db.prepare("SELECT id,label,enabled,last_observed_at,last_received_at,created_at FROM position_feeds WHERE user_id=? ORDER BY created_at DESC").bind(id).all()).results }, 200, cors);
-    if (path === "/v1/feeds" && request.method === "POST") { await verifyPlan(request, env, "geofence", id); return json(await createFeed(db, id, await readJson(request), env, request.url), 201, cors); }
+    if (path === "/v1/feeds" && request.method === "POST") { await verifyPlan(request, env, "geofence", id, db); return json(await createFeed(db, id, await readJson(request), env, request.url), 201, cors); }
     const feedMatch = path.match(/^\/v1\/feeds\/([a-f0-9-]{36})$/i);
     if (feedMatch && request.method === "DELETE") { const revoked = await db.prepare("UPDATE position_feeds SET enabled=0,lease_token=NULL,lease_until=0,updated_at=? WHERE id=? AND user_id=?").bind(nowSeconds(), feedMatch[1], id).run(); if (!revoked.meta.changes) throw new HttpError("Feed was not found", 404); return json({ id: feedMatch[1], revoked: true }, 200, cors); }
     if (path === "/v1/rules" && request.method === "GET") return json({ rules: (await db.prepare("SELECT * FROM geofence_rules WHERE user_id=? ORDER BY created_at DESC").bind(id).all()).results.map(row => ({ ...row, enabled: Boolean(row.enabled), polygon: JSON.parse(row.polygon_json), polygon_json: undefined })) }, 200, cors);
-    if (path === "/v1/rules" && request.method === "POST") { await verifyPlan(request, env, "geofence", id); return json(await createRule(db, id, await readJson(request)), 201, cors); }
+    if (path === "/v1/rules" && request.method === "POST") { await verifyPlan(request, env, "geofence", id, db); return json(await createRule(db, id, await readJson(request)), 201, cors); }
     const ruleMatch = path.match(/^\/v1\/rules\/([a-f0-9-]{36})$/i);
     if (ruleMatch && request.method === "DELETE") { const disabled = await db.prepare("UPDATE geofence_rules SET enabled=0,updated_at=? WHERE id=? AND user_id=?").bind(nowSeconds(), ruleMatch[1], id).run(); if (!disabled.meta.changes) throw new HttpError("Geofence rule was not found", 404); return json({ id: ruleMatch[1], enabled: false }, 200, cors); }
     throw new HttpError("Monitor API route was not found", 404);

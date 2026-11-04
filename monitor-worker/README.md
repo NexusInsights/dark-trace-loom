@@ -4,6 +4,8 @@ This service supplies continuing source polling, durable source history, meaning
 
 ## Deployment
 
+The [migration hold](MIGRATION-HOLD.md) adds a persisted, generation-fenced pause for a reviewed backend cutover. It is not activated by this source change. Preserve the existing namespace and state; see its rollout, rollback and live verification limits before changing a deployment.
+
 Use the already-installed Wrangler from the parent application checkout. Root config is `monitor-worker/wrangler.jsonc`; the namespace is a **SQLite Durable Object**, with class `MonitorStore` and binding `MONITOR_STORE`. No existing D1 database is reused or deleted. Add the app's existing public `SUPABASE_PUBLISHABLE_KEY` variable through the approved configuration path. Keep `APP_ORIGIN` exact and `MONITOR_ALLOWED_HOSTS` restricted to approved public page/feed hostnames. Deploy with the existing account authorization; do not upgrade a plan or refresh OAuth merely to deploy this service.
 
 The Pages proxy may bind `MONITOR_WORKER` to the service `insight-nexus-monitors` and forward `/api/marketplace-monitor/*` to the Worker's matching `/v1/*` paths. The Worker main handler rejects all `/internal` requests. **SQLite Durable Object alarms are the authoritative scheduler**, avoiding the account's exhausted Cron Trigger quota. Successful job mutations arm the earliest due job, and alarm completion/failure rearms the next due/backoff time. Empty/paused queues disarm. The next alarm is read from actual storage; the last persisted completed tick establishes observed execution.

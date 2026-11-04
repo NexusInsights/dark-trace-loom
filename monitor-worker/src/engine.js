@@ -1,6 +1,7 @@
 import { HttpError, LIMITS, nowSeconds, timestamp, canonical, sha256, boundedSnapshot, changeSummary, backoff, plain } from "./core.js";
 import { needsBridge, pollSnapshot } from "./pollers.js";
 import { coverageForJob, failureReceipt } from "./snapshot-model.js";
+import { migrationSession, migrationFetch, MigrationHoldError } from './migration-hold.js';
 
 export function publicJob(row, now = nowSeconds()) {
   const used = row.paid_day === timestamp(now).slice(0, 10) ? row.paid_used || 0 : 0;
@@ -23,6 +24,7 @@ function comparableData(kind, snapshot, previous) {
   return { total_results: snapshot.data.total_results, vulnerabilities: snapshot.data.vulnerabilities, epss: epss?.records || null, cisa_kev: kev?.records || null };
 }
 export async function checkJob(db, id, env, options = {}) {
+  db = await migrationSession(db);
   const now = options.now ?? nowSeconds(); const lease = crypto.randomUUID();
   const params = options.userId ? [id, options.userId] : [id];
   const row = await db.prepare(`SELECT * FROM monitor_jobs WHERE id=?${options.userId ? " AND user_id=?" : ""}`).bind(...params).first();
@@ -47,7 +49,7 @@ export async function checkJob(db, id, env, options = {}) {
       const feed = await db.prepare("SELECT * FROM position_feeds WHERE id=? AND user_id=? AND enabled=1").bind(p.feed_id, row.user_id).first();
       if (!rule || !feed) throw new HttpError("The authorized position feed or geofence rule is unavailable", 424);
       snapshot = { source: "authorized_position_feed", fetched_at: timestamp(now), coverage: "Reported positions from the account-authorized feed. Alerts arise only from observed polygon state transitions, not a guessed location.", data: { feed_id: feed.id, rule_id: rule.id, entity_label: rule.entity_label, state: rule.last_state, last_position_time: feed.last_observed_at ? new Date(feed.last_observed_at).toISOString() : null, reported_position: feed.last_observed_at ? { latitude: feed.last_latitude, longitude: feed.last_longitude, accuracy_m: feed.last_accuracy } : null } };
-    } else snapshot = await pollSnapshot({ ...row, attempt_key: attempt }, env, options.fetcher || fetch);
+    } else snapshot = await pollSnapshot({ ...row, attempt_key: attempt }, env, migrationFetch(db, options.fetcher || fetch));
     const previous = row.last_snapshot_json ? JSON.parse(row.last_snapshot_json) : null;
     const comparison = comparableData(row.kind, snapshot, previous);
     const serialized = boundedSnapshot(snapshot); const hash = await sha256(canonical(comparison));
@@ -63,6 +65,7 @@ export async function checkJob(db, id, env, options = {}) {
     if (!result.at(-1).meta.changes) return { checked: false, state: "superseded" };
     return { checked: true, state, changed, check_id: checkId, source: snapshot.source, content_hash: hash, ...(partialError ? { coverage_state: "partial", source_error: partialError } : {}) };
   } catch (error) {
+    if (error instanceof MigrationHoldError) throw error;
     const message = error instanceof HttpError ? error.message : "Source polling or monitor storage failed; the previous verified snapshot was preserved";
     const budgetDeferred = error instanceof HttpError && error.status === 429 && /allowance/.test(error.message);
     const failures = budgetDeferred ? row.failures : row.failures + 1;
@@ -80,6 +83,7 @@ export async function checkJob(db, id, env, options = {}) {
   }
 }
 export async function runDueJobs(db, env, options = {}) {
+  db = await migrationSession(db);
   const now = options.now ?? nowSeconds(); const scheduled = options.scheduledAt ?? Math.floor(now / 300) * 300;
   const tick = await db.prepare("INSERT OR IGNORE INTO scheduler_ticks(scheduled_at,started_at) VALUES(?,?)").bind(scheduled, now).run();
   if (!tick.meta.changes) return { checked: 0, failed: 0, duplicate_tick: true };
@@ -88,7 +92,7 @@ export async function runDueJobs(db, env, options = {}) {
   let checked = 0, failed = 0;
   for (const row of rows) {
     try { const result = await checkJob(db, row.id, env, { ...(options.now !== undefined ? { now } : {}), fetcher: options.fetcher }); if (result.checked) checked++; if (result.state === "failed") failed++; }
-    catch { failed++; } // Per-job failure is counted; no provider success or negative finding is asserted.
+    catch (error) { if (error instanceof MigrationHoldError) throw error; failed++; } // A migration pause is not a provider failure or a completed scheduler tick.
   }
   await db.prepare("UPDATE scheduler_ticks SET completed_at=?,checked=?,failed=? WHERE scheduled_at=?").bind(nowSeconds(), checked, failed, scheduled).run();
   return { checked, failed, due_jobs_selected: rows.length, max_due_jobs_per_tick: max };

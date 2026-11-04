@@ -1,0 +1,75 @@
+{
+  "verifiedAtUtc": "2026-11-04T07:48:03.415Z",
+  "baseSha": "83efceb6b6369113015f773d434d368cac963111",
+  "scope": "Offline migration hold preparation; no deployment, provider calls or live state writes",
+  "tests": {
+    "command": "node --test monitor-worker/test/*.test.mjs",
+    "exitCode": 0,
+    "passed": 40,
+    "existing": 23,
+    "added": 17,
+    "engine": "Node24 built-in SQLite with controlled promise/network fixtures; production Worker class loaded with SQL-as-text hook"
+  },
+  "bundle": {
+    "compiled": true,
+    "warnings": 0,
+    "outputs": [
+      {
+        "bytes": 80152,
+        "sha256": "a8f32021b4cbd79c25927623e6ff5919961b1e180db8379be27a7eb2acf0b4a3"
+      }
+    ],
+    "uploaded": false
+  },
+  "sources": [
+    {
+      "path": "monitor-worker/src/alarms.js",
+      "sha256": "aa1fa27932b94b635262f64ade7fe6f756388b4445101fb00b961fb618a1e795"
+    },
+    {
+      "path": "monitor-worker/src/api.js",
+      "sha256": "f4b7978b729dbd5b686a5b49d5faf7aeb88fc03f426a4d979e72ea4239fbaf87"
+    },
+    {
+      "path": "monitor-worker/src/engine.js",
+      "sha256": "0f859a34808042e433f86676110c67a63d12199a21b7ff0aa119a281651093d3"
+    },
+    {
+      "path": "monitor-worker/src/migration-hold.js",
+      "sha256": "ee3913c22ca5fb509cd70dbb79ee57817a77aa7b4b51d7d99e0ec6baaa2e0ef4"
+    },
+    {
+      "path": "monitor-worker/src/positions.js",
+      "sha256": "42d804d62e26ccd8ca4e4127b932895eac7f27d7c2207c71ea70d2878c3c7aab"
+    },
+    {
+      "path": "monitor-worker/src/runtime-init.js",
+      "sha256": "8bdc1dfa2c4b3e86bb64dffdc11aad4a01504a0064a94f62dd11024428abc02f"
+    },
+    {
+      "path": "monitor-worker/src/sqlite-facade.js",
+      "sha256": "e4ae7eec5272ebb7c2ebe2f5c373a811bb1bf7c183f83fe95547a148b30dcb89"
+    },
+    {
+      "path": "monitor-worker/src/worker.js",
+      "sha256": "68f855dce79214e6e89efa6fb8aa4784e0d3d923f7da00f9078c9e07c13adc5c"
+    },
+    {
+      "path": "monitor-worker/test/migration-hold.test.mjs",
+      "sha256": "3ee20a6f269bb21417761e6a5cda435aaa8646d80f5f847fd14c218708b2a592"
+    },
+    {
+      "path": "monitor-worker/test/runtime.test.mjs",
+      "sha256": "26947ff4c53aff92d0892cb95e132fe8cc58cee4e0c37b259c410be24f068579"
+    }
+  ],
+  "liveAcceptance": {
+    "holdActivated": false,
+    "namespacePreservationVerified": false,
+    "jobCountsVerified": false,
+    "storageRecoveryVerified": false,
+    "ownerMigrationVerified": false,
+    "providerPollingVerified": false
+  },
+  "handover": "monitor-worker/MIGRATION-HOLD.md"
+}

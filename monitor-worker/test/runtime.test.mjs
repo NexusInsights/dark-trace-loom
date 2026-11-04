@@ -10,6 +10,7 @@ import { validatePolygon, pointInPolygon } from "../src/geometry.js";
 import { createFeed, createRule, ingestPosition } from "../src/positions.js";
 import { handleApi } from "../src/api.js";
 import { sha256, canonical, backoff, sourceRequest, MONITOR_USER_AGENT } from "../src/core.js";
+import { initializeMigrationControl } from '../src/migration-hold.js';
 import { armNextCheck, runAlarm } from "../src/alarms.js";
 import { snapshotHashData } from "../src/snapshot-model.js";
 
@@ -29,6 +30,7 @@ async function database() {
     transactionSync(callback) { sqlite.exec("BEGIN"); try { const value = callback(); sqlite.exec("COMMIT"); return value; } catch (error) { sqlite.exec("ROLLBACK"); throw error; } },
   };
   const db = sqliteFacade(storage); await db.exec(await readFile(new URL("../migrations/0001_monitors.sql", import.meta.url), "utf8"));
+  await initializeMigrationControl(db);
   return db;
 }
 async function job(db, kind = "social_account", params = { platform: "github", username: "octocat" }, owner = USER) {
