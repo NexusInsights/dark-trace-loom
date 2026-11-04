@@ -5,6 +5,15 @@ vi.mock('@/integrations/supabase/client',()=>({supabase:{from(table:string){let 
 import {runPersonaDiscovery} from './personaDiscoveryEngine';
 beforeEach(()=>{harness.lookup.mockReset();harness.writes=[];harness.identifierError=null;harness.ownerAvailable=true;});
 describe('creating a person before research',()=>{
+  it('retains unavailable-provider reasons and makes no writes when no account observation was established',async()=>{
+    harness.lookup.mockResolvedValue({schemaVersion:2,status:'error',username:'fixture',retrievedAt:'2026-11-04T00:00:00Z',profiles:[],checks:[{platform:'GitHub',sourceUrl:'https://api.github.com/users/fixture',retrievedAt:'2026-11-04T00:00:00Z',status:'unavailable',reason:'Provider returned HTTP 429'}]});
+    await expect(runPersonaDiscovery('user',{profileUrl:'https://github.com/fixture'})).rejects.toThrow('GitHub: Provider returned HTTP 429');expect(harness.writes).toEqual([]);
+  });
+  it('bounds unavailable-provider diagnostics and supplies a missing-reason fallback without saving findings',async()=>{
+    harness.lookup.mockResolvedValue({status:'error',username:'fixture',profiles:[],checks:Array.from({length:10},(_,i)=>({platform:`Fixture ${i}`,status:'unavailable',reason:i===0?undefined:' SYNTHETIC\n'+'x'.repeat(2000)}))});
+    const error=await runPersonaDiscovery('user',{username:'fixture'}).catch(error=>error);
+    expect(error).toBeInstanceOf(Error);expect(error.message.length).toBeLessThanOrEqual(1000);expect(error.message).not.toContain('\n');expect(error.message).toContain('no provider reason supplied');expect(error.message).toContain('Fixture 9:');expect(harness.writes).toEqual([]);
+  });
   it('rejects legacy enrichment requests before provider or storage work instead of saving an invalid profile lookup',async()=>{
     await expect(runPersonaDiscovery('user',{name:'Research subject',enrich:true})).rejects.toThrow('separately in Tools');
     expect(harness.lookup).not.toHaveBeenCalled();expect(harness.writes).toEqual([]);

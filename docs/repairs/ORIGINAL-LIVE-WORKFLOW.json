@@ -1,0 +1,56 @@
+{
+  "atUtc": "2026-11-04T06:31:38.484Z",
+  "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b",
+  "origin": "https://dark-trace-loom.pages.dev",
+  "deployment": "3138de43-8117-46ce-94f9-f0363baa8cfc",
+  "fixture": "DEMO QA 2026-11-04 — GitHub mascot, not a person",
+  "observedAccount": {
+    "accountId": "github:583231",
+    "sourceUrl": "https://api.github.com/users/octocat",
+    "retrievedAtUtc": "2026-11-04T06:19:23Z"
+  },
+  "checks": {
+    "signedInLiveLookup": true,
+    "lookupSaved": true,
+    "supportReviewSaved": true,
+    "supportSurvivedReload": true,
+    "reviewedAssociationCreated": true,
+    "rejectionSaved": true,
+    "rejectedAccountExcludedFromSettledIdentityView": true,
+    "refreshAfterRejectionDidNotReviveAssociation": true,
+    "rejectionSurvivedReload": true,
+    "originalSourceRetained": true,
+    "browserErrors": 0
+  },
+  "manualTool": {
+    "firstGitHubAttempt": "all providers unavailable; original generic message hid cause; underlying reason not recovered; not retried",
+    "dev": {
+      "status": "success",
+      "httpStatus": 200,
+      "accountId": "dev:3",
+      "personAssociation": "unreviewed",
+      "sourceUrl": "https://dev.to/api/users/by_username?url=thepracticaldev"
+    }
+  },
+  "pipeline": {
+    "fixture": "DEMO QA 2026-11-04 — DEV source parity",
+    "schedule": "manual",
+    "tool": "username-search",
+    "input": {
+      "profile_url": "https://dev.to/thepracticaldev"
+    },
+    "runStatus": "Completed",
+    "toolStatus": "success",
+    "historySurvivedReload": true,
+    "summaryOwnershipLimitationVisible": true,
+    "caseAttached": false
+  },
+  "limitations": [
+    "Synthetic dossier and workflow using real public mascot/organization data; no individual investigated",
+    "Live account retrieval does not establish person ownership",
+    "No real outbound account link was observed or followed in these live checks",
+    "No paid provider, credential, policy, migration, backend binding or monitor change",
+    "Fifteen signed-in routes rendered; other provider actions remain separately unaccepted",
+    "Historical rejected fixture/review and manual pipeline preserved with explicit DEMO labels"
+  ]
+}

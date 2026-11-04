@@ -447,7 +447,7 @@ export default function IdentityResolutionPage() {
                 Review sources in Discovery, then refresh supported associations here.
               </p>
               <p className="text-[10px] text-muted-foreground/60 mt-1">
-                The engine reads your case evidence, saved tool results and persona identifiers
+                Only retained account records with a current supporting review appear here.
               </p>
             </div>
           ) : (

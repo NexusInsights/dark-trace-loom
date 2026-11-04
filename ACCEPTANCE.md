@@ -1,4 +1,19 @@
-# Original full-platform workflow repair candidate - November 4, 2026
+# Original full-platform live workflow - November 4, 2026
+
+Application source `50b850e1e905b2910bc0d8285771a07c2708525b` is live on the existing Cloudflare app, deployment `3138de43-8117-46ce-94f9-f0363baa8cfc`; CI41784162782 passed for that SHA. Production and immutable origins passed65 HTTP checks each. The original Lovable URL remains unchanged. See `docs/repairs/ORIGINAL-WORKFLOW-20261104.md` for exact source/rollback/backup evidence.
+
+| Module or boundary | New live evidence | Remaining limit |
+|---|---|---|
+| Discovery and review persistence | Authenticated GitHub mascot observation, source save, explicit DEMO support, identity refresh, rejection and reload passed; original source/history retained | No individual investigated; no independent ownership assertion |
+| Username Search manual | DEV organization `dev:3` returned HTTP200/success with source and unreviewed ownership | Separate GitHub attempt unavailable; original message hid cause; diagnostic follow-up now tested locally |
+| Username Search pipeline | Manual one-tool DEV pipeline completed and saved history; same explicit profile URL input; no case attached | Genuine provider lookup in a labelled DEMO workflow; other live tool/provider actions remain unaccepted |
+| Rejection lifecycle | Rejected test association absent from settled identity view and still absent after refresh/reload | This benign own-account path does not prove foreign-user RLS enforcement |
+| Original/person navigation | Fifteen signed-in pages rendered, with original tools/cases/reports and separate person/research routes; browser errors0 | Page rendering is distinct from all actions/provider coverage |
+| Provider diagnostics follow-up | Four reproduced cause-loss assertions corrected;28 focused tests, typecheck and targeted lint pass | Follow-up release pending at this checkpoint; no claim to have identified or fixed the upstream GitHub failure |
+
+---
+
+# Earlier original full-platform workflow repair candidate - November 4, 2026
 
 Branch `codex/original-evidence-workflow-20261104` restores the original platform navigation while retaining the separate person/research workspaces. At this source checkpoint the candidate is tested locally and **not yet released**. The older release below was the person-workspace frontend; it did not update the original Lovable URL. Current release evidence will be recorded in `docs/repairs/ORIGINAL-WORKFLOW-20261104.md`.
 

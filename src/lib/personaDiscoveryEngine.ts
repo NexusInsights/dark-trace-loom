@@ -25,7 +25,10 @@ export async function runPersonaDiscovery(userId: string, input: PersonaInput, o
   if ((sanitized.username || sanitized.profileUrl) && input.searchProfiles !== false) {
     onProgress?.("Retrieving exact public account records; person ownership remains unreviewed...");
     lookup = await lookupProfiles(sanitized.profileUrl ? { profileUrl: sanitized.profileUrl } : sanitized.username!.replace(/^@/, ""));
-    if (lookup.checks.length && lookup.checks.every(check => check.status === "unavailable")) throw new Error("All profile providers were unavailable. No account existence was established. Try again later.");
+    if (lookup.checks.length && lookup.checks.every(check => check.status === "unavailable")) {
+      const reasons = lookup.checks.slice(0, 10).map(check => `${check.platform.replace(/\s+/g, " ").trim().slice(0, 20)}: ${(check.reason?.replace(/\s+/g, " ").trim() || "no provider reason supplied").slice(0, 64)}`).join("; ");
+      throw new Error(`All profile providers were unavailable. No account existence was established. ${reasons}`);
+    }
   }
   onProgress?.("Saving input leads separately from retrieved account observations...");
   const { data: persona } = input.personaId ? { data: { id: input.personaId } } : await checkedDatabase(supabase.from("personas").insert({ user_id: userId, persona_label: sanitized.name || sanitized.username || sanitized.profileUrl || sanitized.email || sanitized.phone || sanitized.domain || "Investigation" }).select("id").single());

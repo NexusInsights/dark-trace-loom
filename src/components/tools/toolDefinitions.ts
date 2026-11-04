@@ -35,7 +35,10 @@ const usernameSearch: ToolDefinition = {
   process: async (inputs) => {
     const username = (inputs.username || "").trim().replace(/^@/, "");
     const data = await lookupProfiles({ ...(username ? { username } : {}), ...(inputs.profile_url?.trim() ? { profileUrl: inputs.profile_url.trim() } : {}) });
-    if (data.checks.every(c => c.status === "unavailable")) throw new Error("All profile providers are unavailable; no account existence was established");
+    if (data.checks.every(c => c.status === "unavailable")) {
+      const reasons = data.checks.slice(0, 10).map(check => `${check.platform.replace(/\s+/g, " ").trim().slice(0, 20)}: ${(check.reason?.replace(/\s+/g, " ").trim() || "no provider reason supplied").slice(0, 64)}`).join("; ");
+      throw new Error(`All profile providers are unavailable; no account existence was established. ${reasons}`);
+    }
     return {
       status: data.status,
       summary: `${data.profiles.length} public account records for "${data.username}"; ${data.checks.filter(c => c.status === "unavailable").length} unavailable providers. Explicit account links and shared handles do not prove person ownership.`,

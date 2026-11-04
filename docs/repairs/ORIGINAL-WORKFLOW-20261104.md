@@ -1,5 +1,23 @@
 # Original platform workflow and evidence repair
 
+## Verified Cloudflare release and live workflow
+
+Source `50b850e1e905b2910bc0d8285771a07c2708525b` was released at 2026-11-04 06:18:32 UTC as Cloudflare deployment `3138de43-8117-46ce-94f9-f0363baa8cfc`. Production is https://dark-trace-loom.pages.dev and the immutable release is https://3138de43.dark-trace-loom.pages.dev. Exact-source CI run41784162782 passed lint, types, the complete aggregate test command and build. The source is backed up on `codex/original-evidence-workflow-20261104`; remote/local equality was checked. Prior rollback is `a2e6328b-b45a-47b5-9a34-d9d11d2fc114`.
+
+Both release origins passed65 public HTTP checks, including asset hashes and anonymous API rejection. Fifteen signed-in routes rendered; initial loading-only observations for research/persona overview were resolved, and case investigations displayed its expected choose/create state. No browser errors were observed. These route checks do not accept every provider action.
+
+The authenticated Discovery workflow retrieved real public mascot account `github:583231`, saved the source record and a clearly labelled DEMO dossier, saved an explicit synthetic support review, persisted it across reload, and created one reviewed association. A later rejection was saved, survived reload, and removed that association from current identity views; refreshing did not revive it. Source and review history are retained. No individual was investigated.
+
+Manual Username Search subsequently reported GitHub unavailable; the original generic error discarded its underlying cause, so that cause remains unknown and GitHub was not retried. An independent DEV organization lookup returned HTTP200, status success, stable `dev:3`, and unreviewed association. A one-tool, manual DEMO pipeline using the same exact DEV URL saved a completed run with the ownership limitation and retained that history after reload; no case was attached. The historical test records are explicitly labelled DEMO and no schedule was created.
+
+A bounded follow-up now retains source-specific failure reasons in both manual-tool and Discovery failures. Focused28 tests, TypeScript and targeted lint pass; these diagnostic fixtures do not explain the earlier GitHub failure. The Identity Review empty-state wording now accurately describes its retained-review input. This follow-up awaits its own exact-source build, CI and release at this commit checkpoint.
+
+Release logs, manifests, live receipts and screenshot are in sibling `insight-nexus-original-release-20261104`. The first-release live receipt is also retained at `docs/repairs/ORIGINAL-LIVE-WORKFLOW.json`. The diagnostic follow-up uses a fresh sibling `insight-nexus-original-diagnostics-release-20261104` directory; previous one-shot release wrappers and artifacts must not be rerun or overwritten.
+
+The original Lovable project editor is now readable at the historical UUID and shows older main-source history plus an out-of-credits notice. It was not published or switched to the backup branch. This changes the earlier sign-in observation below, but does not establish current Lovable source equality, backend body/RLS equality, export integrity, or original-URL deployment. No billing change was made.
+
+The dated implementation/checkpoint sections below are historical and remain preserved.
+
 Current user request: review the entire original site and make discovery/results evidence-based, without presenting generated usernames as findings. Prior live-repair and deployment intent remains relevant. No new credentials, paid providers, installations, access changes, migration or personal investigation is authorized by this implementation.
 
 ## Identity and current release status
