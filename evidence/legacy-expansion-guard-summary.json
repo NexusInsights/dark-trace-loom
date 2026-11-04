@@ -1,0 +1,36 @@
+{
+  "recordedAtUtc": "2026-11-04T05:44:27.087325+00:00",
+  "scope": "Retire unsupported legacy generative expansion without deleting historical records. Client never invokes an older deployed generator; server authenticates, checks owned seed, returns not_configured without writes.",
+  "tests": {
+    "passed": 20,
+    "total": 20,
+    "files": 2,
+    "handlerFixtures": 18,
+    "hookFixtures": 2,
+    "exitCode": 0,
+    "report": "legacy-expansion-guard-tests.json"
+  },
+  "testLimits": "Actual handler and shared authentication source execute in Node VM with synthetic Auth/SDK. Hook uses mocked session/API. No provider calls, SQL/RLS proof, Deno runtime, deployed handler equality or live acceptance.",
+  "lint": "Targeted ESLint passed for all four files",
+  "whitespaceCheck": "git diff --check passed",
+  "sourceFiles": [
+    {
+      "path": "supabase/functions/identity-expansion/index.ts",
+      "sha256": "79f6aa19e8769578d0d8cc95fb7792db9585fdbffce9cee20285bb5640035d12"
+    },
+    {
+      "path": "src/hooks/useIdentityExpansion.ts",
+      "sha256": "ec77fc6d5d9876dca8b145d5f9dd1b55c58c24338755164317d52769979c6169"
+    },
+    {
+      "path": "src/lib/legacyIdentityExpansion.test.ts",
+      "sha256": "0ddd5b8a876166734f348bb63ab3d43ee4eb83ee90f7c1d3f3c1dcc78640150b"
+    },
+    {
+      "path": "src/hooks/useIdentityExpansion.test.tsx",
+      "sha256": "3b4dbef5900ce9a78fd66355968dc5005a30ab87bbf4fa030ad6450a4f046833"
+    }
+  ],
+  "deploymentPerformed": false,
+  "initialHarnessCorrection": "Initial handler tests did not execute because concatenated modules collided on UUID; corrected test module scoping. Production source was not changed for that harness correction."
+}

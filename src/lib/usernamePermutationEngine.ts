@@ -1,5 +1,5 @@
-import { checkedDatabase } from "@/lib/checkedDatabase";
-import { supabase } from "@/integrations/supabase/client";
+
+
 
 interface UsernameCandidate {
   username: string;
@@ -109,35 +109,10 @@ export function generateUsernameCandidates(
 }
 
 export async function runUsernamePermutation(
-  userId: string,
-  personaId: string,
-  firstName?: string,
-  lastName?: string,
-  knownUsername?: string,
-  onProgress?: (step: string) => void
+  userId: string, personaId: string, firstName?: string, lastName?: string,
+  knownUsername?: string, onProgress?: (step: string) => void
 ): Promise<{ candidatesGenerated: number }> {
-  onProgress?.("Generating username variations...");
-  const candidates = generateUsernameCandidates(firstName, lastName, knownUsername);
-
-  onProgress?.(`Saving ${candidates.length} candidates...`);
-  const batchSize = 50;
-  let total = 0;
-
-  for (let i = 0; i < candidates.length; i += batchSize) {
-    const batch = candidates.slice(i, i + batchSize).map((c) => ({
-      persona_id: personaId,
-      user_id: userId,
-      candidate_username: c.username,
-      confidence_score: c.confidence,
-      generation_method: c.method,
-    }));
-    const { data } = await checkedDatabase(supabase
-      .from("username_candidates")
-      .upsert(batch, { ignoreDuplicates: true })
-      .select("id"));
-    if (data) total += data.length;
-  }
-
-  onProgress?.("Complete!");
-  return { candidatesGenerated: total };
+  void userId; void personaId; void firstName; void lastName; void knownUsername;
+  onProgress?.("Generated usernames are disabled; use an exact sourced account.");
+  throw new Error("Username guesses are disabled. Retrieve an exact public account and review its original source instead.");
 }

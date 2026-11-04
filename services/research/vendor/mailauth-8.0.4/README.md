@@ -8,6 +8,8 @@ Nine relative verifier imports and the wrapper's helper import use the installed
 
 Run `node services/research/vendor/mailauth-8.0.4/verify-upstream.mjs` from the app root. The read-only guard checks the exact dependency version, original source hashes, every import rewrite, one digest-alias substitution, wrapper and complete MIT notice. `email-compat.test.mjs` runs that guard with a bounded child process. A dependency upgrade or source drift must fail until this copy is reviewed and regenerated deliberately.
 
+Repository copies may use LF or Windows checkout CRLF line endings. Only that line-ending transformation is normalized when comparing the copied verifier, wrapper and license. Installed upstream SHA256 checks remain raw and unchanged. Spaces, bare carriage returns, code edits, import changes and license changes still fail; regression fixtures exercise those failures against the complete guard.
+
 Primary references:
 
 - Pinned SDK/API and public deep imports: https://github.com/postalsys/mailauth/blob/v8.0.4/README.md

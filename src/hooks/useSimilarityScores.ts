@@ -1,25 +1,14 @@
-import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { runBehavioralSimilarity } from "@/lib/similarityEngine";
+import { runBehavioralSimilarity, readResearchComparisons } from "@/lib/similarityEngine";
 import { useState } from "react";
 
 export function useSimilarityScores() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["similarity_scores", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await checkedDatabase(supabase
-        .from("similarity_scores")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("similarity_score", { ascending: false })
-        .limit(100));
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryKey: ["similarity_scores", user?.id], enabled: !!user,
+    // Historical heuristic scores remain stored but cannot become current findings.
+    queryFn: async () => readResearchComparisons(user!.id),
   });
 }
 

@@ -3,11 +3,11 @@
   "sourceFiles": [
     {
       "path": "src/components/tools/imageMetadata.ts",
-      "sha256": "748af97d0fa2857dff95a3e82feca5f041a0410788234c467047e5d33e1b8571"
+      "sha256": "1534c68b80b8a086d9709e8ff13e643839200b9295031c4aa22f3fada69f5bdb"
     },
     {
       "path": "src/components/tools/toolDefinitions.ts",
-      "sha256": "f035de79dfb0c35a97418542937912217cb9cb23356422472b50caec504515ed"
+      "sha256": "3134f5fd68b293f4ac1ee324f8c46899b9a78c1d9ae2cb00c1404d23efe23f81"
     },
     {
       "path": "src/components/tools/executeTool.ts",
@@ -15,15 +15,15 @@
     },
     {
       "path": "src/lib/pipelineEngine.ts",
-      "sha256": "2bc9309614a43132b3ae8442e1bf1b64d12e36bf92fe8a3f30a6490059a58536"
+      "sha256": "ebaa7e1ceb8fbac2225fd857fe1fbf64ef65c9acbc7abcce5aa6e5a7fcedb9da"
     },
     {
       "path": "supabase/functions/_shared/safeFetch.ts",
-      "sha256": "4b2192d6d3802379a8d19601af73ec341d49688eb14d917ad8e0c0c920045d05"
+      "sha256": "8d8f463d130af9e193acd44be259e0c5d9dc33c6b879d323245f685b29064fdf"
     },
     {
       "path": "src/test/fixtures/images/manifest.json",
-      "sha256": "f909728c85f5cbd2b150872189dd5fdda1b9e876b9d202fe5a87d3e3439dce78"
+      "sha256": "17fa20a7968fa919bc03baf2bf133fdecd626c92ea4ccbae6678814e287425db"
     }
   ],
   "observations": [

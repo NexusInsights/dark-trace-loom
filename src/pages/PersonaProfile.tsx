@@ -1,5 +1,6 @@
 import { checkedDatabase } from "@/lib/checkedDatabase";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { isResolvedIdentityEntity } from "@/lib/identityEvidence";
 import { PublicProfileEvidence } from "@/components/persona/PublicProfileEvidence";
 import { identifierSource } from "@/lib/profileLookup";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -43,18 +44,19 @@ function usePersonaProfile(personaId: string | null) {
   const { data: usernames = [] } = useUsernameCandidates(personaId);
   const { data: emails = [] } = useEmailCandidates(personaId);
 
-  // Get linked entities by matching identifier values
+  // Only explicit reviewed associations for this persona belong in its profile.
   const { data: allEntities = [] } = useIdentityEntities();
   const { data: allScores = [] } = useEntityScores();
   const { data: similarityScores = [] } = useSimilarityScores();
 
   // Fetch entity timeline for matched entities
   const matchedEntities = useMemo(() => {
-    if (!identifiers.length) return [];
-    const values = new Set<string>();
-    identifiers.forEach((i) => values.add(i.identifier_value?.toLowerCase()));
-    return allEntities.filter((e) => values.has(e.entity_value?.toLowerCase()));
-  }, [identifiers, usernames, emails, allEntities]);
+    return allEntities.filter(entity => {
+      if (!isResolvedIdentityEntity(entity)) return false;
+      const metadata = entity.metadata as { identity_evidence?: { persona_id?: string } } | null;
+      return metadata?.identity_evidence?.persona_id === personaId;
+    });
+  }, [personaId, allEntities]);
 
   const entityIds = useMemo(() => new Set(matchedEntities.map((e) => e.id)), [matchedEntities]);
 
@@ -175,6 +177,7 @@ export default function PersonaProfile() {
   const personaId = searchParams.get("id");
   const { data: personas = [] } = usePersonas();
   const [selectedId, setSelectedId] = useState<string | null>(personaId);
+  useEffect(() => { setSelectedId(personaId); }, [personaId]);
 
   const activePersona = personas.find((p) => p.id === selectedId);
   const profile = usePersonaProfile(selectedId);
@@ -320,7 +323,8 @@ export default function PersonaProfile() {
                     {/* Username candidates */}
                     {profile.usernames.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">USERNAME CANDIDATES ({profile.usernames.length})</h4>
+                        <details><summary className="text-xs cursor-pointer text-muted-foreground">Historical generated username guesses ({profile.usernames.length}) — excluded from findings</summary>
+                        <p className="text-xs text-muted-foreground my-2">These saved strings were generated, not discovered. They do not establish account existence or an association.</p>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
                           {profile.usernames.slice(0, 30).map((u) => (
                             <div key={u.id} className="flex items-center gap-1.5 p-1.5 rounded bg-muted/20 border border-border/20">
@@ -329,14 +333,15 @@ export default function PersonaProfile() {
                               <span className="font-mono text-[8px] text-muted-foreground">Unverified guess</span>
                             </div>
                           ))}
-                        </div>
+                        </div></details>
                       </div>
                     )}
 
                     {/* Email candidates */}
                     {profile.emails.length > 0 && (
                       <div>
-                        <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">EMAIL CANDIDATES ({profile.emails.length})</h4>
+                        <details><summary className="text-xs cursor-pointer text-muted-foreground">Historical generated email guesses ({profile.emails.length}) — excluded from findings</summary>
+                        <p className="text-xs text-muted-foreground my-2">These saved strings are not verified contacts and are not used as identity evidence.</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                           {profile.emails.slice(0, 20).map((e) => (
                             <div key={e.id} className="flex items-center gap-1.5 p-1.5 rounded bg-muted/20 border border-border/20">
@@ -345,14 +350,14 @@ export default function PersonaProfile() {
                               <span className="font-mono text-[8px] text-muted-foreground">Unverified guess</span>
                             </div>
                           ))}
-                        </div>
+                        </div></details>
                       </div>
                     )}
 
                     {/* Matched global entities */}
                     {profile.matchedEntities.length > 0 && (
                       <div className="mt-4 border-t border-border/50 pt-3">
-                        <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">MATCHED GLOBAL ENTITIES ({profile.matchedEntities.length})</h4>
+                        <h4 className="font-mono text-[9px] tracking-widest text-muted-foreground mb-2">ANALYST-SUPPORTED ASSOCIATIONS ({profile.matchedEntities.length})</h4>
                         <div className="space-y-1">
                           {profile.matchedEntities.map((e) => {
                             const Icon = TYPE_ICONS[e.entity_type] ?? User;
@@ -394,13 +399,13 @@ export default function PersonaProfile() {
                         disabled={mappingPlatforms || !selectedId}
                         onClick={() => {
                           if (selectedId) mapPlatforms(selectedId, {
-                            onSuccess: (r) => toast.success(`Mapped ${r.mapped} platform accounts`),
+                            onSuccess: (r) => toast.success(`Saved ${r.mapped} reviewed account associations`),
                             onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
                           });
                         }}
                       >
                         {mappingPlatforms ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPin className="h-3 w-3" />}
-                        {mappingPlatforms ? "MAPPING..." : "MAP PLATFORMS"}
+                        {mappingPlatforms ? "SAVING..." : "SAVE REVIEWED ACCOUNTS"}
                       </Button>
                     </div>
                     {platformAccounts.length > 0 ? (
@@ -440,8 +445,8 @@ export default function PersonaProfile() {
                     ) : (
                       <div className="text-center py-8">
                         <Monitor className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-                        <p className="text-xs text-muted-foreground font-mono">No platform accounts mapped</p>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-1">Click "MAP PLATFORMS" to discover accounts from identifiers</p>
+                        <p className="text-xs text-muted-foreground font-mono">No reviewed accounts saved</p>
+                        <p className="text-[10px] text-muted-foreground font-mono mt-1">Review the account sources in Discovery, run Identity Review, then save supported associations here.</p>
                       </div>
                     )}
                   </GlassPanel>
@@ -463,7 +468,7 @@ export default function PersonaProfile() {
                                 <div className="font-mono text-xs font-medium">{il.value}</div>
                                 <div className="font-mono text-[9px] text-muted-foreground">{il.infrastructure_type} • linked to {entity?.entity_value ?? il.entity_id.slice(0, 8)}</div>
                               </div>
-                              <span className="font-mono text-[10px] text-primary font-bold">{Math.round(Number(il.confidence_score) * 100)}%</span>
+                              <span className="text-xs text-muted-foreground">Recorded DNS relationship; ownership unverified</span>
                             </div>
                           );
                         })}
@@ -629,40 +634,29 @@ export default function PersonaProfile() {
                 <TabsContent value="similarity">
                   <GlassPanel className="p-4">
                     <h3 className="font-mono text-xs tracking-widest text-primary mb-3 flex items-center gap-2">
-                      <GitCompare className="h-3.5 w-3.5" /> PATTERN SIMILARITY (HEURISTIC) ({profile.relatedSimilarity.length} pairs)
+                      <GitCompare className="h-3.5 w-3.5" /> SOURCE-CONTEXT RESEARCH LEADS ({profile.relatedSimilarity.length} pairs)
                     </h3>
                     {profile.relatedSimilarity.length > 0 ? (
                       <div className="space-y-2">
                         {profile.relatedSimilarity.map((s) => {
                           const eA = profile.matchedEntities.find((e) => e.id === s.entity_a);
                           const eB = profile.matchedEntities.find((e) => e.id === s.entity_b);
-                          const pct = Math.round(Number(s.similarity_score) * 100);
-                          const barColor = pct >= 70 ? "bg-destructive" : pct >= 40 ? "bg-yellow-500" : "bg-primary";
+                          const details = s.details as { signals?: string[] } | null;
                           return (
                             <div key={s.id} className="p-3 rounded bg-muted/30 border border-border/30">
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="font-mono text-xs truncate max-w-[150px]">{eA?.entity_value ?? s.entity_a.slice(0, 8)}</span>
                                 <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
                                 <span className="font-mono text-xs truncate max-w-[150px]">{eB?.entity_value ?? s.entity_b.slice(0, 8)}</span>
-                                <span className={`ml-auto font-mono text-xs font-bold ${pct >= 70 ? "text-destructive" : pct >= 40 ? "text-yellow-500" : "text-primary"}`}>
-                                  {pct}%
-                                </span>
+                                <span className="ml-auto text-xs text-muted-foreground">Research lead only</span>
                               </div>
-                              <div className="w-full bg-muted rounded-full h-1.5 mb-2">
-                                <div className={`h-1.5 rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
-                              </div>
-                              <div className="flex gap-3 font-mono text-[9px] text-muted-foreground">
-                                <span>USR: {Math.round(Number(s.username_similarity) * 100)}%</span>
-                                <span>TMP: {Math.round(Number(s.temporal_similarity) * 100)}%</span>
-                                <span>INF: {Math.round(Number(s.infrastructure_similarity) * 100)}%</span>
-                                <span>META: {Math.round(Number(s.metadata_similarity) * 100)}%</span>
-                              </div>
+                              <p className="text-xs text-muted-foreground">{Array.isArray(details?.signals) ? details.signals.map(signal => signal.replace(/_/g, " ")).join("; ") : "No documented comparison signals."} These signals do not establish common identity and are excluded from identity findings and reports.</p>
                             </div>
                           );
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground font-mono text-center py-6">No similarity data available. Run similarity scoring first.</p>
+                      <p className="text-xs text-muted-foreground font-mono text-center py-6">No source-backed comparison leads are available. Review source associations first.</p>
                     )}
                   </GlassPanel>
                 </TabsContent>

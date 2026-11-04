@@ -1,0 +1,66 @@
+{
+  "recordedAtUtc": "2026-11-04T05:59:55.3161701Z",
+  "scope": "Replace inferred identity clusters and synthetic similarity probabilities with current source-bound analyst associations and explicitly limited research leads. Preserve all historical rows.",
+  "baseline": "6e8a6f70cf917840068a62b163440aba0efe6572",
+  "beforeEvidence": "reviewed-identity-groups-before.json",
+  "beforeFinding": "Actual old clustering engine grouped two unrelated employer-domain emails at 30 percent and deleted the prior synthetic group.",
+  "tests": {
+    "engineHelperFixtures": 14,
+    "dashboardFixtures": 4,
+    "files": 2,
+    "total": 18,
+    "passed": 18,
+    "exitCode": 0,
+    "report": "reviewed-identity-groups-tests.json"
+  },
+  "coverage": [
+    "Reject shared employer/domain/IP/case/name claims without source review",
+    "Group two current explicitly reviewed accounts with source rationale and no confidence percentage",
+    "Preserve prior clusters/similarity rows and avoid duplicate new memberships",
+    "Reject latest adverse reviews, changed support links and removed dossiers",
+    "Propagate source read and membership save failures",
+    "Hide legacy and stale memberships; count stable accounts rather than duplicate rows",
+    "Show source context only as research leads excluded from identity/reports",
+    "Dashboard shows sources, errors and loading honestly"
+  ],
+  "lint": "Targeted ESLint passed for eight owned files",
+  "whitespaceCheck": "Targeted git diff --check passed",
+  "typecheck": "Full app TypeScript passed before final metadata-binding/loader integration; final aggregate validation belongs to parent",
+  "limits": "Synthetic SDK/React fixtures and actual old engine isolated in VM. No provider calls, live SQL/RLS validation, deployed function equality or deployed UI acceptance. Comparisons are bounded to 200 current account records and 500 pairs, with scope disclosed.",
+  "sourceFiles": [
+    {
+      "path": "src/lib/clusteringEngine.ts",
+      "sha256": "28fce0f48f504a1cef93d81d1d7e01424083bc48c80a9b380ab8f51926b6bdd7"
+    },
+    {
+      "path": "src/lib/similarityEngine.ts",
+      "sha256": "9b83e25a39cbe28ee98eb50890410efd0c025428f78fdb4d2e7c997cc36ddef4"
+    },
+    {
+      "path": "src/lib/reviewedIdentityGroups.ts",
+      "sha256": "3329256d865f6f276cfd2ffb79b584cb35a5c107701ec1c40f36aa1882f6ba78"
+    },
+    {
+      "path": "src/lib/reviewedIdentityGroups.test.ts",
+      "sha256": "b7a6432e53e5ce125d310c683fdf86d7a092f8db96665015ab7e9b03aaa7c5bf"
+    },
+    {
+      "path": "src/hooks/useIdentityClusters.ts",
+      "sha256": "884de2cdbc3415a1fcd9024699960d088c2173dc633ab64dde0b0a37294e79a2"
+    },
+    {
+      "path": "src/hooks/useSimilarityScores.ts",
+      "sha256": "1145545aa6b66e5898b6f4b7e049d04fd6f88c6876f8d2f9e80d497895e5df07"
+    },
+    {
+      "path": "src/pages/PersonaIntelDashboard.tsx",
+      "sha256": "d93423f4c1e797da1cb726a8b054957c8b175622fc4fc7df265bad84b32b070f"
+    },
+    {
+      "path": "src/pages/PersonaIntelDashboard.test.tsx",
+      "sha256": "57319e58fef86abb7803747cbdfa99b62eb9842b9c605e4fbb4be7dc4db5042b"
+    }
+  ],
+  "deploymentPerformed": false,
+  "nextStep": "Parent integrates all agents, runs aggregate validation and verifies intended original deployment/backend before any live release."
+}

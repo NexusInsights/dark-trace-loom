@@ -1,5 +1,5 @@
-import { checkedDatabase } from "@/lib/checkedDatabase";
-import { supabase } from "@/integrations/supabase/client";
+
+
 
 interface EmailCandidate {
   email: string;
@@ -88,36 +88,10 @@ export function generateEmailCandidates(
 }
 
 export async function runEmailPermutation(
-  userId: string,
-  personaId: string,
-  firstName?: string,
-  lastName?: string,
-  knownDomains?: string[],
-  companyDomains?: string[],
-  onProgress?: (step: string) => void
+  userId: string, personaId: string, firstName?: string, lastName?: string,
+  knownDomains?: string[], companyDomains?: string[], onProgress?: (step: string) => void
 ): Promise<{ candidatesGenerated: number }> {
-  onProgress?.("Generating email permutations...");
-  const candidates = generateEmailCandidates(firstName, lastName, knownDomains, companyDomains);
-
-  onProgress?.(`Saving ${candidates.length} candidates...`);
-  const batchSize = 50;
-  let total = 0;
-
-  for (let i = 0; i < candidates.length; i += batchSize) {
-    const batch = candidates.slice(i, i + batchSize).map((c) => ({
-      persona_id: personaId,
-      user_id: userId,
-      candidate_email: c.email,
-      confidence_score: c.confidence,
-      generation_method: c.method,
-    }));
-    const { data } = await checkedDatabase(supabase
-      .from("email_candidates")
-      .upsert(batch, { ignoreDuplicates: true })
-      .select("id"));
-    if (data) total += data.length;
-  }
-
-  onProgress?.("Complete!");
-  return { candidatesGenerated: total };
+  void userId; void personaId; void firstName; void lastName; void knownDomains; void companyDomains;
+  onProgress?.("Generated email addresses are disabled; retain only source-returned contacts.");
+  throw new Error("Email guesses are disabled. Retain an email only as supplied input or a sourced account field, with ownership unverified until reviewed.");
 }

@@ -212,8 +212,8 @@ export default function IdentityResolutionPage() {
       qc.invalidateQueries({ queryKey: ["identity_links"] });
       qc.invalidateQueries({ queryKey: ["entity_observations"] });
       const message = result.entitiesResolved
-        ? `Resolved ${result.entitiesResolved} entities with ${result.linksCreated} links.`
-        : "No usable identifiers found. Save a persona identifier, a successful tool result, or case evidence containing an email, username, domain, IP, phone or social profile, then run again.";
+        ? `Updated ${result.entitiesResolved} source-bound, analyst-supported account associations. These are reviewed assessments, not independently verified identity.`
+        : "No supported account associations are ready. Retrieve an exact public account in Persona Discovery, then review its association with an original supporting source. Inputs and matching handles remain unverified leads.";
       setResolutionMessage(message);
       if (result.entitiesResolved) toast.success(message);
       else toast.info(message);
@@ -277,7 +277,7 @@ export default function IdentityResolutionPage() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Intelligence</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Identity Resolution</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Link multiple identifiers belonging to the same person across investigations.
+          Inspect source-bound account associations supported by an analyst review. Matching handles and shared infrastructure do not establish a person's identity.
         </p>
       </div>
 
@@ -285,9 +285,9 @@ export default function IdentityResolutionPage() {
       <div className="flex items-center gap-3 flex-wrap">
         <Button variant="neon" size="sm" className="gap-2" disabled={running || !user} onClick={handleRun}>
           {running ? (
-            <><Loader2 className="h-3.5 w-3.5 animate-spin" />RESOLVING...</>
+            <><Loader2 className="h-3.5 w-3.5 animate-spin" />REFRESHING...</>
           ) : (
-            <><Fingerprint className="h-3.5 w-3.5" />RUN IDENTITY RESOLUTION</>
+            <><Fingerprint className="h-3.5 w-3.5" />REFRESH REVIEWED ASSOCIATIONS</>
           )}
         </Button>
         <Button variant="outline" size="sm" className="gap-2" disabled={scoring || !entities.length} onClick={handleScore}>
@@ -444,7 +444,7 @@ export default function IdentityResolutionPage() {
             <div className="flex flex-col items-center justify-center h-full text-center">
               <Fingerprint className="h-12 w-12 text-muted-foreground/30 mb-3" />
               <p className="text-xs font-mono text-muted-foreground">
-                RUN THE ENGINE TO RESOLVE IDENTITIES
+                Review sources in Discovery, then refresh supported associations here.
               </p>
               <p className="text-[10px] text-muted-foreground/60 mt-1">
                 The engine reads your case evidence, saved tool results and persona identifiers
@@ -482,7 +482,7 @@ export default function IdentityResolutionPage() {
                         fontSize={8}
                         fontFamily="monospace"
                       >
-                        {edge.label} ({Math.round(edge.confidence * 100)}%)
+                        {edge.label} (analyst supported)
                       </text>
                     )}
                   </g>
@@ -598,7 +598,7 @@ export default function IdentityResolutionPage() {
                         {l.relationship_type.replace(/_/g, " ")}
                       </span>
                       <span className="font-mono text-[10px] text-muted-foreground">
-                        ({Math.round(l.confidence_score * 100)}%)
+                        (analyst supported; ownership not independently verified)
                       </span>
                     </div>
 
@@ -645,7 +645,7 @@ export default function IdentityResolutionPage() {
                   })}
                 >
                   {expanding ? <Loader2 className="h-3 w-3 animate-spin" /> : <Expand className="h-3 w-3" />}
-                  EXPAND
+                  SOURCE REVIEW REQUIRED
                 </Button>
                 <button
                   onClick={() => setSelectedEntityId(null)}
@@ -881,7 +881,7 @@ export default function IdentityResolutionPage() {
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-mono text-xs font-medium truncate max-w-[180px]">{c.cluster_label}</span>
-                  <span className="font-mono text-[10px] text-primary font-bold">{Math.round(Number(c.cluster_score))}%</span>
+                  <span className="font-mono text-[10px] text-primary font-bold">Reviewed group</span>
                 </div>
                 <span className="font-mono text-[9px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
               </button>
@@ -900,7 +900,7 @@ export default function IdentityResolutionPage() {
                       <Icon className="h-3 w-3 shrink-0" style={{ color: TYPE_COLORS[entity?.entity_type] ?? "hsl(var(--muted-foreground))" }} />
                       <span className="truncate flex-1">{entity?.entity_value ?? "unknown"}</span>
                       <span className="text-[9px] text-muted-foreground uppercase">{entity?.entity_type}</span>
-                      <span className="text-[9px] text-primary font-bold">{Math.round(m.confidence_score * 100)}%</span>
+                      <span className="text-[9px] text-primary font-bold">Analyst supported</span>
                       {m.join_reason && <span className="text-[8px] text-muted-foreground">{m.join_reason.replace(/_/g, " ")}</span>}
                     </div>
                   );
@@ -915,14 +915,14 @@ export default function IdentityResolutionPage() {
       {similarityScores.length > 0 && (
         <GlassPanel className="p-4" neonLine="top">
           <h3 className="font-mono text-xs tracking-widest text-primary mb-3 flex items-center gap-2">
-            <GitCompare className="h-3.5 w-3.5" /> PATTERN SIMILARITY (HEURISTIC) ({similarityScores.length} pairs)
+            <GitCompare className="h-3.5 w-3.5" /> SOURCE CONTEXT LEADS ({similarityScores.length} pairs)
           </h3>
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {similarityScores.map((s) => {
               const entityA = entities.find((e) => e.id === s.entity_a);
               const entityB = entities.find((e) => e.id === s.entity_b);
-              const pct = Math.round(Number(s.similarity_score) * 100);
-              const barColor = pct >= 70 ? "bg-destructive" : pct >= 40 ? "bg-yellow-500" : "bg-primary";
+              const details = s.details && typeof s.details === "object" && !Array.isArray(s.details) ? s.details : {};
+              const signals = Array.isArray(details.signals) ? details.signals.filter(value => typeof value === "string") : [];
               return (
                 <div key={s.id} className="p-3 rounded border border-border/50 bg-card/50">
                   <div className="flex items-center justify-between mb-2">
@@ -931,19 +931,9 @@ export default function IdentityResolutionPage() {
                       <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
                       <span className="font-mono text-xs truncate max-w-[140px]">{entityB?.entity_value ?? "?"}</span>
                     </div>
-                    <span className={`font-mono text-xs font-bold ${pct >= 70 ? "text-destructive" : pct >= 40 ? "text-yellow-500" : "text-primary"}`}>
-                      {pct}%
-                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">Research lead</span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-1.5 mb-2">
-                    <div className={`h-1.5 rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
-                  </div>
-                  <div className="flex gap-3 font-mono text-[9px] text-muted-foreground">
-                    <span>USR: {Math.round(Number(s.username_similarity) * 100)}%</span>
-                    <span>TMP: {Math.round(Number(s.temporal_similarity) * 100)}%</span>
-                    <span>INF: {Math.round(Number(s.infrastructure_similarity) * 100)}%</span>
-                    <span>META: {Math.round(Number(s.metadata_similarity) * 100)}%</span>
-                  </div>
+                  <p className="font-mono text-[9px] text-muted-foreground">{signals.join("; ") || "Shared reviewed source context"}. This is a research lead, not proof of identity or ownership.</p>
                 </div>
               );
             })}

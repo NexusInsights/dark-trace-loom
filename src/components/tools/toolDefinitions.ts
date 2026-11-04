@@ -29,14 +29,16 @@ const usernameSearch: ToolDefinition = {
   icon: User,
   category: "Identity",
   fields: [
-    { key: "username", label: "Username", placeholder: "e.g. john_doe_42", required: true },
+    { key: "username", label: "Exact username", placeholder: "e.g. john_doe_42" },
+    { key: "profile_url", label: "Or known public profile URL", placeholder: "https://github.com/example" },
   ],
   process: async (inputs) => {
-    const username = inputs.username.trim();
-    const data = await lookupProfiles(username.replace(/^@/, ""));
+    const username = (inputs.username || "").trim().replace(/^@/, "");
+    const data = await lookupProfiles({ ...(username ? { username } : {}), ...(inputs.profile_url?.trim() ? { profileUrl: inputs.profile_url.trim() } : {}) });
     if (data.checks.every(c => c.status === "unavailable")) throw new Error("All profile providers are unavailable; no account existence was established");
     return {
-      summary: `${data.profiles.length} public account records for "${username}"; ${data.checks.filter(c => c.status === "unavailable").length} unavailable providers. Shared handles do not prove shared ownership.`,
+      status: data.status,
+      summary: `${data.profiles.length} public account records for "${data.username}"; ${data.checks.filter(c => c.status === "unavailable").length} unavailable providers. Explicit account links and shared handles do not prove person ownership.`,
       details: { ...data }, tags: ["identity", "username", "public-api"],
     };
   },

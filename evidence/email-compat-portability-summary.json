@@ -1,0 +1,44 @@
+{
+  "recordedAtUtc": "2026-11-04T06:11:28.7427096Z",
+  "cause": "Git Windows checkout converted repository verifier/wrapper/license to CRLF. Installed SDK sources remain LF. All three copies matched exactly after CRLF-to-LF normalization: verifier724 CRLF, wrapper41, license16.",
+  "repair": "Guard permits only CRLF/LF equivalence for repository copy comparisons. Raw installed upstream SHA256, exact pinned version/import map/digest substitution remain strict.",
+  "testCommand": "node --test services/research/email-compat.test.mjs",
+  "tests": {
+    "durationMs": 1278.6511,
+    "passed": 11,
+    "exitCode": 0,
+    "failed": 0
+  },
+  "coverage": [
+    "Real installed pinned SDK/current repository guard",
+    "Complete guard accepts LF and CRLF temporary copies",
+    "Reject altered digest algorithm, verifier import, wrapper import, license text, source whitespace, bare CR, raw upstream hash, pinned version"
+  ],
+  "productAlgorithmChanged": false,
+  "noDiffVerified": [
+    "dkim-verifier.mjs",
+    "verify.mjs",
+    "LICENSE.txt",
+    "manifest.json"
+  ],
+  "diffCheck": "passed",
+  "sourceFiles": [
+    {
+      "path": "services/research/email-compat.test.mjs",
+      "sha256": "0252cf68268da77c9f55fd40f847c1736744cf04198796c35906dd2c578c2e10"
+    },
+    {
+      "path": "services/research/vendor/mailauth-8.0.4/verify-upstream.mjs",
+      "sha256": "ef1172886fb4c71416d070e9472479a20dd1c7789bf45817e5287fefcbc8c607"
+    },
+    {
+      "path": "services/research/vendor/mailauth-8.0.4/verify-checkout-text.mjs",
+      "sha256": "efab102aedd1d64bb9481f28e88511ac1c00fafb23ae09b2842727e095312924"
+    },
+    {
+      "path": "services/research/vendor/mailauth-8.0.4/README.md",
+      "sha256": "0ff0da1a4e2b4285bad840550e79b6cf3ce52febb372da72ba9c57dd3f0827ce"
+    }
+  ],
+  "limits": "Offline copied-fixture/installed-SDK checks only. No installs, provider calls, credentials, deployment or network."
+}

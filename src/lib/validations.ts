@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { profileSeed } from "./publicProfiles";
 
 // ─── Auth ───
 export const loginSchema = z.object({
@@ -93,6 +94,9 @@ export const setRoleSchema = z.object({
 // ─── Persona Discovery ───
 export const personaDiscoverySchema = z.object({
   name: z.string().trim().max(200, "Name too long").optional().default(""),
+  profileUrl: z.string().trim().max(2048, "Profile URL too long")
+    .refine((value) => !value || !!profileSeed(value), "Provide a supported exact public profile URL")
+    .optional().default(""),
   username: z.string().trim().max(100, "Username too long")
     .refine((v) => !v || /^[a-zA-Z0-9._@-]*$/.test(v), "Username contains invalid characters")
     .optional().default(""),
@@ -105,7 +109,7 @@ export const personaDiscoverySchema = z.object({
   phone: z.string().trim().max(30, "Phone number too long")
     .refine((v) => !v || /^[+\d\s()-]*$/.test(v), "Phone contains invalid characters")
     .optional().default(""),
-}).refine(
+  }).refine(data => !(data.username && data.profileUrl), "Provide one exact username or profile URL, not both").refine(
   (data) => Object.values(data).some((v) => v && v.trim().length > 0),
   "Provide at least one identifier"
 );

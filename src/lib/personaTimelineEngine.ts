@@ -1,170 +1,70 @@
 import { checkedDatabase } from "@/lib/checkedDatabase";
 import { jsonValue } from "@/lib/jsonValue";
 import { supabase } from "@/integrations/supabase/client";
-import { isEvidenceIdentifier } from "./profileLookup";
+import { evidenceDate, evidenceObject, filterCurrentIdentityEntities, publicEvidenceUrl, type IdentityEvidence } from "./identityEvidence";
+import { loadIdentitySourceRecords } from "./loadIdentityEvidence";
 
+/** Current reviews, not identifier text or a historical confidence number, admit a person-linked account. */
+export async function loadReviewedPersonaEntities(userId: string, personaId: string) {
+  if (!userId.trim() || !personaId.trim()) throw new Error("A signed-in owner and research record are required.");
+  const [{ data }, records] = await Promise.all([
+    checkedDatabase(supabase.from("identity_entities").select("id,entity_type,entity_value,metadata").eq("user_id", userId)),
+    loadIdentitySourceRecords(userId),
+  ]);
+  const entities = filterCurrentIdentityEntities(data ?? [], records).filter(entity => evidenceObject(evidenceObject(entity.metadata).identity_evidence).persona_id === personaId);
+  return { entities, records };
+}
+type PersonaContext = Awaited<ReturnType<typeof loadReviewedPersonaEntities>>;
 interface TimelineEvent {
-  event_type: string;
+  event_type: "account_observed" | "account_created";
   event_label: string;
   event_timestamp: string;
   source: string;
   metadata: Record<string, unknown>;
 }
 
-export async function buildPersonaTimeline(
-  userId: string,
-  personaId: string,
-  onProgress?: (step: string) => void
-): Promise<{ eventsCreated: number }> {
-  onProgress?.("Loading persona data...");
-
-  // Get persona identifiers
-  const { data: rawIdentifiers } = await checkedDatabase(supabase
-    .from("persona_identifiers")
-    .select("identifier_type, identifier_value, confidence_score, created_at, source")
-    .eq("persona_id", personaId)
-    .eq("user_id", userId));
-  const identifiers = rawIdentifiers?.filter(isEvidenceIdentifier);
-
-  if (!identifiers?.length) {
-    onProgress?.("No identifiers found");
-    return { eventsCreated: 0 };
-  }
-
-  const values = new Set(identifiers.map((i) => i.identifier_value.toLowerCase()));
-
-  // Load related data in parallel
-  onProgress?.("Scanning data sources...");
-  const [
-    { data: entities },
-    { data: usernames },
-    { data: emails },
-    { data: breaches },
-    { data: observations },
-    { data: entityTimeline },
-    { data: infraLinks },
-  ] = await Promise.all([
-    checkedDatabase(supabase.from("identity_entities").select("id, entity_type, entity_value, created_at").eq("user_id", userId)),
-    checkedDatabase(supabase.from("username_candidates").select("candidate_username, created_at, generation_method").eq("persona_id", personaId)),
-    checkedDatabase(supabase.from("email_candidates").select("candidate_email, created_at, generation_method").eq("persona_id", personaId)),
-    checkedDatabase(supabase.from("breach_records").select("id, entity_id, breach_source, breach_date, severity, data_exposed, created_at").eq("status", "exposure").eq("user_id", userId)),
-    checkedDatabase(supabase.from("entity_observations").select("entity_id, case_id, source_tool, observed_value, created_at").eq("user_id", userId)),
-    checkedDatabase(supabase.from("entity_timeline").select("entity_id, event_type, event_timestamp, description, source").eq("user_id", userId)),
-    checkedDatabase(supabase.from("infrastructure_links").select("entity_id, infrastructure_type, value, created_at").eq("source_tool", "live-dns").eq("user_id", userId)),
-  ]);
-
-  // Match entities to persona
-  const matchedEntityIds = new Set(
-    (entities ?? []).filter((e) => values.has(e.entity_value.toLowerCase())).map((e) => e.id)
-  );
-
+function sourceEvents(context: PersonaContext): TimelineEvent[] {
   const events: TimelineEvent[] = [];
-
-  onProgress?.("Building timeline events...");
-
-  // 1. Identifier discovery events
-  for (const id of identifiers) {
-    events.push({
-      event_type: id.source?.startsWith("live:") ? "identifier_retrieved" : "input_recorded",
-      event_label: `${id.source?.startsWith("live:") ? "Retrieved" : "Input recorded"} ${id.identifier_type}: ${id.identifier_value}`,
-      event_timestamp: id.created_at,
-      source: "persona_discovery",
-      metadata: { type: id.identifier_type, value: id.identifier_value, confidence: id.confidence_score },
-    });
-  }
-
-  // 4. Entity creation events (matched)
-  for (const e of entities ?? []) {
-    if (matchedEntityIds.has(e.id)) {
-      events.push({
-        event_type: "entity_created",
-        event_label: `Entity registered: ${e.entity_value} (${e.entity_type})`,
-        event_timestamp: e.created_at,
-        source: "identity_resolution",
-        metadata: { entity_id: e.id, entity_type: e.entity_type },
-      });
+  for (const entity of context.entities) {
+    const evidence = evidenceObject(evidenceObject(entity.metadata).identity_evidence) as unknown as IdentityEvidence;
+    const lookup = context.records.find(row => row.id === evidence.lookup_result_id);
+    const saved = evidenceObject(lookup?.result_data), result = Array.isArray(saved.profiles) ? saved : evidenceObject(saved.details);
+    const profile = Array.isArray(result.profiles) ? result.profiles.map(evidenceObject).find(row => row.accountId === evidence.account_id && publicEvidenceUrl(row.profileUrl) === evidence.profile_url) : undefined;
+    if (!profile) continue;
+    const metadata = { entity_id: entity.id, source_record_id: evidence.lookup_result_id, identity_evidence: evidence };
+    events.push({ event_type: "account_observed", event_label: `Account record retrieved: ${profile.platform} ${profile.username} (analyst-supported association)`, event_timestamp: evidence.retrieved_at, source: evidence.source_url, metadata: { ...metadata, timestamp_basis: "source_retrieval" } });
+    if (evidenceDate(profile.accountCreatedAt) && Date.parse(profile.accountCreatedAt) <= Date.parse(evidence.retrieved_at)) {
+      events.push({ event_type: "account_created", event_label: `Source reports account created: ${profile.platform} ${profile.username}`, event_timestamp: profile.accountCreatedAt, source: evidence.source_url, metadata: { ...metadata, timestamp_basis: "provider_account_created" } });
     }
   }
+  return events;
+}
+function eventKey(event: { event_type?: unknown; event_label?: unknown; event_timestamp?: unknown; source?: unknown; metadata?: unknown }): string {
+  const metadata = evidenceObject(event.metadata), evidence = evidenceObject(metadata.identity_evidence);
+  return JSON.stringify([event.event_type, event.event_label, event.event_timestamp, publicEvidenceUrl(event.source), metadata.entity_id, metadata.source_record_id, metadata.timestamp_basis, evidence.classification, evidence.persona_id, evidence.account_id, evidence.profile_url, evidence.lookup_result_id, evidence.review_id, evidence.source_url, evidence.retrieved_at, evidence.supporting_source_url, evidence.reviewed_at]);
+}
 
-  // 5. Breach exposure events
-  for (const b of breaches ?? []) {
-    if (matchedEntityIds.has(b.entity_id)) {
-      events.push({
-        event_type: "breach_exposure",
-        event_label: `Breach: ${b.breach_source} (${b.severity})`,
-        event_timestamp: b.breach_date ?? b.created_at,
-        source: b.breach_source,
-        metadata: { severity: b.severity, data_exposed: b.data_exposed, breach_id: b.id },
-      });
-    }
-  }
+/** Retain legacy rows in storage while excluding unsupported, stale or fabricated source events from findings. */
+export function visiblePersonaEvents<T extends { persona_id?: unknown; event_type?: unknown; event_label?: unknown; event_timestamp?: unknown; source?: unknown; metadata?: unknown }>(events: T[], personaId: string, context: PersonaContext): T[] {
+  const current = new Set(sourceEvents(context).map(eventKey));
+  return events.filter(event => event.persona_id === personaId && evidenceObject(event.metadata).resolution_excluded !== true && current.has(eventKey(event)));
+}
 
-  // 6. Investigation sightings
-  for (const obs of observations ?? []) {
-    if (matchedEntityIds.has(obs.entity_id)) {
-      events.push({
-        event_type: "investigation_sighting",
-        event_label: `Observed: ${obs.observed_value}${obs.source_tool ? ` via ${obs.source_tool}` : ""}`,
-        event_timestamp: obs.created_at,
-        source: obs.source_tool ?? "investigation",
-        metadata: { case_id: obs.case_id, observed_value: obs.observed_value },
-      });
-    }
-  }
-
-  // 7. Entity timeline events (matched)
-  for (const ev of entityTimeline ?? []) {
-    if (matchedEntityIds.has(ev.entity_id)) {
-      events.push({
-        event_type: ev.event_type,
-        event_label: ev.description ?? `${ev.event_type} event`,
-        event_timestamp: ev.event_timestamp,
-        source: ev.source ?? "entity_timeline",
-        metadata: { entity_id: ev.entity_id },
-      });
-    }
-  }
-
-  // 8. Domain/infrastructure registration events
-  for (const il of infraLinks ?? []) {
-    if (matchedEntityIds.has(il.entity_id)) {
-      events.push({
-        event_type: "infrastructure_linked",
-        event_label: `${il.infrastructure_type}: ${il.value}`,
-        event_timestamp: il.created_at,
-        source: "infrastructure_mapping",
-        metadata: { type: il.infrastructure_type, value: il.value },
-      });
-    }
-  }
-
-  if (events.length === 0) {
-    onProgress?.("No events found");
-    return { eventsCreated: 0 };
-  }
-
-  // Sort chronologically
-  events.sort((a, b) => new Date(a.event_timestamp).getTime() - new Date(b.event_timestamp).getTime());
-
-  // Clear old events for this persona
-  onProgress?.(`Saving ${events.length} events...`);
-  const existing = await checkedDatabase(supabase.from("persona_events").select("event_type,event_timestamp,event_label").eq("persona_id", personaId).eq("user_id", userId));
-  const existingKeys = new Set((existing.data || []).map(event => `${event.event_type}:${event.event_timestamp}:${event.event_label}`));
-  const fresh = events.filter(event => !existingKeys.has(`${event.event_type}:${event.event_timestamp}:${event.event_label}`));
-
-  // Batch insert
-  const batchSize = 50;
+export async function buildPersonaTimeline(userId: string, personaId: string, onProgress?: (step: string) => void): Promise<{ eventsCreated: number }> {
+  onProgress?.("Loading currently reviewed source accounts...");
+  const context = await loadReviewedPersonaEntities(userId, personaId);
+  const events = sourceEvents(context).sort((a, b) => Date.parse(a.event_timestamp) - Date.parse(b.event_timestamp));
+  if (!events.length) { onProgress?.("No currently supported source observations; original records retained."); return { eventsCreated: 0 }; }
+  const { data: existing } = await checkedDatabase(supabase.from("persona_events").select("event_type,event_timestamp,event_label,source,metadata").eq("persona_id", personaId).eq("user_id", userId));
+  const keys = new Set((existing ?? []).map(eventKey));
+  const fresh = events.filter(event => { const key = eventKey(event); if (keys.has(key)) return false; keys.add(key); return true; });
+  onProgress?.(`Saving ${fresh.length} source-timed events...`);
   let total = 0;
-  for (let i = 0; i < fresh.length; i += batchSize) {
-    const batch = fresh.slice(i, i + batchSize).map((ev) => ({
-      persona_id: personaId,
-      user_id: userId,
-      ...ev, metadata: jsonValue(ev.metadata),
-    }));
+  for (let index = 0; index < fresh.length; index += 50) {
+    const batch = fresh.slice(index, index + 50).map(event => ({ persona_id: personaId, user_id: userId, ...event, metadata: jsonValue(event.metadata) }));
     const { data } = await checkedDatabase(supabase.from("persona_events").insert(batch).select("id"));
     total += data?.length ?? 0;
   }
-
   onProgress?.("Complete!");
   return { eventsCreated: total };
 }

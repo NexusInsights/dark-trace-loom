@@ -3,23 +3,23 @@
   "sourceFiles": [
     {
       "path": "supabase/functions/image-hash/index.ts",
-      "sha256": "1c067b22cd79d721fdcb2a5bbfd9bf48423003b42777f1153533cf8a0b48ee1a"
+      "sha256": "009da3f6f8767721e0c1ac967be28b29109f54e36e15c289aba829937eb642e8"
     },
     {
       "path": "supabase/functions/_shared/imageHash.ts",
-      "sha256": "fb7dd7ab3253bb3e348462059f92e1cfeb1087caafbecbb481b6987bd24a7d48"
+      "sha256": "f090e73b788332709a7d4507239ff6c95e371daa27374c25660a0523318ee156"
     },
     {
       "path": "supabase/functions/_shared/safeFetch.ts",
-      "sha256": "4b2192d6d3802379a8d19601af73ec341d49688eb14d917ad8e0c0c920045d05"
+      "sha256": "8d8f463d130af9e193acd44be259e0c5d9dc33c6b879d323245f685b29064fdf"
     },
     {
       "path": "supabase/functions/_shared/requireUser.ts",
-      "sha256": "12d6fc22b641e8ac6741591639707dc6b21315ac51bcee0dac20fba7c675a22d"
+      "sha256": "e8d0cfa2164f14f622ae078605c4cf2fdcf274e816ccbf25c97aad2da8ec437a"
     },
     {
       "path": "src/components/tools/extraTools.ts",
-      "sha256": "8ecd9b113b9cf7aae32d259ab16dea7312e9e8290999382ea36479aba412b159"
+      "sha256": "17ed8b24ea466511d01ed6731f0bf73b2988567a8fe84edc5c63c59970d46682"
     },
     {
       "path": "src/components/tools/executeTool.ts",
@@ -27,11 +27,11 @@
     },
     {
       "path": "src/lib/pipelineEngine.ts",
-      "sha256": "2bc9309614a43132b3ae8442e1bf1b64d12e36bf92fe8a3f30a6490059a58536"
+      "sha256": "ebaa7e1ceb8fbac2225fd857fe1fbf64ef65c9acbc7abcce5aa6e5a7fcedb9da"
     },
     {
       "path": "src/test/fixtures/image-hash/manifest.json",
-      "sha256": "4ea073188c2e15f4006b8c057fc68a2948bf8d192ec38ed12d8bff268483ca4b"
+      "sha256": "b6ad210fe319be332feafacd40a15d460d050f64ed033413b9cb809ca223edf8"
     }
   ],
   "observations": [

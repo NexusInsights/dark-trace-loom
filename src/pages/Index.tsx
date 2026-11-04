@@ -130,22 +130,22 @@ function GlassCard({ children, className, highlight }: { children: React.ReactNo
    ═══════════════════════════════════════════ */
 
 const capabilities = [
-  { icon: Fingerprint, title: "Identity Resolution Engine", desc: "Resolve and link identities across platforms, domains, and data sources." },
-  { icon: Eye, title: "Persona Discovery", desc: "Uncover connected online personas and aliases through behavioral analysis." },
+  { icon: Fingerprint, title: "Identity Evidence Review", desc: "Review source-backed account associations while preserving supporting evidence and rejection decisions." },
+  { icon: Eye, title: "Account Discovery", desc: "Retrieve exact public account records and explicit account links from supported sources. A matching handle does not establish a person's identity." },
   { icon: Network, title: "Entity Correlation Graph", desc: "Map relationships between entities with interactive graph visualization." },
   { icon: Server, title: "Infrastructure Mapping", desc: "Trace digital infrastructure including DNS, IPs, certificates, and hosting." },
-  { icon: Bot, title: "Automated OSINT Agents", desc: "Deploy autonomous agents to continuously collect and process intelligence." },
+  { icon: Bot, title: "Tool Workflows", desc: "Run configured tools with explicit inputs and inspect successful, partial and failed steps." },
   { icon: Search, title: "Investigation Workspace", desc: "Unified workspace for managing multi-source investigations at scale." },
   { icon: Briefcase, title: "Evidence Management", desc: "Chain-of-custody evidence tracking with cryptographic verification." },
-  { icon: FileText, title: "Legal Intelligence Reporting", desc: "Generate court-ready reports with proper evidence attribution." },
+  { icon: FileText, title: "Source-backed Reporting", desc: "Export observations, analyst assessments and limitations separately. A report does not independently verify a claim." },
   { icon: Code2, title: "Enterprise API", desc: "Full REST API for custom integrations and automated workflows." },
 ];
 
 const workflowSteps = [
-  { icon: Radio, title: "Collect Intelligence", desc: "Ingest data from surface, deep, and dark web sources." },
-  { icon: Cpu, title: "Analyze Entities", desc: "Extract and classify entities, personas, and infrastructure." },
-  { icon: Layers, title: "Correlate Infrastructure", desc: "Cross-reference findings across disparate data points." },
-  { icon: Target, title: "Investigate Relationships", desc: "Map entity connections and uncover hidden networks." },
+  { icon: Radio, title: "Collect Source Records", desc: "Start with supplied leads and retrieve records from configured public sources." },
+  { icon: Cpu, title: "Inspect Observations", desc: "Check source URLs, account IDs, retrieval times and coverage gaps." },
+  { icon: Layers, title: "Compare Evidence", desc: "Inspect explicit account links and retain alternative explanations." },
+  { icon: Target, title: "Review Associations", desc: "Record supporting sources or reject a match before using it in identity analysis." },
   { icon: FileText, title: "Generate Evidence", desc: "Export saved records, source references and recorded custody logs." },
 ];
 
@@ -381,7 +381,7 @@ export default function LandingPage() {
             <span className="font-mono text-[10px] tracking-[0.3em] text-accent uppercase">Workflow</span>
             <h2 className="font-display text-2xl md:text-3xl font-bold tracking-tight mt-3">Intelligence Pipeline</h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
-              End-to-end workflow from raw data collection to court-ready evidence.
+              Follow each lead from its source record through review to a report that preserves uncertainty.
             </p>
           </div>
 

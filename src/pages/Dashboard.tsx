@@ -1,4 +1,6 @@
 import { checkedDatabase } from "@/lib/checkedDatabase";
+import { evidenceObject, filterCurrentIdentityEntities, isCurrentConnectivityScore } from "@/lib/identityEvidence";
+import { loadIdentitySourceRecords } from "@/lib/loadIdentityEvidence";
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,143 +34,49 @@ function useRealtimeInvalidation() {
 }
 
 // ─── Data hooks ───
-function useDashCases() {
-  return useQuery({
-    queryKey: ["dash", "cases"],
-    queryFn: async () => {
-      const { data } = await checkedDatabase(supabase.from("cases").select("*").order("created_at", { ascending: false }).limit(5));
-      return data ?? [];
-    },
-  });
+async function dashboardRows<T>(query: () => { range: (from: number, to: number) => PromiseLike<{data:T[]|null;error:unknown}> }):Promise<T[]> {
+  const rows:T[]=[];
+  for(let offset=0;;offset+=500){const {data}=await checkedDatabase(query().range(offset,offset+499));rows.push(...(data??[]));if(!data||data.length<500)return rows;}
 }
 
-function useDashCounts() {
-  return useQuery({
-    queryKey: ["dash", "counts"],
-    queryFn: async () => {
-      const [cases, artifacts, toolResults, subjects, entities, links, breaches] = await Promise.all([
-        checkedDatabase(supabase.from("cases").select("*", { count: "exact", head: true })),
-        checkedDatabase(supabase.from("artifacts").select("*", { count: "exact", head: true })),
-        checkedDatabase(supabase.from("tool_results").select("*", { count: "exact", head: true })),
-        checkedDatabase(supabase.from("subjects").select("*", { count: "exact", head: true })),
-        checkedDatabase(supabase.from("identity_entities").select("*", { count: "exact", head: true })),
-        checkedDatabase(supabase.from("identity_entity_links").select("*", { count: "exact", head: true })),
-        checkedDatabase(supabase.from("breach_records").select("*", { count: "exact", head: true })),
-      ]);
-      return {
-        cases: cases.count ?? 0,
-        artifacts: artifacts.count ?? 0,
-        toolResults: toolResults.count ?? 0,
-        subjects: subjects.count ?? 0,
-        entities: entities.count ?? 0,
-        links: links.count ?? 0,
-        breaches: breaches.count ?? 0,
-      };
-    },
-  });
+function dashboardRunState(row: {status?:string|null;result_data?:unknown}):string {
+  const output=evidenceObject(row.result_data), details=evidenceObject(output.details);
+  const states=[row.status,output.status,details.status].map(value=>String(value||'').toLowerCase());
+  if(states.includes('demo')||output.isDemo===true||output.demo===true||details.isDemo===true)return 'Demo — saved output';
+  if(output.notConfigured===true||output.configured===false||details.notConfigured===true||states.includes('not_configured'))return 'Not configured — saved output';
+  if(output.error||details.error||output.success===false||details.success===false||states.some(value=>['error','failed','failure','unknown_tool'].includes(value)))return 'Failed — saved output';
+  if(states.includes('partial'))return 'Partial — saved output';
+  if(states.some(value=>['success','completed','complete'].includes(value)))return 'Recorded success — findings unreviewed';
+  return 'Unassessed — saved output';
 }
 
-function useDashEntities() {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: ["dash", "entities", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await checkedDatabase(supabase
-        .from("identity_entities")
-        .select("id, entity_type, entity_value, confidence_score, created_at")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(100));
-      return data ?? [];
-    },
-  });
+async function loadDashboardSnapshot(userId:string) {
+  const [casesCount,artifactsCount,toolsCount,subjectsCount,cases,ledger,savedEntities,savedScores,savedLinks,savedBreaches,toolResults,activityLogs]=await Promise.all([
+    checkedDatabase(supabase.from('cases').select('*',{count:'exact',head:true})),
+    checkedDatabase(supabase.from('artifacts').select('*',{count:'exact',head:true})),
+    checkedDatabase(supabase.from('tool_results').select('*',{count:'exact',head:true}).eq('user_id',userId)),
+    checkedDatabase(supabase.from('subjects').select('*',{count:'exact',head:true})),
+    checkedDatabase(supabase.from('cases').select('*').order('created_at',{ascending:false}).limit(5)),
+    loadIdentitySourceRecords(userId),
+    dashboardRows(()=>supabase.from('identity_entities').select('id,entity_type,entity_value,metadata,created_at').eq('user_id',userId).order('id')),
+    dashboardRows(()=>supabase.from('entity_scores').select('*').eq('user_id',userId).order('id')),
+    dashboardRows(()=>supabase.from('identity_entity_links').select('*').eq('user_id',userId).order('id')),
+    dashboardRows(()=>supabase.from('breach_records').select('entity_id,severity,credential_leaked').eq('status','exposure').eq('user_id',userId).order('id')),
+    checkedDatabase(supabase.from('tool_results').select('id,tool_name,status,result_data,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(20)),
+    checkedDatabase(supabase.from('activity_logs').select('action,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(200)),
+  ]);
+  const entities=filterCurrentIdentityEntities(savedEntities,ledger), ids=new Set(entities.map(entity=>entity.id));
+  const scores=savedScores.filter(score=>entities.some(entity=>isCurrentConnectivityScore(score,entity))).map(score=>({...score,entity:entities.find(entity=>entity.id===score.entity_id)})).sort((a,b)=>b.score-a.score);
+  const linkRecords=savedLinks.filter(link=>link.relationship_type==='analyst_supported_association'&&ids.has(link.source_entity_id)&&ids.has(link.target_entity_id));
+  const breaches=savedBreaches.filter(row=>ids.has(row.entity_id));
+  return {
+    cases:cases.data??[],entities,scores,linkRecords,
+    counts:{cases:casesCount.count??0,artifacts:artifactsCount.count??0,toolResults:toolsCount.count??0,subjects:subjectsCount.count??0,entities:entities.length,links:linkRecords.length,breaches:breaches.length},
+    breachStats:{total:breaches.length,critical:breaches.filter(row=>row.severity==='critical').length,high:breaches.filter(row=>row.severity==='high').length,medium:breaches.filter(row=>row.severity==='medium').length,credentials:breaches.filter(row=>row.credential_leaked).length},
+    toolResults:(toolResults.data??[]).filter(row=>!['profile-association-review','person-investigation-review','person-investigation-evidence'].includes(row.tool_name)).slice(0,5),activityLogs:activityLogs.data??[],
+  };
 }
-
-function useDashScores() {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: ["dash", "scores", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await checkedDatabase(supabase
-        .from("entity_scores")
-        .select("*, entity:identity_entities!entity_scores_entity_id_fkey(entity_type, entity_value)")
-        .eq("user_id", user!.id)
-        .order("score", { ascending: false })
-        .limit(20));
-      return data ?? [];
-    },
-  });
-}
-
-function useDashLinks() {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: ["dash", "links", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await checkedDatabase(supabase
-        .from("identity_entity_links")
-        .select("id, relationship_type, confidence_score, created_at")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(100));
-      return data ?? [];
-    },
-  });
-}
-
-function useDashToolResults() {
-  return useQuery({
-    queryKey: ["dash", "tool_results"],
-    queryFn: async () => {
-      const { data } = await checkedDatabase(supabase.from("tool_results").select("*").order("created_at", { ascending: false }).limit(5));
-      return data ?? [];
-    },
-  });
-}
-
-function useDashBreachStats() {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: ["dash", "breach-stats", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await checkedDatabase(supabase
-        .from("breach_records")
-        .select("severity, credential_leaked").eq("status", "exposure")
-        .eq("user_id", user!.id));
-      const records = data ?? [];
-      return {
-        total: records.length,
-        critical: records.filter((r) => r.severity === "critical").length,
-        high: records.filter((r) => r.severity === "high").length,
-        medium: records.filter((r) => r.severity === "medium").length,
-        credentials: records.filter((r) => r.credential_leaked).length,
-      };
-    },
-  });
-}
-
-function useDashActivity() {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: ["dash", "activity", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await checkedDatabase(supabase
-        .from("activity_logs")
-        .select("action, created_at")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(200));
-      return data ?? [];
-    },
-  });
-}
-
-// ─── Helpers ───
+function useDashboardSnapshot(){const {user}=useAuth();return useQuery({queryKey:['dash','snapshot',user?.id],enabled:!!user,queryFn:()=>loadDashboardSnapshot(user!.id)});}
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -193,14 +101,9 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   useRealtimeInvalidation();
 
-  const { data: cases = [] } = useDashCases();
-  const { data: counts } = useDashCounts();
-  const { data: entities = [] } = useDashEntities();
-  const { data: scores = [] } = useDashScores();
-  const { data: linkRecords = [] } = useDashLinks();
-  const { data: toolResults = [] } = useDashToolResults();
-  const { data: breachStats } = useDashBreachStats();
-  const { data: activityLogs = [] } = useDashActivity();
+  const { user } = useAuth();
+  const snapshot = useDashboardSnapshot();
+  const { cases = [], counts, entities = [], scores = [], linkRecords = [], toolResults = [], breachStats, activityLogs = [] } = snapshot.data ?? {};
 
   // Entity type distribution for pie chart
   const entityTypeData = useMemo(() => {
@@ -264,32 +167,35 @@ export default function DashboardPage() {
 
   // Radar data for intelligence overview
   const radarData = useMemo(() => [
-    { metric: "Entities", value: Math.min(entities.length * 5, 100) },
-    { metric: "Links", value: Math.min(linkRecords.length * 8, 100) },
-    { metric: "Cases", value: Math.min((counts?.cases ?? 0) * 15, 100) },
-    { metric: "Breaches", value: Math.min((breachStats?.total ?? 0) * 10, 100) },
-    { metric: "Tools", value: Math.min((counts?.toolResults ?? 0) * 5, 100) },
-    { metric: "Artifacts", value: Math.min((counts?.artifacts ?? 0) * 8, 100) },
+    { metric: "Reviewed accounts", value: entities.length },
+    { metric: "Supported links", value: linkRecords.length },
+    { metric: "Saved cases", value: counts?.cases ?? 0 },
+    { metric: "Associated breach rows", value: breachStats?.total ?? 0 },
+    { metric: "Saved tool records", value: counts?.toolResults ?? 0 },
+    { metric: "Stored artifacts", value: counts?.artifacts ?? 0 },
   ], [entities, linkRecords, counts, breachStats]);
 
+  if (!user) return <div className="p-6"><h1>Intelligence Analytics</h1><p>Sign in to view your saved records and reviewed account associations.</p></div>;
+  if (snapshot.error) return <div className="p-6"><h1>Intelligence Analytics</h1><p role="alert">Dashboard evidence is unavailable: {snapshot.error.message}. Current source and review records could not be checked; cached findings are hidden.</p></div>;
+  if (!snapshot.data) return <div className="p-6"><h1>Intelligence Analytics</h1><p role="status">Loading saved records and current source-bound reviews…</p></div>;
   return (
     <div className="p-6 max-w-7xl mx-auto animate-fade-in space-y-6">
       {/* Header */}
       <div>
-        <span className="intel-tag intel-tag-purple mb-3 inline-block">CLASSIFIED</span>
+        <span className="intel-tag intel-tag-purple mb-3 inline-block">SOURCE AND REVIEW COVERAGE</span>
         <h1 className="text-2xl font-display font-bold tracking-tight">Intelligence Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-1">Real-time intelligence metrics and pattern analysis</p>
+        <p className="text-sm text-muted-foreground mt-1">Saved activity is separate from source-bound, analyst-supported account associations. Identity ownership and comprehensive coverage remain unassessed.</p>
       </div>
 
       {/* Primary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <StatDisplay label="Investigations" value={counts?.cases ?? 0} icon={FolderOpen} status="active" />
-        <StatDisplay label="Entities" value={counts?.entities ?? 0} icon={Fingerprint} status="active" />
-        <StatDisplay label="Links" value={counts?.links ?? 0} icon={Network} status="active" />
+        <StatDisplay label="Reviewed accounts" value={counts?.entities ?? 0} icon={Fingerprint} status="active" />
+        <StatDisplay label="Supported links" value={counts?.links ?? 0} icon={Network} status="active" />
         <StatDisplay label="Artifacts" value={counts?.artifacts ?? 0} icon={FileText} status="active" />
-        <StatDisplay label="Tool Runs" value={counts?.toolResults ?? 0} icon={Wrench} status="active" />
+        <StatDisplay label="Saved tool records" value={counts?.toolResults ?? 0} icon={Wrench} status="active" />
         <StatDisplay label="Subjects" value={counts?.subjects ?? 0} icon={Search} status="active" />
-        <StatDisplay label="Breaches" value={counts?.breaches ?? 0} icon={AlertTriangle} status={counts?.breaches ? "warning" : "active"} />
+        <StatDisplay label="Associated breach rows" value={counts?.breaches ?? 0} icon={AlertTriangle} status={counts?.breaches ? "warning" : "active"} />
       </div>
 
       {/* Charts Row 1 */}
@@ -318,7 +224,7 @@ export default function DashboardPage() {
         </IntelCard>
 
         {/* Intelligence Radar */}
-        <IntelCard icon={Shield} title="Intelligence Overview">
+        <IntelCard icon={Shield} title="Record Totals (counts)">
           <div className="h-[200px] mt-2">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
@@ -335,7 +241,7 @@ export default function DashboardPage() {
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Entity Clustering */}
-        <IntelCard icon={Globe} title="Entity Clustering">
+        <IntelCard icon={Globe} title="Reviewed Account Types">
           <div className="h-[220px] mt-2">
             {entityTypeData.length === 0 ? (
               <p className="text-xs text-muted-foreground font-mono text-center py-8">No entity data</p>
@@ -366,7 +272,7 @@ export default function DashboardPage() {
         </IntelCard>
 
         {/* Relationship Density */}
-        <IntelCard icon={Network} title="Relationship Density">
+        <IntelCard icon={Network} title="Supported Relationship Types">
           <div className="h-[220px] mt-2">
             {relTypeData.length === 0 ? (
               <p className="text-xs text-muted-foreground font-mono text-center py-8">No relationship data</p>
@@ -409,7 +315,7 @@ export default function DashboardPage() {
       {/* Charts Row 3 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Entity Discovery Trend */}
-        <IntelCard icon={Zap} title="Entity Discovery Trend" badge="14D">
+        <IntelCard icon={Zap} title="Reviewed Account Records" badge="14D">
           <div className="h-[180px] mt-2">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={discoveryData}>
@@ -452,7 +358,7 @@ export default function DashboardPage() {
               </GlassPanel>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground font-mono text-center py-8">No breach data — run a breach scan</p>
+            <p className="text-xs text-muted-foreground font-mono text-center py-8">No reviewed account-linked breach evidence is available. Breach coverage is unassessed; this does not establish absence of exposure.</p>
           )}
         </IntelCard>
       </div>
@@ -460,7 +366,7 @@ export default function DashboardPage() {
       {/* Bottom Row: Top Entities & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Highest Risk Entities */}
-        <IntelCard icon={TrendingUp} title="Highest Risk Entities" badge="TOP 10" className="lg:col-span-2">
+        <IntelCard icon={TrendingUp} title="Reviewed Connectivity (heuristic)" badge="TOP 10" className="lg:col-span-2">
           {scores.length === 0 ? (
             <p className="text-xs text-muted-foreground font-mono py-4 text-center">No scored entities — run scoring engine</p>
           ) : (
@@ -491,14 +397,13 @@ export default function DashboardPage() {
 
         {/* Recent Activity & Quick Actions */}
         <div className="space-y-4">
-          <IntelCard icon={Wrench} title="Recent Tool Runs" badge="LIVE">
+          <IntelCard icon={Wrench} title="Recent Saved Tool Outputs">
             {toolResults.length === 0 ? (
               <p className="text-xs text-muted-foreground font-mono py-4 text-center">No tool runs yet</p>
             ) : (
               <div className="space-y-1">
                 {toolResults.map((tr) => {
-                  const resultData = tr.result_data as Record<string, unknown> | null;
-                  const summary = resultData?.summary as string | undefined;
+                  const state = dashboardRunState(tr);
                   return (
                     <div key={tr.id} className="px-3 py-2.5 rounded-md hover:bg-secondary/40 transition-colors">
                       <div className="flex items-center gap-2 mb-0.5">
@@ -506,7 +411,7 @@ export default function DashboardPage() {
                         <span className="text-xs font-medium font-mono">{tr.tool_name}</span>
                         <span className="ml-auto text-[10px] font-mono text-muted-foreground">{timeAgo(tr.created_at)}</span>
                       </div>
-                      {summary && <p className="text-[10px] text-muted-foreground truncate pl-5">{summary}</p>}
+                      <p className="text-[10px] text-muted-foreground pl-5">{state}</p>
                     </div>
                   );
                 })}

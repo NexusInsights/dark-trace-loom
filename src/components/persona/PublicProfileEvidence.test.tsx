@@ -27,9 +27,13 @@ function renderEvidence(personaId: string | null = "saved-persona") {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.user = { id: "saved-user" };
-  const chain = { select: vi.fn(), eq: vi.fn(), contains: vi.fn(), order: vi.fn(), limit: mocks.limit };
-  for (const method of [chain.select, chain.eq, chain.contains, chain.order]) method.mockReturnValue(chain);
-  mocks.from.mockReturnValue(chain);
+  mocks.from.mockImplementation(() => {
+    let toolName = "";
+    const chain = { select: vi.fn(), eq: vi.fn(), contains: vi.fn(), order: vi.fn(), limit: vi.fn(() => mocks.limit(toolName)) };
+    for (const method of [chain.select, chain.contains, chain.order]) method.mockReturnValue(chain);
+    chain.eq.mockImplementation((column, value) => { if (column === "tool_name") toolName = value; return chain; });
+    return chain;
+  });
 });
 
 afterEach(() => {
@@ -38,7 +42,7 @@ afterEach(() => {
 });
 
 describe("saved persona public-profile evidence", () => {
-  it.each([[], [{ result_data: null }]])("shows an empty state without a query error for %j", async data => {
+  it.each([{ data: [] }, { data: [{ result_data: null }] }])("shows an empty state without a query error for %j", async ({ data }) => {
     mocks.limit.mockResolvedValue({ data, error: null });
     const { client, onError } = renderEvidence();
     expect(await screen.findByText(/This saved persona has no live profile lookup/)).toBeInTheDocument();
@@ -76,5 +80,31 @@ describe("saved persona public-profile evidence", () => {
     mocks.user = null;
     renderEvidence();
     expect(mocks.from).not.toHaveBeenCalled();
+  });
+
+  it("keeps account existence separate from a latest rejected person association", async () => {
+    const profile = { platform: "GitHub", username: "example", accountId: "github:123", platformId: "123", existence: "found", evidenceKind: "public_account", personAssociation: "unreviewed", profileUrl: "https://github.com/example", sourceUrl: "https://api.github.com/users/example", retrievedAt: "2026-11-04T00:00:00Z" };
+    mocks.limit.mockImplementation(toolName => Promise.resolve({ error: null, data: toolName === "public-profile-search" ? [{ id: "lookup", result_data: { schemaVersion: 2, status: "partial", username: "example", retrievedAt: profile.retrievedAt, profiles: [profile], checks: [{ platform: "GitHub", sourceUrl: profile.sourceUrl, retrievedAt: profile.retrievedAt, status: "found", profile }, { platform: "GitLab", sourceUrl: "https://gitlab.com/api/v4/users?username=example", retrievedAt: profile.retrievedAt, status: "unavailable", reason: "HTTP 429" }] } }] : [
+      { result_data: { account_id: "github:123", profile_url: "https://github.com/renamed-example", decision: "rejected", reason: "The same stable account changed its handle; biography belongs to another person.", reviewed_at: "2026-11-04T02:00:00Z" } },
+      { result_data: { account_id: "github:123", profile_url: profile.profileUrl, decision: "supported", reason: "Older assessment", reviewed_at: "2026-11-04T01:00:00Z" } },
+    ] }));
+    renderEvidence();
+    expect(await screen.findByText("Person association: Rejected")).toBeInTheDocument();
+    expect(screen.getByText(/Account record observed/)).toBeInTheDocument();
+    expect(screen.getByText(/GitLab: unavailable - HTTP 429/)).toBeInTheDocument();
+    expect(screen.queryByText(/Person association: Analyst-supported/)).not.toBeInTheDocument();
+  });
+
+  it("does not render unsafe saved profile URLs as source-backed accounts", async () => {
+    mocks.limit.mockResolvedValue({ error: null, data: [{ id: "lookup", result_data: { username: "example", retrievedAt: "2026-11-04T00:00:00Z", checks: [], profiles: [{ platform: "Fake", username: "guess", profileUrl: "javascript:alert(1)", sourceUrl: "https://example.org" }] } }] });
+    renderEvidence();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/invalid source records/);
+    expect(screen.queryByRole("link", { name: /Fake:/ })).not.toBeInTheDocument();
+  });
+
+  it.each([{ displayName: { guessed: "Person" } }, { bio: ["guess"] }, { relatedProfiles: {} }, { relatedProfiles: [{ platform: "GitHub", username: {}, profileUrl: "https://github.com/example", evidence: "old claim" }] }])("reports malformed legacy account metadata without crashing: %j", async metadata => {
+    mocks.limit.mockResolvedValue({ error: null, data: [{ id: "lookup", result_data: { username: "example", retrievedAt: "2026-11-04T00:00:00Z", checks: [], profiles: [{ platform: "GitHub", username: "example", profileUrl: "https://github.com/example", sourceUrl: "https://api.github.com/users/example", ...metadata }] } }] });
+    renderEvidence();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/malformed account metadata/);
   });
 });

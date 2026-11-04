@@ -1,4 +1,23 @@
-# Production frontend release - November 4, 2026
+# Original full-platform workflow repair candidate - November 4, 2026
+
+Branch `codex/original-evidence-workflow-20261104` restores the original platform navigation while retaining the separate person/research workspaces. At this source checkpoint the candidate is tested locally and **not yet released**. The older release below was the person-workspace frontend; it did not update the original Lovable URL. Current release evidence will be recorded in `docs/repairs/ORIGINAL-WORKFLOW-20261104.md`.
+
+| Boundary | Newly verified evidence | Acceptance limit |
+|---|---|---|
+| Original navigation and workflows | Original dashboard, case investigations, reports, tool suite, agents, pipelines, personas and graphs restored; person investigations/reports retain distinct routes and old bookmarks | Route and component fixtures; authenticated post-release navigation still pending |
+| Account discovery | Exact handle or supported public profile URL; stable account IDs, source URLs, timestamps, explicit source-reported links, bounded fixed-provider follow-up; no name-derived usernames | Synthetic provider/auth/transport tests; two benign real seed reads recorded separately; no individual investigated |
+| Association review | Retained lookup plus explicit source/reason; latest rejection or unreviewing removes current associations; foreign/deleted dossiers and conflicting cross-dossier claims excluded | Analyst assessment, not independent ownership verification; production persistence pending |
+| Downstream views | Graphs, groups, scores, timeline, platform accounts and dashboard use current source reviews; old guesses preserved as historical/excluded records; errors do not become success | Deterministic SDK/UI fixtures; live RLS and deployed Supabase function equality remain unverified |
+| Reports | Generated, partial, failed, demo and unreviewed records retain distinct labels; saved association claims are not promoted without current review validation | Report provenance fixtures; existing case records are preserved |
+| Regression | 1,328 app tests in 103 files; worker36, Cloudflare19, client15, SQL11, research117, monitors23, ownership1; dispatcher37 and GitHub parity10 checks pass | Component suite executions include reused SQL cases; do not sum as unique provider acceptance |
+| Portability | Initial aggregate research failure reproduced CRLF-only checkout mismatch; complete SDK source guard now passes11 cases and rejects actual source/hash/version drift | Exact upstream raw SHA remains checked; no verifier algorithm or installed dependency changed |
+| Static checks | Full lint0 errors, TypeScript0, diff check pass; final Discovery navigation check3/3 | Existing lint warnings remain; production build/CI/release verification still pending |
+
+No credentials, dependency installations, paid providers, migration, backend rebinding or security setting change. Production `zisrsttmjeipkmllqubi` and separate staging `ocliymtdvtxfxczxgbjr` remain distinct. Original Lovable publishing access and private export integrity are unresolved. Historical evidence below is preserved.
+
+---
+
+# Previous person-workspace frontend release - November 4, 2026
 
 Source **750ec469ba0390b2369f10e326fa4792c03637d3** is now deployed to [production](https://dark-trace-loom.pages.dev), Cloudflare deployment **a2e6328b-b45a-47b5-9a34-d9d11d2fc114**, completed **05:16:29 UTC**. The [immutable release](https://a2e6328b.dark-trace-loom.pages.dev) and [prior rollback deployment](https://3ee9ded0.dark-trace-loom.pages.dev) are recorded in [the release receipt](docs/repairs/PRODUCTION-RELEASE-20261104.json). This section supersedes historical statements below that this frontend has never been deployed; it does not promote backend fixtures to live acceptance.
 

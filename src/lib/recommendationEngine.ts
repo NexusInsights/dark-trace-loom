@@ -43,7 +43,7 @@ const RULES: RecommendationRule[] = [
   { triggerType: "org", pattern: (_, t) => t === "org" || t === "organization", tool: "domain_discovery", toolDescription: "Find domains owned by organization", confidence: 0.85 },
 
   // Username triggers
-  { triggerType: "username", pattern: (_, t) => t === "username", tool: "username_search", toolDescription: "Search username across 200+ platforms", confidence: 0.95 },
+  { triggerType: "username", pattern: (_, t) => t === "username", tool: "username_search", toolDescription: "Retrieve exact account records from the five supported public APIs; review person association separately", confidence: 0.95 },
   { triggerType: "username", pattern: (_, t) => t === "username", tool: "social_lookup", toolDescription: "Find social profiles for username", confidence: 0.9 },
   { triggerType: "username", pattern: (_, t) => t === "username", tool: "breach_search", toolDescription: "Check username in breach databases", confidence: 0.8 },
 

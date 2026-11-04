@@ -26,14 +26,16 @@ export function usePersonas() {
 }
 
 export function usePersonaIdentifiers(personaId: string | null) {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ["persona_identifiers", personaId],
-    enabled: !!personaId,
+    queryKey: ["persona_identifiers", personaId, user?.id],
+    enabled: !!personaId && !!user,
     queryFn: async () => {
       const { data, error } = await checkedDatabase(supabase
         .from("persona_identifiers")
         .select("*")
         .eq("persona_id", personaId!)
+        .eq("user_id", user!.id)
         .order("confidence_score", { ascending: false }));
       if (error) throw error;
       return (data ?? []).filter(isEvidenceIdentifier);

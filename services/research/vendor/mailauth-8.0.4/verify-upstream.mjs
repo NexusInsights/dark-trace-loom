@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
+import { assertCheckoutText } from './verify-checkout-text.mjs';
 
 // Read-only audit. The optional app path permits running this proposal outside
 // the repo. Committed placement would default to this file's owning package.
@@ -29,8 +30,8 @@ for (const [before,after] of Object.entries(manifest.mappings)) {
 }
 assert.equal(expected.split(manifest.before).length-1,1,'Algorithm guard failed.');
 expected=expected.replace(manifest.before,manifest.after);
-assert.equal(await readFile(new URL('dkim-verifier.mjs',import.meta.url),'utf8'),expected,'Vendored verifier has unreviewed edits.');
+assertCheckoutText(await readFile(new URL('dkim-verifier.mjs',import.meta.url),'utf8'),expected,'Vendored verifier has unreviewed edits.');
 const expectedWrapper=upstreamWrapper.replace("from '../tools.js'","from 'mailauth/lib/tools'").replace("from './dkim-verifier.js'","from './dkim-verifier.mjs'");
-assert.equal(await readFile(new URL('verify.mjs',import.meta.url),'utf8'),expectedWrapper,'Vendored wrapper has unreviewed edits.');
-assert.equal(await readFile(new URL('LICENSE.txt',import.meta.url),'utf8'),await readFile(resolve(dirname(packagePath),'LICENSE.txt'),'utf8'),'MIT notice must remain identical.');
-console.log('PASS: pinned mailauth8.0.4 source SHA256, exact import map, one digest-alias substitution, wrapper and MIT notice.');
+assertCheckoutText(await readFile(new URL('verify.mjs',import.meta.url),'utf8'),expectedWrapper,'Vendored wrapper has unreviewed edits.');
+assertCheckoutText(await readFile(new URL('LICENSE.txt',import.meta.url),'utf8'),await readFile(resolve(dirname(packagePath),'LICENSE.txt'),'utf8'),'MIT notice must remain identical.');
+console.log('PASS: pinned mailauth8.0.4 source SHA256, exact import map, one digest-alias substitution, wrapper and MIT notice (checkout CRLF/LF equivalent).');

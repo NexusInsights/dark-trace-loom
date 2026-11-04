@@ -1,9 +1,73 @@
 import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
 import { encodeReport } from "./reportFormats";
+import { evidenceDate, isResolvedIdentityEntity, publicEvidenceUrl } from "./identityEvidence";
 
 export type ReportType = "investigation-summary" | "evidence-list" | "timeline" | "subject-profile";
 export type ReportFormat = "json" | "pdf" | "docx";
+
+export type SavedRecordClassification = "supplied_input" | "generated_candidate" | "demo_output" | "failed_output" | "partial_output" | "rejected_association" | "excluded_record" | "unreviewed_record" | "sourced_observation" | "unvalidated_association_claim";
+export interface SavedRecordAssessment {
+  classification: SavedRecordClassification;
+  label: string;
+  outcome: string | null;
+  sourceUrl: string | null;
+  retrievedAt: string | null;
+  personAssociation: "not_established";
+  reviewValidation: "not_performed";
+}
+
+export const SAVED_RECORD_NOTICE = "This export preserves saved case records, supplied inputs and tool output. A cited account or shared identifier does not establish a person association. Failed, partial, demo, generated and unreviewed records remain labeled; a snapshot hash verifies stored content, not factual accuracy.";
+
+const record = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+const nonempty = (value: unknown): string | null => typeof value === "string" && value.trim() ? value.trim() : null;
+function reportSourceUrl(value: unknown): string | null {
+  return publicEvidenceUrl(value) || null;
+}
+
+/** Classify the saved record without treating arbitrary text or a lookup input as a person fact. */
+export function assessReportRecord(raw: unknown, artifactType = ""): SavedRecordAssessment {
+  let value = raw;
+  if (typeof raw === "string") { try { value = JSON.parse(raw); } catch { value = {}; } }
+  const data = record(value), details = record(data.details), metadata = record(data.metadata), identity = record(metadata.identity_evidence);
+  const outcome = nonempty(data.status) || nonempty(details.status) || nonempty(metadata.status);
+  const status = outcome?.toLowerCase();
+  const sourceUrl = [identity.source_url, metadata.source_url, data.sourceUrl, data.source_url, details.sourceUrl, details.source_url, data.source, details.source].map(reportSourceUrl).find(Boolean) || null;
+  const retrieved = nonempty(identity.retrieved_at) || nonempty(metadata.retrieved_at) || nonempty(data.retrievedAt) || nonempty(data.retrieved_at) || nonempty(details.retrievedAt) || nonempty(details.retrieved_at);
+  const retrievedAt = evidenceDate(retrieved) ? retrieved : null;
+  const source = nonempty(data.source) || nonempty(metadata.source) || "";
+  const decision = (nonempty(data.decision) || nonempty(metadata.decision) || nonempty(identity.decision) || nonempty(record(data.review).decision))?.toLowerCase();
+  let classification: SavedRecordClassification = "unreviewed_record";
+  if (status === "demo" || data.demo === true || data.isDemo === true || data.mode === "demo" || details.demo === true || details.mode === "demo") classification = "demo_output";
+  else if (["error", "failed", "failure", "not_configured", "unknown_tool", "not_found", "unavailable", "cancelled", "rate_limited"].includes(status || "") || data.success === false || !!data.error || !!details.error) classification = "failed_output";
+  else if (decision === "rejected") classification = "rejected_association";
+  else if (metadata.resolution_excluded === true || data.resolution_excluded === true) classification = "excluded_record";
+  else if (status === "partial" || data.partial === true || details.partial === true) classification = "partial_output";
+  else if (data.generated === true || data.candidate === true || ["candidates", "username_candidates", "email_candidates"].some(key => Array.isArray(data[key])) || /generat|permut|candidat|synthetic|guess|variation/i.test(source) || /generat|permut|candidat|synthetic|guess/i.test(String(identity.classification || "")) || /permut|candidate/i.test(artifactType)) classification = "generated_candidate";
+  else if (["input", "auto_expansion", "supplied_input", "user_input"].includes(source) || ["input", "supplied_input", "user_input"].includes(String(identity.classification))) classification = "supplied_input";
+  // Artifact data is arbitrary saved text. Even a structurally complete claim
+  // cannot prove the referenced review exists or is still the latest decision.
+  else if (isResolvedIdentityEntity({ metadata, entity_type: "social_profile", entity_value: identity.profile_url })) classification = "unvalidated_association_claim";
+  else if (sourceUrl && retrievedAt && !["unreviewed", "rejected"].includes(decision || "")) classification = "sourced_observation";
+  const labels: Record<SavedRecordClassification, string> = {
+    supplied_input: "Provided input; ownership unverified",
+    generated_candidate: "Generated candidate; not an observed identity",
+    demo_output: "Demo output; not live evidence",
+    failed_output: "Failed or unavailable output; no finding established",
+    partial_output: "Partial output; incomplete observation",
+    rejected_association: "Rejected person association",
+    excluded_record: "Excluded from identity resolution",
+    unreviewed_record: "Unreviewed saved record",
+    sourced_observation: "Source-cited observation; person association unverified",
+    unvalidated_association_claim: "Recorded association claim; supporting review not revalidated",
+  };
+  return { classification, label: labels[classification], outcome, sourceUrl, retrievedAt, personAssociation: "not_established", reviewValidation: "not_performed" };
+}
+
+export function summarizeReportRecords(assessments: SavedRecordAssessment[]) {
+  const classifications = Object.fromEntries(assessments.map(item => item.classification).filter((value, index, all) => all.indexOf(value) === index).map(value => [value, assessments.filter(item => item.classification === value).length]));
+  return { savedRecords: assessments.length, analystSupportedAssociations: 0, associationValidation: "not_performed", classifications };
+}
 
 export interface ReportData {
   reportType: ReportType;
@@ -25,6 +89,7 @@ export interface ReportData {
     type: string;
     data: string | null;
     createdAt: string;
+    assessment?: SavedRecordAssessment;
   }>;
   events: Array<{
     id: string;
@@ -86,7 +151,7 @@ async function fetchCaseData(caseId: string): Promise<ReportData> {
       id: s.id, name: s.name, type: s.type, notes: s.notes,
     })),
     artifacts: (artifactsRes.data ?? []).map((a) => ({
-      id: a.id, type: a.artifact_type, data: a.data, createdAt: a.created_at,
+      id: a.id, type: a.artifact_type, data: a.data, createdAt: a.created_at, assessment: assessReportRecord(a.data, a.artifact_type),
     })),
     events: (eventsRes.data ?? []).map((e) => ({
       id: e.id, type: e.event_type, description: e.description, timestamp: e.timestamp,
@@ -99,7 +164,7 @@ async function fetchCaseData(caseId: string): Promise<ReportData> {
 
 /** Generate JSON report */
 function generateJsonReport(data: ReportData, reportType: ReportType): string {
-  return JSON.stringify({ ...data, reportType }, null, 2);
+  return JSON.stringify({ ...data, reportType, interpretationNotice: SAVED_RECORD_NOTICE, recordSummary: summarizeReportRecords(data.artifacts.map(a => a.assessment || assessReportRecord(a.data, a.type))), subjects: data.subjects.map(subject => ({ ...subject, recordKind: "provided_subject_record" })), events: data.events.map(event => ({ ...event, recordKind: "saved_event_record" })) }, null, 2);
 }
 
 /** Generate markdown content for a report type */
@@ -112,20 +177,21 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
   lines.push(`**Case:** ${data.case.title}`);
   lines.push(`**Generated:** ${dt(data.generatedAt)}`);
   lines.push(`**Case Created:** ${dt(data.case.createdAt)}`);
+  lines.push(`\n${SAVED_RECORD_NOTICE}`);
   if (data.case.description) lines.push(`\n> ${data.case.description}`);
   lines.push("");
 
   switch (reportType) {
     case "investigation-summary":
       lines.push(`## Overview`);
-      lines.push(`- **Subjects:** ${data.subjects.length}`);
-      lines.push(`- **Artifacts:** ${data.artifacts.length}`);
-      lines.push(`- **Events:** ${data.events.length}`);
+      lines.push(`- **Provided subject records:** ${data.subjects.length}`);
+      lines.push(`- **Saved artifact records:** ${data.artifacts.length}`);
+      lines.push(`- **Recorded events:** ${data.events.length}`);
       lines.push(`- **Evidence Log Entries:** ${data.evidenceLogs.length}`);
       lines.push("");
 
       if (data.subjects.length > 0) {
-        lines.push(`## Subjects`);
+        lines.push(`## Provided Subject Records`);
         data.subjects.forEach((s) => {
           lines.push(`### ${s.name} (${s.type})`);
           if (s.notes) lines.push(`> ${s.notes}`);
@@ -134,9 +200,11 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
       }
 
       if (data.artifacts.length > 0) {
-        lines.push(`## Key Artifacts`);
+        lines.push(`## Saved Artifact Records`);
         data.artifacts.forEach((a) => {
-          lines.push(`- **[${a.type}]** ${a.id.slice(0, 8)} — created ${dt(a.createdAt)}`);
+          const assessment = a.assessment || assessReportRecord(a.data, a.type);
+          lines.push(`- **[${a.type}]** ${a.id.slice(0, 8)} - created ${dt(a.createdAt)} - ${assessment.label}${assessment.outcome ? ` (${assessment.outcome})` : ""}`);
+          if (assessment.sourceUrl) lines.push(`  - Recorded source: ${assessment.sourceUrl}; retrieved: ${assessment.retrievedAt || "not supplied"}`);
         });
         lines.push("");
       }
@@ -150,16 +218,18 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
       break;
 
     case "evidence-list":
-      lines.push(`## Evidence Artifacts (${data.artifacts.length})`);
+      lines.push(`## Saved Artifact Records (${data.artifacts.length})`);
       lines.push("");
-      lines.push(`| # | ID | Type | Created | Integrity Hashes |`);
-      lines.push(`|---|------|------|---------|-----------------|`);
+      lines.push(`| # | ID | Type | Created | Record assessment | Outcome | Integrity Hashes |`);
+      lines.push(`|---|------|------|---------|-----------------|---------|-----------------|`);
       data.artifacts.forEach((a, i) => {
         const hashes = data.evidenceLogs
           .filter((l) => l.artifactId === a.id)
           .map((l) => `\`${l.hash.slice(0, 12)}\` (${l.action})`)
           .join(", ");
-        lines.push(`| ${i + 1} | ${a.id.slice(0, 8)} | ${a.type} | ${dt(a.createdAt)} | ${hashes || "—"} |`);
+        const assessment = a.assessment || assessReportRecord(a.data, a.type);
+        lines.push(`| ${i + 1} | ${a.id.slice(0, 8)} | ${a.type} | ${dt(a.createdAt)} | ${assessment.label} | ${assessment.outcome || "not recorded"} | ${hashes || "—"} |`);
+        if (assessment.sourceUrl) lines.push(`Recorded source for ${a.id}: ${assessment.sourceUrl}; retrieved: ${assessment.retrievedAt || "not supplied"}`);
       });
       lines.push("");
 
@@ -188,12 +258,14 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
       lines.push(`## Artifact Timeline`);
       { const sorted = [...data.artifacts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       sorted.forEach((a) => {
-        lines.push(`- ${dt(a.createdAt)} — [${a.type}] artifact \`${a.id.slice(0, 8)}\``);
+        const assessment = a.assessment || assessReportRecord(a.data, a.type);
+        lines.push(`- ${dt(a.createdAt)} — [${a.type}] artifact \`${a.id.slice(0, 8)}\` — ${assessment.label}${assessment.outcome ? ` (${assessment.outcome})` : ""}`);
       }); }
       break;
 
     case "subject-profile":
       lines.push(`## Subject Profiles (${data.subjects.length})`);
+      lines.push("Provided subject records. No subject association is inferred from names or text matches.");
       lines.push("");
       if (data.subjects.length === 0) {
         lines.push("_No subjects recorded._");
@@ -204,16 +276,6 @@ function generateMarkdown(data: ReportData, reportType: ReportType): string {
           lines.push(`- **ID:** \`${s.id.slice(0, 8)}\``);
           if (s.notes) lines.push(`- **Notes:** ${s.notes}`);
 
-          // Related artifacts
-          const related = data.artifacts.filter((a) =>
-            a.data?.toLowerCase().includes(s.name.toLowerCase())
-          );
-          if (related.length > 0) {
-            lines.push(`- **Related Artifacts:** ${related.length}`);
-            related.forEach((a) => {
-              lines.push(`  - [${a.type}] \`${a.id.slice(0, 8)}\``);
-            });
-          }
           lines.push("");
         });
       }
@@ -293,6 +355,7 @@ export async function generateReport(
         artifactCount: data.artifacts.length,
         eventCount: data.events.length,
         evidenceLogCount: data.evidenceLogs.length,
+        recordSummary: summarizeReportRecords(data.artifacts.map(a => a.assessment || assessReportRecord(a.data, a.type))),
       },
     })
     .select()

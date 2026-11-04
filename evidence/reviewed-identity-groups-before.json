@@ -1,0 +1,53 @@
+{
+  "scope": "Actual baseline clustering engine in isolated VM; synthetic in-memory SDK/data only, zero sockets or database calls.",
+  "baseline": "6e8a6f70cf917840068a62b163440aba0efe6572",
+  "sourceSha256": "01154e9657fb77ef79eefbf8e871f55a6b8897d2e3c977f335ea90040f5b9864",
+  "scenario": "Two distinct synthetic email accounts share only an employer domain; no observations, reviews or identity evidence.",
+  "result": {
+    "clustersCreated": 1,
+    "entitiesClustered": 2
+  },
+  "observedUnsupportedGrouping": true,
+  "observedHistoricalDeletion": true,
+  "syntheticWrites": [
+    {
+      "table": "identity_clusters",
+      "mode": "delete",
+      "count": 1
+    },
+    {
+      "table": "identity_clusters",
+      "mode": "insert",
+      "rows": [
+        {
+          "id": "identity_clusters-0",
+          "user_id": "synthetic-user",
+          "cluster_label": "first@shared-company.org",
+          "cluster_score": 30
+        }
+      ]
+    },
+    {
+      "table": "cluster_members",
+      "mode": "upsert",
+      "rows": [
+        {
+          "id": "cluster_members-0",
+          "cluster_id": "identity_clusters-0",
+          "entity_id": "synthetic-one",
+          "user_id": "synthetic-user",
+          "confidence_score": 0.3,
+          "join_reason": "shared_email_domain"
+        },
+        {
+          "id": "cluster_members-1",
+          "cluster_id": "identity_clusters-0",
+          "entity_id": "synthetic-two",
+          "user_id": "synthetic-user",
+          "confidence_score": 0.3,
+          "join_reason": "shared_email_domain"
+        }
+      ]
+    }
+  ]
+}

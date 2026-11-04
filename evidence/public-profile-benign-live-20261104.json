@@ -1,0 +1,107 @@
+{
+  "performedAt": "2026-11-04T05:53:33.202Z",
+  "scope": "Actual current public profile source module bundled with existing esbuild. At most two fixed-host benign mascot/organizational seed API requests. Native network only for exact allowed initial URLs; no credentials, paid APIs, private-person targets, follow-on targets, browser login, database, settings or deployment. This accepts only provider observation/provenance paths, not authenticated deployed workflow, identity association or persistence.",
+  "followLinks": false,
+  "derivedTargets": "Metadata inspected; unverified and never queried. Bounded one-hop behavior is tested synthetically separately.",
+  "requests": [
+    {
+      "sourceUrl": "https://api.github.com/users/octocat",
+      "network": true,
+      "startedAt": "2026-11-04T05:53:32.743Z",
+      "httpStatus": 200,
+      "completedAt": "2026-11-04T05:53:33.047Z",
+      "outcome": "response_received"
+    },
+    {
+      "sourceUrl": "https://dev.to/api/users/by_username?url=thepracticaldev",
+      "network": true,
+      "startedAt": "2026-11-04T05:53:33.052Z",
+      "httpStatus": 200,
+      "completedAt": "2026-11-04T05:53:33.199Z",
+      "outcome": "response_received"
+    }
+  ],
+  "outcomes": [
+    {
+      "profileUrl": "https://github.com/octocat",
+      "status": "success",
+      "schemaVersion": 2,
+      "retrievedAt": "2026-11-04T05:53:32.729Z",
+      "profiles": [
+        {
+          "platform": "GitHub",
+          "platformId": "583231",
+          "accountId": "github:583231",
+          "username": "octocat",
+          "profileUrl": "https://github.com/octocat",
+          "sourceUrl": "https://api.github.com/users/octocat",
+          "retrievedAt": "2026-11-04T05:53:33.051Z",
+          "existence": "found",
+          "personAssociation": "unreviewed",
+          "links": []
+        }
+      ],
+      "checks": [
+        {
+          "platform": "GitHub",
+          "sourceUrl": "https://api.github.com/users/octocat",
+          "retrievedAt": "2026-11-04T05:53:33.051Z",
+          "status": "found"
+        }
+      ]
+    },
+    {
+      "profileUrl": "https://dev.to/thepracticaldev",
+      "status": "success",
+      "schemaVersion": 2,
+      "retrievedAt": "2026-11-04T05:53:33.052Z",
+      "profiles": [
+        {
+          "platform": "DEV Community",
+          "platformId": "3",
+          "accountId": "dev:3",
+          "username": "thepracticaldev",
+          "profileUrl": "https://dev.to/thepracticaldev",
+          "sourceUrl": "https://dev.to/api/users/by_username?url=thepracticaldev",
+          "retrievedAt": "2026-11-04T05:53:33.200Z",
+          "existence": "found",
+          "personAssociation": "unreviewed",
+          "links": []
+        }
+      ],
+      "checks": [
+        {
+          "platform": "DEV Community",
+          "sourceUrl": "https://dev.to/api/users/by_username?url=thepracticaldev",
+          "retrievedAt": "2026-11-04T05:53:33.200Z",
+          "status": "found"
+        }
+      ]
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "src/lib/publicProfiles.ts",
+      "sha256": "1e355c3dd44cde0daa1612c48002ed7d23147a662f85c584b53cd0654e8c3fdd"
+    },
+    {
+      "path": "src/lib/publicProfileEvidence.ts",
+      "sha256": "37f8904aace755f8079cb847f8a03107121b09a5a1c671ec41cda2169854d47a"
+    },
+    {
+      "path": "services/research/admission.mjs",
+      "sha256": "96c9a24f76563aefa4d4b2312acd11a24bd2f32df8ead78194dca7ba19ff1c2c"
+    }
+  ],
+  "finalValidationNote": "After these two allowed live seed requests, fresh optional scalar/resource/date fields and source-check/platform/timestamp consistency were tightened and tested synthetically. No additional live requests were made. sourceFiles remain the exact code hashes used for the live checkpoint, not a claim that changed final validators were rerun live.",
+  "finalValidationSources": [
+    {
+      "path": "src/lib/publicProfiles.ts",
+      "sha256": "1e355c3dd44cde0daa1612c48002ed7d23147a662f85c584b53cd0654e8c3fdd"
+    },
+    {
+      "path": "src/lib/publicProfileEvidence.ts",
+      "sha256": "9a90c841e3b999c89f92a1ec35f2a7e0d794b07af7c7e789410985c992701237"
+    }
+  ]
+}

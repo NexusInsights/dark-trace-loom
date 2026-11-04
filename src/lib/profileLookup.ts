@@ -1,15 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { ProfileSearchResult } from "./publicProfiles";
+import { normalizeProfileInput, validateProfileSearchResult, type ProfileLookupInput, type ProfileSearchResult } from "./publicProfiles";
+import { readResearchRawBody } from "../../services/research/admission.mjs";
 
-export async function lookupProfiles(username: string): Promise<ProfileSearchResult> {
+export async function lookupProfiles(input: string | ProfileLookupInput): Promise<ProfileSearchResult> {
+  const normalized = normalizeProfileInput(input);
+  const body = normalized.profileUrl ? { profileUrl: normalized.profileUrl } : { username: normalized.username };
   const { data, error } = await supabase.auth.getSession();
   if (error) throw error;
   if (!data.session) throw new Error("Sign in to search profiles");
-  const response = await fetch("/api/profile-search", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` }, body: JSON.stringify({ username }), signal: AbortSignal.timeout(25000) });
-  const result = await response.json();
+  const signal = AbortSignal.timeout(30000);
+  const response = await fetch("/api/profile-search", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` }, body: JSON.stringify(body), signal });
+  let result;
+  try { result = JSON.parse(await readResearchRawBody(response, 512 * 1024, { signal, timeoutMs: 10000 })); }
+  catch { throw new Error("Profile lookup returned an invalid, oversized or timed-out response"); }
   if (!response.ok || result.error) throw new Error(result.error || `Profile lookup failed (HTTP ${response.status})`);
-  if (!Array.isArray(result.profiles) || !Array.isArray(result.checks)) throw new Error("Invalid profile lookup response");
-  return result;
+  return validateProfileSearchResult(result);
 }
 
 export function isEvidenceIdentifier(identifier: { source?: string | null }): boolean {

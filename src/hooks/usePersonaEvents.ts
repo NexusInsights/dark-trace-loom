@@ -2,7 +2,7 @@ import { checkedDatabase } from "@/lib/checkedDatabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { buildPersonaTimeline } from "@/lib/personaTimelineEngine";
+import { buildPersonaTimeline, loadReviewedPersonaEntities, visiblePersonaEvents } from "@/lib/personaTimelineEngine";
 import { useState } from "react";
 
 export function usePersonaEvents(personaId: string | null) {
@@ -19,7 +19,7 @@ export function usePersonaEvents(personaId: string | null) {
         .not("event_type", "in", "(username_generated,email_generated,identifier_discovered)")
         .order("event_timestamp", { ascending: false }));
       if (error) throw error;
-      return data ?? [];
+      return visiblePersonaEvents(data ?? [], personaId!, await loadReviewedPersonaEntities(user!.id, personaId!));
     },
   });
 }

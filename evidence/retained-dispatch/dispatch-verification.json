@@ -1,6 +1,6 @@
 {
   "scope": "Actual isolated dispatcher and fetch guard. Synthetic auth, policy responses, repository and network transport only; no sockets, SQL/RLS, production deployment or live acceptance. Owner checkout not accessed.",
-  "sourceSha256": "f175b145d846cd5ebb9f46f7ee88585699dbf43c895a4573dda5b0d9334b8125",
+  "sourceSha256": "ed3b88a4ed1b50b71e2c8af37f7adb0e3bff11370beb17ceaee5405a496d9b8b",
   "passed": 37,
   "total": 37,
   "checks": [

@@ -1,214 +1,52 @@
 import { checkedDatabase } from "@/lib/checkedDatabase";
 import { supabase } from "@/integrations/supabase/client";
-import { evidenceText } from "./evidenceText";
+import { extractCorrelationObservations } from "./correlationEvidence";
 
 export type CorrelationType = "username" | "email" | "domain" | "ip" | "phone";
-
-interface ExtractedIdentifier {
-  type: CorrelationType;
-  value: string;
-  artifactId: string;
-  caseId: string;
+interface Identifier { type: CorrelationType; value: string; artifactId: string; caseId: string; }
+interface CorrelationLead {
+  source_type: string; source_value: string; source_case_id: string; source_artifact_id: string | null;
+  target_type: string; target_value: string; target_case_id: string; target_artifact_id: string | null;
+  relationship_type: string; confidence: number;
 }
+const keyFor = (lead: CorrelationLead): string => [lead.relationship_type, ...[
+  `${lead.source_case_id}:${lead.source_artifact_id}:${lead.source_type}:${lead.source_value}`,
+  `${lead.target_case_id}:${lead.target_artifact_id}:${lead.target_type}:${lead.target_value}`,
+].sort()].join("|");
 
-interface CorrelationMatch {
-  sourceType: CorrelationType;
-  sourceValue: string;
-  sourceCaseId: string;
-  sourceArtifactId: string;
-  targetType: CorrelationType;
-  targetValue: string;
-  targetCaseId: string;
-  targetArtifactId: string;
-  relationshipType: string;
-  confidence: number;
-}
-
-// Regex patterns for identifier extraction
-const PATTERNS: Record<CorrelationType, RegExp> = {
-  email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-  domain: /(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})/g,
-  ip: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
-  phone: /(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}/g,
-  username: /(?<![a-zA-Z0-9._%+-])@([a-zA-Z0-9_]{2,30})\b/g,
-};
-
-/** Extract identifiers from text */
-function extractIdentifiers(text: string, artifactId: string, caseId: string): ExtractedIdentifier[] {
-  const results: ExtractedIdentifier[] = [];
+/** Find literal shared source observations. These are unverified leads, not identity findings. */
+export async function runCorrelationEngine(userId: string, onProgress?: (step: string) => void): Promise<{ correlationsFound: number; identifiersScanned: number }> {
+  if (!userId.trim()) throw new Error("Sign in before comparing observations");
+  onProgress?.("Loading accessible cases...");
+  const { data: cases } = await checkedDatabase(supabase.from("cases").select("id, title").order("created_at", { ascending: false }));
+  if (!cases || cases.length < 2) return { correlationsFound: 0, identifiersScanned: 0 };
+  const { data: artifacts } = await checkedDatabase(supabase.from("artifacts").select("id, case_id, data, artifact_type").in("case_id", cases.map(record => record.id)));
+  const identifiers: Identifier[] = [];
+  for (const artifact of artifacts ?? []) {
+    if (artifact.data) identifiers.push(...extractCorrelationObservations(artifact.data).map(observation => ({ type: observation.type, value: observation.value, artifactId: artifact.id, caseId: artifact.case_id })));
+  }
+  const leads: CorrelationLead[] = [];
   const seen = new Set<string>();
-
-  for (const [type, regex] of Object.entries(PATTERNS) as [CorrelationType, RegExp][]) {
-    const re = new RegExp(regex.source, regex.flags);
-    let match: RegExpExecArray | null;
-    while ((match = re.exec(text)) !== null) {
-      const value = (type === "username" ? match[1] : match[0]).toLowerCase();
-      if (type === "ip" && value.split(".").some(part => Number(part) > 255)) continue;
-      if (type === "phone" && value.replace(/\D/g, "").length < 10) continue;
-      // Skip common false positives
-      if (type === "domain" && /^(localhost|example\.com|test\.\w+)$/i.test(value)) continue;
-      if (type === "ip" && (value === "0.0.0.0" || value === "127.0.0.1" || value.startsWith("255."))) continue;
-
-      const key = `${type}:${value}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        results.push({ type, value, artifactId, caseId });
-      }
-    }
+  for (let i = 0; i < identifiers.length; i++) for (let j = i + 1; j < identifiers.length; j++) {
+    const source = identifiers[i], target = identifiers[j];
+    if (source.caseId === target.caseId || source.type !== target.type || source.value !== target.value) continue;
+    const lead: CorrelationLead = {
+      source_type: source.type, source_value: source.value, source_case_id: source.caseId, source_artifact_id: source.artifactId,
+      target_type: target.type, target_value: target.value, target_case_id: target.caseId, target_artifact_id: target.artifactId,
+      relationship_type: `shared_${source.type}_lead`,
+      // Required legacy database field; zero means unassessed, never a probability.
+      confidence: 0,
+    };
+    const key = keyFor(lead);
+    if (!seen.has(key)) { seen.add(key); leads.push(lead); }
   }
-
-  return results;
-}
-
-/** Find correlations across all identifiers */
-function findCorrelations(identifiers: ExtractedIdentifier[]): CorrelationMatch[] {
-  const matches: CorrelationMatch[] = [];
-  const seen = new Set<string>();
-
-  // Group by value
-  const byValue = new Map<string, ExtractedIdentifier[]>();
-  for (const id of identifiers) {
-    const key = `${id.type}:${id.value}`;
-    if (!byValue.has(key)) byValue.set(key, []);
-    byValue.get(key)!.push(id);
+  if (leads.length) {
+    const { data: existing } = await checkedDatabase(supabase.from("cross_case_correlations").select("*").eq("user_id", userId));
+    const existingKeys = new Set((existing ?? []).map(record => keyFor(record)));
+    const pending = leads.filter(lead => !existingKeys.has(keyFor(lead)));
+    onProgress?.(`Saving ${pending.length} new unverified leads; existing records are retained...`);
+    for (let i = 0; i < pending.length; i += 50) await checkedDatabase(supabase.from("cross_case_correlations").insert(pending.slice(i, i + 50).map(lead => ({ ...lead, user_id: userId }))));
   }
-
-  // Find cross-case matches (same value appearing in different cases)
-  for (const [, group] of byValue) {
-    if (group.length < 2) continue;
-    for (let i = 0; i < group.length; i++) {
-      for (let j = i + 1; j < group.length; j++) {
-        if (group[i].caseId === group[j].caseId) continue;
-        const pairKey = [group[i].artifactId, group[j].artifactId].sort().join(":");
-        if (seen.has(pairKey)) continue;
-        seen.add(pairKey);
-
-        matches.push({
-          sourceType: group[i].type,
-          sourceValue: group[i].value,
-          sourceCaseId: group[i].caseId,
-          sourceArtifactId: group[i].artifactId,
-          targetType: group[j].type,
-          targetValue: group[j].value,
-          targetCaseId: group[j].caseId,
-          targetArtifactId: group[j].artifactId,
-          relationshipType: `shared_${group[i].type}`,
-          confidence: 1.0,
-        });
-      }
-    }
-  }
-
-  // Cross-type correlations: email domain ↔ domain
-  const emails = identifiers.filter((id) => id.type === "email");
-  const domains = identifiers.filter((id) => id.type === "domain");
-  for (const email of emails) {
-    const emailDomain = email.value.split("@")[1];
-    for (const domain of domains) {
-      if (domain.caseId === email.caseId) continue;
-      if (emailDomain === domain.value) {
-        const pairKey = [email.artifactId, domain.artifactId].sort().join(":domain:");
-        if (seen.has(pairKey)) continue;
-        seen.add(pairKey);
-        matches.push({
-          sourceType: "email",
-          sourceValue: email.value,
-          sourceCaseId: email.caseId,
-          sourceArtifactId: email.artifactId,
-          targetType: "domain",
-          targetValue: domain.value,
-          targetCaseId: domain.caseId,
-          targetArtifactId: domain.artifactId,
-          relationshipType: "email_domain_match",
-          confidence: 0.85,
-        });
-      }
-    }
-  }
-
-  return matches;
-}
-
-/** Run correlation engine across all user's cases */
-export async function runCorrelationEngine(
-  userId: string,
-  onProgress?: (step: string) => void
-): Promise<{ correlationsFound: number; identifiersScanned: number }> {
-  onProgress?.("Loading cases...");
-  const { data: cases, error: casesError } = await checkedDatabase(supabase
-    .from("cases")
-    .select("id, title")
-    .order("created_at", { ascending: false }));
-
-  if (casesError) throw new Error(`Failed to load cases: ${casesError.message}`);
-  if (!cases || cases.length < 2) {
-    return { correlationsFound: 0, identifiersScanned: 0 };
-  }
-
-  onProgress?.(`Scanning artifacts across ${cases.length} cases...`);
-  const caseIds = cases.map((c) => c.id);
-  const { data: artifacts, error: artError } = await checkedDatabase(supabase
-    .from("artifacts")
-    .select("id, case_id, data, artifact_type")
-    .in("case_id", caseIds));
-
-  if (artError) throw new Error(`Failed to load artifacts: ${artError.message}`);
-
-  // Also scan subjects
-  const { data: subjects } = await checkedDatabase(supabase
-    .from("subjects")
-    .select("id, case_id, name, notes, type")
-    .in("case_id", caseIds));
-
-  onProgress?.("Extracting identifiers...");
-  const allIdentifiers: ExtractedIdentifier[] = [];
-
-  for (const a of artifacts ?? []) {
-    if (a.data) {
-      allIdentifiers.push(...extractIdentifiers(evidenceText(a.data), a.id, a.case_id));
-    }
-  }
-
-  // Treat subject names as potential identifiers
-  for (const s of subjects ?? []) {
-    const text = [s.name, s.notes ?? ""].join(" ");
-    // Create a pseudo artifact ID for subjects
-    allIdentifiers.push(...extractIdentifiers(text, s.id, s.case_id));
-  }
-
-  onProgress?.(`Found ${allIdentifiers.length} identifiers. Correlating...`);
-  const correlations = findCorrelations(allIdentifiers);
-
-  if (correlations.length > 0) {
-    onProgress?.(`Saving ${correlations.length} correlations...`);
-    // Clear old correlations for this user
-    await checkedDatabase(supabase.from("cross_case_correlations").delete().eq("user_id", userId));
-
-    // Insert new correlations in batches
-    const batchSize = 50;
-    for (let i = 0; i < correlations.length; i += batchSize) {
-      const batch = correlations.slice(i, i + batchSize).map((c) => ({
-        user_id: userId,
-        source_case_id: c.sourceCaseId,
-        source_type: c.sourceType,
-        source_value: c.sourceValue,
-        source_artifact_id: c.sourceArtifactId,
-        target_case_id: c.targetCaseId,
-        target_type: c.targetType,
-        target_value: c.targetValue,
-        target_artifact_id: c.targetArtifactId,
-        relationship_type: c.relationshipType,
-        confidence: c.confidence,
-      }));
-
-      const { error } = await checkedDatabase(supabase.from("cross_case_correlations").insert(batch));
-      if (error) console.error("Batch insert error:", error.message);
-    }
-  }
-
-  onProgress?.("Complete!");
-  return {
-    correlationsFound: correlations.length,
-    identifiersScanned: allIdentifiers.length,
-  };
+  onProgress?.("Comparison complete. Shared observations do not establish shared ownership.");
+  return { correlationsFound: leads.length, identifiersScanned: identifiers.length };
 }

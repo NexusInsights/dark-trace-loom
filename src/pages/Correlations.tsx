@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { checkFeatureGate } from "@/lib/planGating";
 import { UpgradePrompt } from "@/components/tools/UpgradePrompt";
 import { runCorrelationEngine } from "@/lib/correlationEngine";
+import { visibleCorrelationLeads } from "@/lib/correlationEvidence";
 import { toast } from "sonner";
 import {
   Network, Loader2, Radar, Mail, Globe, AtSign, Server, Phone,
@@ -125,7 +126,7 @@ function useForceLayout(nodes: GraphNode[], edges: GraphEdge[], w: number, h: nu
 export default function CorrelationsPage() {
   const { user } = useAuth();
   const { plan } = useSubscription();
-  const { data: cases = [] } = useCases();
+  const { data: cases = [], error: casesError } = useCases();
   const qc = useQueryClient();
 
   const [running, setRunning] = useState(false);
@@ -137,7 +138,7 @@ export default function CorrelationsPage() {
 
   const gate = checkFeatureGate(plan, "hasAdvancedCorrelation");
 
-  const { data: correlations = [], isLoading } = useQuery({
+  const { data: savedCorrelations = [], isLoading, error: correlationError } = useQuery({
     queryKey: ["correlations", user?.id],
     enabled: !!user,
     queryFn: async () => {
@@ -145,11 +146,17 @@ export default function CorrelationsPage() {
         .from("cross_case_correlations")
         .select("*")
         .eq("user_id", user!.id)
-        .order("confidence", { ascending: false }));
+        .order("created_at", { ascending: false }));
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+      const artifactIds = [...new Set(rows.flatMap(row => [row.source_artifact_id, row.target_artifact_id]).filter((id): id is string => !!id))];
+      if (!artifactIds.length) return [];
+      const { data: artifacts } = await checkedDatabase(supabase.from("artifacts").select("id, data").in("id", artifactIds));
+      return visibleCorrelationLeads(rows, artifacts ?? []);
     },
   });
+
+  const correlations = useMemo(() => casesError || correlationError ? [] : savedCorrelations, [casesError, correlationError, savedCorrelations]);
 
   // Resize observer
   useEffect(() => {
@@ -233,7 +240,7 @@ export default function CorrelationsPage() {
     try {
       const result = await runCorrelationEngine(user.id, setProgress);
       qc.invalidateQueries({ queryKey: ["correlations", user.id] });
-      toast.success(`Found ${result.correlationsFound} correlations across ${result.identifiersScanned} identifiers`);
+      toast.success(`Compared ${result.identifiersScanned} sourced observations; ${result.correlationsFound} unverified leads. Shared values do not establish shared ownership.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Correlation failed");
     } finally {
@@ -257,9 +264,11 @@ export default function CorrelationsPage() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Intelligence</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Correlation Engine</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Detect relationships across investigations by correlating usernames, emails, domains, IPs, and phone numbers.
+          Compare literal sourced observations across cases. Results are unverified leads; a shared value does not establish a person or account relationship. Unsupported legacy records remain saved and are excluded from this view.
         </p>
       </div>
+
+      {(casesError || correlationError) && <div role="alert" className="rounded border border-destructive p-3 text-sm text-destructive">Source observations could not be loaded. No current correlation results can be established. {String((casesError || correlationError) instanceof Error ? ((casesError || correlationError) as Error).message : "Evidence source unavailable")}</div>}
 
       {!gate.allowed && (
         <UpgradePrompt reason={gate.reason!} requiredPlan={gate.requiredPlan!} />
@@ -272,7 +281,7 @@ export default function CorrelationsPage() {
             variant="neon"
             size="sm"
             className="gap-2"
-            disabled={running || cases.length < 2}
+            disabled={running || cases.length < 2 || !!casesError}
             onClick={handleRun}
           >
             {running ? (
@@ -288,12 +297,12 @@ export default function CorrelationsPage() {
 
           {correlations.length > 0 && (
             <span className="font-mono text-[10px] text-muted-foreground ml-auto">
-              {correlations.length} CORRELATIONS FOUND
+              {correlations.length} SAVED UNVERIFIED LEADS
             </span>
           )}
         </div>
 
-        {cases.length < 2 && (
+        {!casesError && cases.length < 2 && (
           <GlassPanel className="p-4 mt-4">
             <p className="text-xs text-muted-foreground font-mono text-center">
               You need at least 2 cases to run cross-case correlation analysis.
@@ -461,7 +470,7 @@ export default function CorrelationsPage() {
         {correlations.length > 0 && (
           <div className="mt-6 space-y-3">
             <span className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
-              Correlation Details ({correlations.length})
+              Saved Lead Details ({correlations.length})
             </span>
             <div className="space-y-2 max-h-[400px] overflow-auto">
               {correlations.map((c) => {
@@ -483,7 +492,7 @@ export default function CorrelationsPage() {
                           <ArrowRight className="h-3 w-3" />
                           <span>{caseMap.get(c.target_case_id) ?? c.target_case_id.slice(0, 8)}</span>
                           <span className="ml-auto font-mono">
-                            {Math.round(c.confidence * 100)}% confidence
+                            Unverified lead; ownership not established
                           </span>
                         </div>
                       </div>

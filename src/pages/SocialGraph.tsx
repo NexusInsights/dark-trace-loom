@@ -8,6 +8,7 @@ import { useInfrastructureLinks } from "@/hooks/useInfrastructure";
 import { useQueryClient } from "@tanstack/react-query";
 import { runSocialGraphMining } from "@/lib/socialGraphEngine";
 import { runInfrastructureMining } from "@/lib/infrastructureEngine";
+import { isResolvedIdentityEntity } from "@/lib/identityEvidence";
 import { toast } from "sonner";
 import {
   Loader2, Network, Mail, Globe, AtSign, Server, Phone, Share2,
@@ -30,6 +31,9 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const EDGE_COLORS: Record<string, string> = {
+  analyst_supported_association: "hsl(160, 60%, 45%)",
+  co_appearance_lead: "hsl(270, 60%, 58%)",
+  unverified_association_lead: "hsl(35, 85%, 55%)",
   co_appearance: "hsl(270, 60%, 58%)",
   shared_infrastructure: "hsl(160, 60%, 45%)",
   shared_identifier: "hsl(35, 85%, 55%)",
@@ -53,7 +57,7 @@ interface GNode {
 }
 
 interface GEdge {
-  source: string; target: string; type: string; confidence: number;
+  source: string; target: string; type: string; assessment: "reviewed_association" | "unverified_lead";
 }
 
 function useForceLayout(nodes: GNode[], edges: GEdge[], w: number, h: number) {
@@ -116,9 +120,16 @@ function useForceLayout(nodes: GNode[], edges: GEdge[], w: number, h: number) {
 
 export default function SocialGraphPage() {
   const { user } = useAuth();
-  const { data: entities = [], isLoading: loadingEntities } = useIdentityEntities();
-  const { data: rawEdges = [], isLoading: loadingEdges } = useSocialGraphEdges();
-  const { data: infraLinks = [] } = useInfrastructureLinks();
+  const { data: savedEntities = [], isLoading: loadingEntities, error: entityError } = useIdentityEntities();
+  const { data: savedEdges = [], isLoading: loadingEdges, error: edgeError } = useSocialGraphEdges();
+  const { data: savedInfraLinks = [], error: infrastructureError } = useInfrastructureLinks();
+  const evidenceError = entityError || edgeError || infrastructureError;
+  const entities = useMemo(() => evidenceError ? [] : savedEntities.filter(isResolvedIdentityEntity), [savedEntities, evidenceError]);
+  const rawEdges = useMemo(() => evidenceError ? [] : savedEdges, [evidenceError, savedEdges]);
+  const infraLinks = useMemo(() => {
+    const ids = new Set(entities.map(entity => entity.id));
+    return savedInfraLinks.filter(link => ids.has(link.entity_id));
+  }, [entities, savedInfraLinks]);
   const qc = useQueryClient();
 
   const [running, setRunning] = useState(false);
@@ -159,7 +170,7 @@ export default function SocialGraphPage() {
         source: e.source_entity_id,
         target: e.target_entity_id,
         type: e.relationship_type,
-        confidence: e.confidence_score,
+        assessment: e.assessment,
       });
     }
 
@@ -167,12 +178,14 @@ export default function SocialGraphPage() {
     // Group infra links by type+value to create shared infra nodes
     const infraGroups = new Map<string, { type: string; value: string; entityIds: string[] }>();
     const activeInfra = (filterEdgeType === "all" || filterEdgeType === "infrastructure") ? infraLinks : [];
+    const reviewedEntityIds = new Set(entities.map(entity => entity.id));
     for (const link of activeInfra) {
+      if (!reviewedEntityIds.has(link.entity_id)) continue;
       const key = `${link.infrastructure_type}:${link.value}`;
       if (!infraGroups.has(key)) {
         infraGroups.set(key, { type: link.infrastructure_type, value: link.value, entityIds: [] });
       }
-      infraGroups.get(key)!.entityIds.push(link.entity_id);
+      if (!infraGroups.get(key)!.entityIds.includes(link.entity_id)) infraGroups.get(key)!.entityIds.push(link.entity_id);
     }
 
     // Only show infra nodes that connect 2+ entities (shared infrastructure)
@@ -186,7 +199,7 @@ export default function SocialGraphPage() {
           source: entityId,
           target: infraNodeId,
           type: "infrastructure",
-          confidence: 0.8,
+          assessment: "unverified_lead",
         });
       }
     }
@@ -236,7 +249,7 @@ export default function SocialGraphPage() {
     try {
       const result = await runSocialGraphMining(user.id, setProgress);
       qc.invalidateQueries({ queryKey: ["social_graph_edges"] });
-      toast.success(`Mined ${result.edgesCreated} relationships from ${result.entitiesAnalyzed} entities`);
+      toast.success(`Saved ${result.edgesCreated} reviewed associations from ${result.entitiesAnalyzed} reviewed accounts`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Mining failed");
     } finally {
@@ -280,20 +293,22 @@ export default function SocialGraphPage() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-primary uppercase">Intelligence</span>
         <h1 className="text-2xl font-display font-bold tracking-tight mt-1">Social Graph Mining</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Review saved co-occurrences and identifier patterns. These associations do not establish communication or common identity. Infrastructure records come from observed DNS answers.
+          View accounts with source-backed analyst association reviews. Other saved patterns are unverified leads, and infrastructure observations do not establish ownership or communication. Unsupported legacy entities remain saved outside this view.
         </p>
       </div>
 
+      {evidenceError && <div role="alert" className="rounded border border-destructive p-3 text-sm text-destructive">Current review or source evidence could not be loaded. No current graph findings can be established. {evidenceError instanceof Error ? evidenceError.message : "Evidence source unavailable"}</div>}
+
       {/* Controls */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="neon" size="sm" className="gap-2" disabled={running || miningInfra || !entities.length} onClick={handleRun}>
+        <Button variant="neon" size="sm" className="gap-2" disabled={running || miningInfra || !entities.length || !!evidenceError} onClick={handleRun}>
           {running ? (
             <><Loader2 className="h-3.5 w-3.5 animate-spin" />MINING...</>
           ) : (
             <><Users className="h-3.5 w-3.5" />MINE SOCIAL GRAPH</>
           )}
         </Button>
-        <Button variant="outline" size="sm" className="gap-2" disabled={running || miningInfra || !entities.length} onClick={handleInfraMine}>
+        <Button variant="outline" size="sm" className="gap-2" disabled={running || miningInfra || !entities.length || !!evidenceError} onClick={handleInfraMine}>
           {miningInfra ? (
             <><Loader2 className="h-3.5 w-3.5 animate-spin" />MAPPING...</>
           ) : (
@@ -310,10 +325,10 @@ export default function SocialGraphPage() {
         )}
       </div>
 
-      {!entities.length && !running && (
+      {!entities.length && !running && !evidenceError && (
         <GlassPanel className="p-4">
           <p className="text-xs text-muted-foreground font-mono text-center">
-            Run Identity Resolution first to populate the entity database, then mine social connections here.
+            Add a source-backed account association review in Persona Discovery, then run Identity Resolution to include reviewed accounts here. Inputs and unreviewed candidates remain saved outside this graph.
           </p>
         </GlassPanel>
       )}
@@ -321,7 +336,7 @@ export default function SocialGraphPage() {
       {/* Edge type filters & stats */}
       {(rawEdges.length > 0 || infraLinks.length > 0) && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {["co_appearance", "shared_infrastructure", "shared_identifier", "communication", "infrastructure"].map((type) => {
+          {["analyst_supported_association", "co_appearance_lead", "unverified_association_lead", "infrastructure"].map((type) => {
             const count = type === "infrastructure"
               ? infraLinks.length
               : edgeTypeStats.get(type) ?? 0;
@@ -418,7 +433,7 @@ export default function SocialGraphPage() {
                         x1={s.x} y1={s.y} x2={t.x} y2={t.y}
                         stroke={isHighlight ? color : "hsl(222, 16%, 22%)"}
                         strokeWidth={isHighlight ? 2.5 : 1}
-                        strokeDasharray={edge.confidence < 0.6 ? "4 4" : undefined}
+                        strokeDasharray={edge.assessment === "unverified_lead" ? "4 4" : undefined}
                         opacity={hoveredNode && !isHighlight ? 0.08 : 0.6}
                       />
                       {isHighlight && (
@@ -427,7 +442,7 @@ export default function SocialGraphPage() {
                           textAnchor="middle" fill={color}
                           fontSize={8} fontFamily="monospace"
                         >
-                          {edge.type.replace(/_/g, " ")} ({Math.round(edge.confidence * 100)}%)
+                          {edge.assessment === "reviewed_association" ? "Reviewed association" : "Unverified lead"}
                         </text>
                       )}
                     </g>
@@ -537,7 +552,7 @@ export default function SocialGraphPage() {
                               <div className="flex items-center gap-1.5">
                                 <HardDrive className="h-3 w-3 text-primary" />
                                 <span className="text-foreground font-semibold">{l.infrastructure_type.replace(/_/g, " ")}</span>
-                                <span className="text-primary ml-auto">{Math.round(l.confidence_score * 100)}%</span>
+                                <span className="text-primary ml-auto">Unverified lead</span>
                               </div>
                               <span className="text-muted-foreground block mt-0.5 truncate">{l.value}</span>
                             </div>
@@ -587,7 +602,7 @@ export default function SocialGraphPage() {
                               {edge.relationship_type.replace(/_/g, " ")}
                             </span>
                             <span className="font-mono text-primary ml-auto">
-                              {Math.round(edge.confidence_score * 100)}%
+                              {edge.assessment === "reviewed_association" ? "Reviewed association" : "Unverified lead"}
                             </span>
                           </div>
                           {edge.evidence && (
@@ -629,7 +644,7 @@ export default function SocialGraphPage() {
                         {edge.relationship_type.replace(/_/g, " ")}
                       </span>
                       <span className="font-mono text-[10px] text-primary">
-                        {Math.round(edge.confidence_score * 100)}%
+                        {edge.assessment === "reviewed_association" ? "Reviewed association" : "Unverified lead"}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">

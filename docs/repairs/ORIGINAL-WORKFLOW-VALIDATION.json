@@ -1,0 +1,66 @@
+{
+  "recordedAtUtc": "2026-11-04T06:13:34.936769+00:00",
+  "branch": "codex/original-evidence-workflow-20261104",
+  "baseSha": "6e8a6f70cf917840068a62b163440aba0efe6572",
+  "fixtureTests": {
+    "app": 1328,
+    "appFiles": 103,
+    "worker": 36,
+    "cloudflare": 19,
+    "intelligenceClient": 15,
+    "intelligenceSql": 11,
+    "research": 117,
+    "monitors": 23,
+    "ownershipSql": 1,
+    "dispatcherChecks": 37,
+    "githubParityChecks": 10,
+    "finalDiscoveryRerun": 3
+  },
+  "lintErrors": 0,
+  "lintWarnings": 15,
+  "typecheckExitCode": 0,
+  "initialAggregateFailure": "Research DKIM vendored copy CRLF vs LF checkout; corrected only checkout comparison, retained strict installed SDK raw SHA; research rerun117/117 passed",
+  "liveEvidence": "Two benign public seed reads only; no individual investigation, authenticated review/persistence or deployed function acceptance yet",
+  "logs": [
+    {
+      "file": "aggregate-tests.log",
+      "sha256": "38809b246e6c2e79c5080e64e8d05dce7a83d223dde3fe80a044ddfe5e712b7c",
+      "bytes": 93200
+    },
+    {
+      "file": "research-final-tests.log",
+      "sha256": "0f7d60587c85f30a157ecd389e7b4694ab4abe7858eb99f68edfd4db2d296e62",
+      "bytes": 11929
+    },
+    {
+      "file": "monitors-tests.log",
+      "sha256": "13cd9dd7dc6546336faad66aaa5514563cb9b44a231c69ecc43acd404d0fdb4a",
+      "bytes": 2670
+    },
+    {
+      "file": "retained-tests.log",
+      "sha256": "84a47746c4ff72afe43688b47feb5a7eb69f67a4d9e00838dbdfe0b830cb2455",
+      "bytes": 563
+    },
+    {
+      "file": "final-lint.json",
+      "sha256": "56cf424bfd3d8ebbb8c39b5cd64d379b0b4ab4e08a050f38b23b8310c734923c",
+      "bytes": 302570
+    },
+    {
+      "file": "final-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "final-discovery-tests.json",
+      "sha256": "1463dc7ca00d574b57e2c7fb1b6bcc087cf985df90f3567894ded66e5dcd7713",
+      "bytes": 1669
+    },
+    {
+      "file": "diff-check.log",
+      "sha256": "a4f3e6104ac8e6c621a3e7d51e33401fcae3b70df923ee2cd67108ef28b35df8",
+      "bytes": 2209
+    }
+  ]
+}

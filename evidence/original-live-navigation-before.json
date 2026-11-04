@@ -1,0 +1,242 @@
+{
+  "kind": "read-only navigation, no tool execution or person search",
+  "pages": [
+    {
+      "page": "Dashboard",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/dashboard",
+      "actualUrl": "https://dark-trace-loom.lovable.app/dashboard",
+      "headings": [
+        "Intelligence Analytics",
+        "Investigation Activity",
+        "Intelligence Overview",
+        "Entity Clustering",
+        "Relationship Density",
+        "Risk Distribution",
+        "Entity Discovery Trend",
+        "Breach Exposure",
+        "Highest Risk Entities",
+        "Recent Tool Runs",
+        "Recent Investigations"
+      ],
+      "actionCount": 6
+    },
+    {
+      "page": "Tool Suite",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/tools",
+      "actualUrl": "https://dark-trace-loom.lovable.app/tools",
+      "headings": [
+        "Tool Suite",
+        "Identity",
+        "Reconnaissance",
+        "Analysis",
+        "Media",
+        "Utility",
+        "Communications",
+        "Threat Intel",
+        "Financial",
+        "Geospatial"
+      ],
+      "actionCount": 35
+    },
+    {
+      "page": "Marketplace",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/marketplace",
+      "actualUrl": "https://dark-trace-loom.lovable.app/marketplace",
+      "headings": [
+        "Tool Marketplace"
+      ],
+      "actionCount": 3
+    },
+    {
+      "page": "PDL History",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/pdl-history",
+      "actualUrl": "https://dark-trace-loom.lovable.app/pdl-history",
+      "headings": [
+        " PDL Lookup History"
+      ],
+      "actionCount": 11
+    },
+    {
+      "page": "Agents",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/agents",
+      "actualUrl": "https://dark-trace-loom.lovable.app/agents",
+      "headings": [
+        "Investigation Agents"
+      ],
+      "actionCount": 13
+    },
+    {
+      "page": "Reports",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/reports",
+      "actualUrl": "https://dark-trace-loom.lovable.app/reports",
+      "headings": [
+        "Report Generator"
+      ],
+      "actionCount": 17
+    },
+    {
+      "page": "Evidence Export",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/evidence-export",
+      "actualUrl": "https://dark-trace-loom.lovable.app/evidence-export",
+      "headings": [
+        "Legal Evidence Export"
+      ],
+      "actionCount": 8
+    },
+    {
+      "page": "Correlations",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/correlations",
+      "actualUrl": "https://dark-trace-loom.lovable.app/correlations",
+      "headings": [
+        "Correlation Engine"
+      ],
+      "actionCount": 4
+    },
+    {
+      "page": "Identity Resolution",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/identity",
+      "actualUrl": "https://dark-trace-loom.lovable.app/identity",
+      "headings": [
+        "Identity Resolution",
+        " IDENTITY CLUSTERS (count omitted)"
+      ]
+    },
+    {
+      "page": "Social Graph",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/social-graph",
+      "actualUrl": "https://dark-trace-loom.lovable.app/social-graph",
+      "headings": [
+        "Social Graph Mining"
+      ]
+    },
+    {
+      "page": "Pipelines",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/pipelines",
+      "actualUrl": "https://dark-trace-loom.lovable.app/pipelines",
+      "headings": [
+        "OSINT Pipelines"
+      ]
+    },
+    {
+      "page": "Persona Discovery",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/personas",
+      "actualUrl": "https://dark-trace-loom.lovable.app/personas",
+      "headings": [
+        "Persona Discovery",
+        " Discovery Input",
+        "Personas (count omitted)"
+      ]
+    },
+    {
+      "page": "Persona Profiles",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/persona-profile",
+      "actualUrl": "https://dark-trace-loom.lovable.app/persona-profile",
+      "headings": [
+        "Persona Profile Builder",
+        "SELECT PERSONA"
+      ]
+    },
+    {
+      "page": "Persona Intel",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/persona-intel",
+      "actualUrl": "https://dark-trace-loom.lovable.app/persona-intel",
+      "headings": [
+        "Persona Intelligence",
+        " PERSONA RELATIONSHIP GRAPH",
+        " HIGH-RISK PERSONAS (count omitted)",
+        " RECENT DISCOVERIES (count omitted)",
+        " IDENTIFIER TYPES",
+        " CLUSTER SIZES",
+        " CROSS-CASE LINKS",
+        " RECENT PERSONA ACTIVITY"
+      ]
+    },
+    {
+      "page": "Investigations",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/investigations",
+      "actualUrl": "https://dark-trace-loom.lovable.app/investigations",
+      "headings": []
+    },
+    {
+      "page": "Organizations",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/organizations",
+      "actualUrl": "https://dark-trace-loom.lovable.app/organizations",
+      "headings": [
+        "Organizations"
+      ]
+    },
+    {
+      "page": "Alerts",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/alerts",
+      "actualUrl": "https://dark-trace-loom.lovable.app/alerts",
+      "headings": [
+        "Alerts"
+      ]
+    },
+    {
+      "page": "Training",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/training",
+      "actualUrl": "https://dark-trace-loom.lovable.app/training",
+      "headings": [
+        "Training Academy"
+      ]
+    },
+    {
+      "page": "Knowledge Base",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/knowledge",
+      "actualUrl": "https://dark-trace-loom.lovable.app/knowledge",
+      "headings": [
+        "Knowledge Base"
+      ]
+    },
+    {
+      "page": "API",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/api",
+      "actualUrl": "https://dark-trace-loom.lovable.app/api",
+      "headings": [
+        "API Access",
+        " API Keys",
+        "Usage Today",
+        "Authentication",
+        "Rate Limits",
+        "Endpoints",
+        "Example Requests"
+      ]
+    },
+    {
+      "page": "Pricing",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/pricing",
+      "actualUrl": "https://dark-trace-loom.lovable.app/pricing",
+      "headings": [
+        "Intelligence at every scale",
+        "Free",
+        "Professional",
+        "Team",
+        "Enterprise"
+      ]
+    },
+    {
+      "page": "Billing",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/billing",
+      "actualUrl": "https://dark-trace-loom.lovable.app/billing",
+      "headings": [
+        "Subscription & Billing"
+      ]
+    },
+    {
+      "page": "Admin",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/admin",
+      "actualUrl": "https://dark-trace-loom.lovable.app/admin",
+      "headings": []
+    },
+    {
+      "page": "Activity Logs",
+      "requestedUrl": "https://dark-trace-loom.lovable.app/activity",
+      "actualUrl": "https://dark-trace-loom.lovable.app/activity",
+      "headings": [
+        "Activity Logs"
+      ]
+    }
+  ],
+  "scope": "Read-only navigation of 24 original authenticated menu routes. Heading/control presence only; no tool execution, person search, paid call, publication or backend acceptance. Private record names, contents and counts omitted."
+}
