@@ -1,0 +1,654 @@
+{
+  "status": "Live captured-tail import independently verified",
+  "run": "InsightNexus_csv_tail_20261104_4947857f",
+  "target": "ocliymtdvtxfxczxgbjr",
+  "querySha256": "d8b182e52526c461eb598e0ca4157bbcb5b1a11b1067f1ca182a690fd7bfbd4b",
+  "productionCutover": false,
+  "sourceCutoverFreshness": false,
+  "verification": {
+    "auth_users": 2,
+    "table_count": 63,
+    "verified_at": "2026-11-04T09:06:40.277204+00:00",
+    "public_total": 2874,
+    "table_results": [
+      {
+        "table_name": "activity_logs",
+        "current_rows": 720,
+        "expected_rows": 720,
+        "untouched_rows": 570,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 570,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "agent_runs",
+        "current_rows": 7,
+        "expected_rows": 7,
+        "untouched_rows": 7,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 7,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "agents",
+        "current_rows": 5,
+        "expected_rows": 5,
+        "untouched_rows": 5,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 5,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "alert_notifications",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "alerts",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "analysis_reports",
+        "current_rows": 4,
+        "expected_rows": 4,
+        "untouched_rows": 4,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 4,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "api_keys",
+        "current_rows": 1,
+        "expected_rows": 1,
+        "untouched_rows": 1,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 1,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "api_usage",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "articles",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "artifacts",
+        "current_rows": 9,
+        "expected_rows": 9,
+        "untouched_rows": 9,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 9,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "billing_events",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "breach_records",
+        "current_rows": 8,
+        "expected_rows": 8,
+        "untouched_rows": 8,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 8,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "case_collaborators",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "cases",
+        "current_rows": 3,
+        "expected_rows": 3,
+        "untouched_rows": 3,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 3,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "cluster_members",
+        "current_rows": 23,
+        "expected_rows": 23,
+        "untouched_rows": 23,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 23,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "courses",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "cross_case_correlations",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "cross_case_links",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "email_candidates",
+        "current_rows": 140,
+        "expected_rows": 140,
+        "untouched_rows": 140,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 140,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "entities",
+        "current_rows": 10,
+        "expected_rows": 10,
+        "untouched_rows": 10,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 10,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "entity_monitors",
+        "current_rows": 1,
+        "expected_rows": 1,
+        "untouched_rows": 1,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 1,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "entity_observations",
+        "current_rows": 151,
+        "expected_rows": 151,
+        "untouched_rows": 150,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 150,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "entity_relationships",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "entity_scores",
+        "current_rows": 65,
+        "expected_rows": 65,
+        "untouched_rows": 65,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 65,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "entity_timeline",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "events",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "evidence_logs",
+        "current_rows": 10,
+        "expected_rows": 10,
+        "untouched_rows": 10,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 10,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "expansion_logs",
+        "current_rows": 9,
+        "expected_rows": 9,
+        "untouched_rows": 9,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 9,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "identity_clusters",
+        "current_rows": 6,
+        "expected_rows": 6,
+        "untouched_rows": 6,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 6,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "identity_entities",
+        "current_rows": 85,
+        "expected_rows": 85,
+        "untouched_rows": 43,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 85,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "identity_entity_links",
+        "current_rows": 10,
+        "expected_rows": 10,
+        "untouched_rows": 10,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 10,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "infrastructure_links",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "intelligence_executions",
+        "current_rows": 7,
+        "expected_rows": 7,
+        "untouched_rows": 7,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 7,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "investigation_suggestions",
+        "current_rows": 12,
+        "expected_rows": 12,
+        "untouched_rows": 12,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 12,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "investigation_templates",
+        "current_rows": 6,
+        "expected_rows": 6,
+        "untouched_rows": 6,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 6,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "lessons",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "modules",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "organization_invitations",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "organization_members",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "organizations",
+        "current_rows": 1,
+        "expected_rows": 1,
+        "untouched_rows": 1,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 1,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "pdl_lookups",
+        "current_rows": 4,
+        "expected_rows": 4,
+        "untouched_rows": 4,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 4,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "persona_events",
+        "current_rows": 256,
+        "expected_rows": 256,
+        "untouched_rows": 256,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 256,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "persona_identifiers",
+        "current_rows": 187,
+        "expected_rows": 187,
+        "untouched_rows": 185,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 185,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "personas",
+        "current_rows": 11,
+        "expected_rows": 11,
+        "untouched_rows": 10,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 10,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "pipeline_runs",
+        "current_rows": 7,
+        "expected_rows": 7,
+        "untouched_rows": 6,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 6,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "pipelines",
+        "current_rows": 4,
+        "expected_rows": 4,
+        "untouched_rows": 3,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 3,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "platform_accounts",
+        "current_rows": 262,
+        "expected_rows": 262,
+        "untouched_rows": 262,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 262,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "profiles",
+        "current_rows": 2,
+        "expected_rows": 2,
+        "untouched_rows": 2,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 2,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "progress",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "reports",
+        "current_rows": 3,
+        "expected_rows": 3,
+        "untouched_rows": 3,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 3,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "similarity_scores",
+        "current_rows": 339,
+        "expected_rows": 339,
+        "untouched_rows": 339,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 339,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "social_graph_edges",
+        "current_rows": 151,
+        "expected_rows": 151,
+        "untouched_rows": 151,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 151,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "subjects",
+        "current_rows": 4,
+        "expected_rows": 4,
+        "untouched_rows": 4,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 4,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "subscriptions",
+        "current_rows": 2,
+        "expected_rows": 2,
+        "untouched_rows": 2,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 2,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "system_logs",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "tags",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "tool_marketplace",
+        "current_rows": 50,
+        "expected_rows": 50,
+        "untouched_rows": 50,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 50,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "tool_permissions",
+        "current_rows": 0,
+        "expected_rows": 0,
+        "untouched_rows": 0,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 0,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "tool_results",
+        "current_rows": 37,
+        "expected_rows": 37,
+        "untouched_rows": 33,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 33,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "usage_metrics",
+        "current_rows": 55,
+        "expected_rows": 55,
+        "untouched_rows": 53,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 53,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "user_installed_tools",
+        "current_rows": 100,
+        "expected_rows": 100,
+        "untouched_rows": 100,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 100,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "user_roles",
+        "current_rows": 1,
+        "expected_rows": 1,
+        "untouched_rows": 1,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 1,
+        "reconstructed_prior_matches": true
+      },
+      {
+        "table_name": "username_candidates",
+        "current_rows": 106,
+        "expected_rows": 106,
+        "untouched_rows": 106,
+        "checkpoint_matches": true,
+        "reconstructed_prior_rows": 106,
+        "reconstructed_prior_matches": true
+      }
+    ],
+    "untouched_rows": 2670,
+    "auth_identities": 3,
+    "checkpoint_count": 63,
+    "selected_present": 204,
+    "selected_results": [
+      {
+        "table_name": "activity_logs",
+        "present_rows": 150,
+        "expected_rows": 150,
+        "matching_rows": 150
+      },
+      {
+        "table_name": "entity_observations",
+        "present_rows": 1,
+        "expected_rows": 1,
+        "matching_rows": 1
+      },
+      {
+        "table_name": "identity_entities",
+        "present_rows": 42,
+        "expected_rows": 42,
+        "matching_rows": 42
+      },
+      {
+        "table_name": "persona_identifiers",
+        "present_rows": 2,
+        "expected_rows": 2,
+        "matching_rows": 2
+      },
+      {
+        "table_name": "personas",
+        "present_rows": 1,
+        "expected_rows": 1,
+        "matching_rows": 1
+      },
+      {
+        "table_name": "pipeline_runs",
+        "present_rows": 1,
+        "expected_rows": 1,
+        "matching_rows": 1
+      },
+      {
+        "table_name": "pipelines",
+        "present_rows": 1,
+        "expected_rows": 1,
+        "matching_rows": 1
+      },
+      {
+        "table_name": "tool_results",
+        "present_rows": 4,
+        "expected_rows": 4,
+        "matching_rows": 4
+      },
+      {
+        "table_name": "usage_metrics",
+        "present_rows": 2,
+        "expected_rows": 2,
+        "matching_rows": 2
+      }
+    ],
+    "selected_expected": 204,
+    "run_identity_matches": true,
+    "recorded_changed_rows": 42,
+    "recorded_inserted_rows": 162,
+    "auth_user_ids_unchanged": true,
+    "reconstructed_prior_rows": 2712,
+    "selected_content_matches": 204,
+    "all_checkpoint_digests_match": true,
+    "auth_identity_mapping_unchanged": true,
+    "password_or_session_values_read": false,
+    "all_reconstructed_prior_digests_match": true
+  }
+}

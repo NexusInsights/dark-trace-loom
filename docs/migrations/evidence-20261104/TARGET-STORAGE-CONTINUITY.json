@@ -1,0 +1,28 @@
+{
+  "checkedAtUtc": "2026-11-04T08:50:04.790755+00:00",
+  "scope": "Read-only retained receipt/schema inspection; no binary reread or network",
+  "currentTargetReceipt": "D:/CodexData/InsightNexus-Migration/2026-11-04/target-account-storage-digests.private.json",
+  "currentTargetRowFields": [
+    "bucket",
+    "bytes",
+    "id",
+    "metadata",
+    "name"
+  ],
+  "currentTargetFieldDigestReceipt": "D:/CodexData/InsightNexus-Migration/2026-11-04/target-storage-field-digests.private.json",
+  "currentTargetVersionPresent": false,
+  "currentTargetUpdatedAtPresent": false,
+  "currentTargetMetadataFingerprintPresent": true,
+  "historicalTargetDownloadFiles": 3,
+  "historicalTargetDownloadSidecarReceipts": 0,
+  "historicalTargetVersionMetadataBindingFound": false,
+  "sourceSha256ReceiptMustNotBeTreatedAsTargetVersionReceipt": true,
+  "exactContinuityEstablished": false,
+  "limitation": "The October14 retained target files have no adjacent or top-level target-object download receipt tying their SHA256 to target version, updated_at or metadata. Current target receipts retain IDs/bucket/path/metadata fingerprints and sizes, but omit object version and updated_at. Therefore historical target bytes cannot be connected cryptographically to the current target object version using these receipts alone.",
+  "verifiedPriorEvidence": "Three retained target binaries remain byte-identical to retained source binaries, as separately recorded in RETAINED-STORAGE-BYTES.json. No rehash was repeated here.",
+  "interpretation": "Do not claim fresh remote bytes or exact target version continuity. This is an evidence gap, not a detected content mismatch.",
+  "networkCalls": 0,
+  "uiAccess": false,
+  "credentialUse": false,
+  "sourceOrTargetMutation": false
+}

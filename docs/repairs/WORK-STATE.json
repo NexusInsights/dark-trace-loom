@@ -129,5 +129,5 @@
     ]
   },
   "latestIndependentMigration": "docs/migrations/INDEPENDENT-LIVE-CHECKPOINT-20261104.json",
-  "independentCutoverStatus": "preview live and snapshot imported; authenticated freshness/storage/monitor acceptance pending"
+  "independentCutoverStatus": "Preview live; official snapshot and captured tail imported and independently verified at 2,874 rows; sign-in, final freshness, current storage bytes and monitor cutover pending"
 }

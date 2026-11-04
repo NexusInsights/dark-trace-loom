@@ -1,8 +1,16 @@
 # Independent migration live checkpoint — November 4, 2026
 
+Current-data preservation now covers all 63 public tables: 2,872 CSV rows, 162 additions, 42 substantive existing-record updates, and no historical IDs missing. All table counts have UI evidence; 2,485 public foreign-key references validate. Exact source-UI ID hashes resolve all 151 new blank fields as SQL NULL. Fifteen spreadsheet decorations are preserved in raw exports and excluded from inferred database updates. Fourteen synthetic normalization tests passed. Raw data and update before-images remain private.
+
+The reviewed captured-tail transaction executed once on the independent destination: 162 inserts and 42 updates, bringing its public tables to 2,874 rows. The independent read-back at 09:06:40 UTC verified all 63 checkpoint digests, all 204 selected row hashes and all 2,670 untouched rows, with the original 2,712-row state reconstructed against all 63 prior hashes. Auth user IDs and identity mappings remain unchanged. Seven PostgreSQL rehearsals and ten generator tests passed; actual multi-connection contention remains untested. The private exact rollback was rehearsed and retained, not executed live.
+
+The CSVs were captured at separate times. Activity logs grew from 720 to 721 after export, so the captured tail does not establish cutover freshness. Source SQL was not retried. The original SQL error body is unavailable in supported history; ordinary table downloads used the separately authorized logged-in export workflow.
+
+Three retained source files (23,067 bytes) match saved SHA-256 receipts and retained destination downloads; their source archives pass CRC. The current source export matches the same object versions and metadata. Current destination byte acceptance remains pending because the historical target downloads lack version receipts. No content mismatch was detected, and no private object was made public.
+
 Independent preview698e5307 now serves source83efceb from owned backendocliymtdvtxfxczxgbjr;42/42 served-file hashes match and20 Edge function source closures match the reviewed source. The guarded official-snapshot transfer added887 missing records plus1 audit entry. Independent live SQL verifies63/63 table digests,2,712 public rows and all1,824 prior rows unchanged.
 
-Production has NOT switched: eb26475f still useszisrsttmjeipkmllqubi. Actual destination sign-in,3 private-file byte comparisons, complete post-05:03Z source changes and monitor recovery/draining remain cutover gates. Monitor hold source has40 passing offline tests and is prepared, not activated. CSV downloads are retained privately and unimported. Failed test expectations and their corrected endpoint/body follow-ups remain in the evidence; no fixture is counted as authenticated acceptance.
+Production has NOT switched: eb26475f still uses zisrsttmjeipkmllqubi. Actual destination sign-in, current destination bytes for 3 private files, final post-capture source changes and monitor cutover verification remain open. Monitor hold source has 40 passing offline tests and is prepared, not activated. CSV downloads and before-images are retained privately; captured inserts/updates are now imported and verified. Failed test expectations and their corrected endpoint/body follow-ups remain in the evidence; no fixture is counted as authenticated acceptance.
 
 See docs/migrations/INDEPENDENT-LIVE-CHECKPOINT-20261104.json and evidence-20261104/. No source deletion, credential/access expansion, paid provider call or production cutover occurred.
 

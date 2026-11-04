@@ -1,0 +1,56 @@
+{
+  "checkedAtUtc": "2026-11-04T08:47:41.017442+00:00",
+  "sourceSnapshotUtc": "2026-11-04T05:03:44Z",
+  "retainedSourceObjects": 3,
+  "retainedSourceBytes": 23067,
+  "retainedTargetDownloadObjects": 3,
+  "sourceManifestSha256Matches": 3,
+  "sourceManifestBytesMatch": 3,
+  "uniqueByteIdenticalRetainedTargetMatches": 3,
+  "sourceDownloadArchiveCrcPassed": 3,
+  "sourceDownloadArchiveContentMatches": 3,
+  "currentSourceIdsPathsVersionsAndTimesMatch": [
+    {
+      "objectIndex": 1,
+      "id": true,
+      "bucket_id": true,
+      "name": true,
+      "owner": true,
+      "owner_id": true,
+      "version": true,
+      "created_at": true,
+      "updated_at": true
+    },
+    {
+      "objectIndex": 2,
+      "id": true,
+      "bucket_id": true,
+      "name": true,
+      "owner": true,
+      "owner_id": true,
+      "version": true,
+      "created_at": true,
+      "updated_at": true
+    },
+    {
+      "objectIndex": 3,
+      "id": true,
+      "bucket_id": true,
+      "name": true,
+      "owner": true,
+      "owner_id": true,
+      "version": true,
+      "created_at": true,
+      "updated_at": true
+    }
+  ],
+  "currentSourceMetadataEqualsRetained": 3,
+  "currentSourceSizesMatch": 3,
+  "currentSourceEtagsMatch": 3,
+  "currentRemoteTargetBytesReDownloaded": false,
+  "networkCalls": 0,
+  "credentialUse": false,
+  "targetMutation": false,
+  "privateEvidence": "D:/CodexData/InsightNexus-Migration/2026-11-04/retained-storage-byte-verification.private.json",
+  "interpretation": "All counts describe rehashed retained bytes. Current export metadata correlation is separate from a new authenticated download of current remote target content."
+}

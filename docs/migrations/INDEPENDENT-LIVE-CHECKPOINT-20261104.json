@@ -1,6 +1,6 @@
 {
-  "recordedAtUtc": "2026-11-04T07:56:15.838004+00:00",
-  "status": "Independent preview and snapshot data migration verified; production cutover pending",
+  "recordedAtUtc": "2026-11-04T09:06:40.277204+00:00",
+  "status": "Independent preview and captured source-data migration verified; production cutover pending",
   "repository": "https://github.com/NexusInsights/dark-trace-loom",
   "backupBranch": "codex/lovable-exit-20261104",
   "deployedApplicationSourceSha": "83efceb6b6369113015f773d434d368cac963111",
@@ -56,18 +56,38 @@
     "authIdentityMappingsPreserved": 3,
     "passwordOrSessionValuesCompared": false,
     "preservedConflicts": "Destination-only cluster and pre-existing pipeline timestamps retained",
-    "rollback": "Private exact-delta rollback rehearsed with synthetic data; not executed live; refuses later writes"
+    "rollback": "Private exact-delta rollback rehearsed with synthetic data; not executed live; refuses later writes",
+    "capturedTail": {
+      "run": "InsightNexus_csv_tail_20261104_4947857f",
+      "insertedRows": 162,
+      "updatedRows": 42,
+      "publicRowsAfter": 2874,
+      "independentPostReadVerified": true,
+      "matchingTableCheckpoints": 63,
+      "exactSelectedRows": 204,
+      "untouchedRowsVerified": 2670,
+      "reconstructedPriorRows": 2712,
+      "reconstructedPriorTableDigestsMatched": 63,
+      "authUserIdsUnchanged": true,
+      "authIdentityMappingsUnchanged": true,
+      "privateForwardSha256": "1ff6cdb43af9fa29e82e6e2b26aa32376dd099a1b97711c54264c355d52bf41f",
+      "privateRollbackSha256": "b4486991ccb8deea2cba2bffd9c852daacda5b734feed26a83c9b4832dc9fc62",
+      "rollbackExecutedLive": false,
+      "currentCutoverSnapshot": false
+    }
   },
   "offlineValidation": {
     "appTests": 1361,
     "appFiles": 105,
     "migrationPreparationTests": 45,
     "dataDeltaTests": 27,
-    "csvNormalizationTests": 12,
+    "csvNormalizationTests": 14,
     "monitorTests": 40,
     "typecheck": "passed",
     "lint": "0 errors,15 existing warnings",
-    "independentBuild": "passed"
+    "independentBuild": "passed",
+    "tailPostgresTests": 7,
+    "tailGeneratorTests": 10
   },
   "monitor": {
     "service": "insight-nexus-monitors",
@@ -83,19 +103,53 @@
     "optionalContainer": "Independent source; Worker absent (Cloudflare10007). Historical paid Containers setup gate retained; not activated"
   },
   "currentCsvReads": {
-    "tables": [
-      "pipelines",
-      "activity_logs",
-      "alerts"
-    ],
-    "newIdsObserved": 151,
-    "newIdsImported": 0,
-    "historicalCoverage": "All old IDs present in pipelines/activity_logs",
+    "tableCount": 63,
+    "exportedRows": 2872,
+    "uiRowCountBindings": 63,
+    "headersMatchSnapshotSchema": true,
+    "uniqueIdsWithinEachTable": true,
+    "validatedPublicForeignKeyReferences": 2485,
+    "newIdsObserved": 162,
+    "newIdsImported": 162,
+    "substantiveSharedUpdates": 42,
+    "possibleSpreadsheetDecorationRows": 15,
+    "historicalIdsMissing": 0,
+    "exactNullBindings": {
+      "activityLogIpRows": 150,
+      "activityIdSetSha256": "3def4e7bd6639aea817ba46a0d35ada93cfbd5720128957a93f961ae8088175f",
+      "personaNotesRows": 1,
+      "personaIdSetSha256": "614ff5dbebe366e7855d299b16a68c6ad0226cf3d9e593df649772f6366acdac",
+      "encoding": "Sorted canonical UUIDs joined by LF, no trailing LF; private CSV ID sets match fully rendered source UI rows with null markers"
+    },
+    "separatelyTimedExports": true,
+    "sourceActivityCountAtExport": 720,
+    "sourceActivityCountAfterExport": 721,
+    "sourceSqlRetried": false,
+    "exportRoute": "Ordinary logged-in project Database table CSV download; separately authorized by the user's whole-project migration and browser export request",
+    "originalSqlError": "Supported task history retains failed query arguments/status but omits the original error body. Earlier missing projects:write explanation remains historical, not an independently verified raw service error.",
     "gates": [
-      "Exact current completeness not proven",
-      "Nullable text blanks ambiguous",
-      "Original source SQL error body unavailable; further source exports paused while denial scope is clarified"
-    ]
+      "Captured records are independently verified in destination; exports were not atomic and do not prove current cutover freshness",
+      "At least one newer source activity record requires final reconciliation during controlled write cutover"
+    ],
+    "substantiveUpdatesApplied": 42
+  },
+  "verifiedRepositoryBackupBeforeThisRecord": {
+    "localAndRemoteSha": "a40fd856ac5afc20f125ce792ae46ec370b7768c",
+    "ciRun": 41796299791,
+    "ciConclusion": "success",
+    "ciUrl": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41796299791"
+  },
+  "storageBytes": {
+    "preservedSourceObjects": 3,
+    "preservedSourceBytes": 23067,
+    "sourceSha256ReceiptsMatch": 3,
+    "byteIdenticalPreservedTargetDownloads": 3,
+    "sourceArchiveCrcChecksPassed": 3,
+    "currentSourceExportVersionsAndMetadataMatchRetainedSource": true,
+    "currentDestinationBytesDownloaded": false,
+    "currentDestinationVersionContinuityVerified": false,
+    "remainingEvidence": "October 14 target downloads lack object-version sidecar receipts; retained current target metadata lacks version and updated_at. This is an evidence gap, not a detected byte mismatch.",
+    "destinationDashboardRead": "Existing browser route reached sign-in; no new login, credential or permission was supplied"
   },
   "remainingCutoverChecks": [
     "User sign-in on independent preview and authenticated original workflow",

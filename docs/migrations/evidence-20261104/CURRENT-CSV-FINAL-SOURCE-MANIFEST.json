@@ -1,0 +1,535 @@
+{
+  "recordedAtUtc": "2026-11-04T08:48:15.861674+00:00",
+  "scope": "Immutable captured 63-table set, not current or atomic cutover source",
+  "tableCount": 63,
+  "totalRows": 2872,
+  "allHeadersMatchSnapshotSchema": true,
+  "perTableIdsUnique": true,
+  "allPublicForeignKeyReferencesValidated": 2485,
+  "authReferenceBasis": "Known source snapshot auth user IDs; not fresh full Auth export",
+  "newIdsSinceSnapshot": 162,
+  "historicalIdsMissing": 0,
+  "changedSharedRowsExcludingPossibleDecorations": 42,
+  "possibleExportDecorationRows": 15,
+  "newBlankAmbiguities": {
+    "activity_logs.ip_address": 150,
+    "personas.notes": 1
+  },
+  "separatelyTimedExports": true,
+  "files": [
+    {
+      "table": "activity_logs",
+      "filename": "activity_logs.csv",
+      "bytes": 130446,
+      "sha256": "76a863692aba7aebd72608e335e101053092d0b7a5841c04dfbac0836f2a75df",
+      "rows": 720,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "agent_runs",
+      "filename": "agent_runs.csv",
+      "bytes": 6280,
+      "sha256": "5a92a3a48ea5cf3fa93be3da000bcfbbbd510518717c647cefdce5192d7b5c7d",
+      "rows": 7,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "agents",
+      "filename": "agents.csv",
+      "bytes": 1206,
+      "sha256": "463f9e651a31ba40179d236d8b65d227f29967c02a5879fffe36d86f5277099c",
+      "rows": 5,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "alert_notifications",
+      "filename": "alert_notifications.csv",
+      "bytes": 67,
+      "sha256": "c42eb24a9c9697777da4840c2c010325bc72eaf7bf2ab15fa1aadbaeb0a90e2b",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "alerts",
+      "filename": "alerts.csv",
+      "bytes": 111,
+      "sha256": "32253f0e802eaefd3e613143f7a0f7edaee2f6ad1868b7aa4cfff06820c13e96",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "analysis_reports",
+      "filename": "analysis_reports.csv",
+      "bytes": 11103,
+      "sha256": "45ca8181f9c7c0ded647bc105c7d0ac3752e46abcc3f24c29805e0de87146966",
+      "rows": 4,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "api_keys",
+      "filename": "api_keys.csv",
+      "bytes": 216,
+      "sha256": "12d06d2415fb167ede639e1a9d85ad08a4469d78a2286ea4063e20bef6899f14",
+      "rows": 1,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "api_usage",
+      "filename": "api_usage.csv",
+      "bytes": 47,
+      "sha256": "8931ad03a6d96ccb56dc40cc8dbec84a5c0d15c35d84ecdc403ab8e2cfea3d59",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "articles",
+      "filename": "articles.csv",
+      "bytes": 61,
+      "sha256": "de246a393ea371ddfc2c683bae43f038015a3cd8d04fa99a9b0d476063c29184",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "artifacts",
+      "filename": "artifacts.csv",
+      "bytes": 7473,
+      "sha256": "20e1f9a5810d54001fd0c35ed86511e465892814eb41c1e659ff5e083f5fba32",
+      "rows": 9,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "billing_events",
+      "filename": "billing_events.csv",
+      "bytes": 95,
+      "sha256": "b094e78e1ff3441c615e941d8cf7b2cb82887854f569bbbf3d322118b415edf9",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "breach_records",
+      "filename": "breach_records.csv",
+      "bytes": 3422,
+      "sha256": "d7a0fbd38ee9d8c04505b87c1d4fb3d65c87bc53b6f9109b7120ecf8aa3a862e",
+      "rows": 8,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "case_collaborators",
+      "filename": "case_collaborators.csv",
+      "bytes": 45,
+      "sha256": "842bd0752aa5f2dbddfcf70eaf442a77db402493271d85270dc40f17b5195608",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "cases",
+      "filename": "cases.csv",
+      "bytes": 751,
+      "sha256": "013f5e8cceda703d5ff8bc237edc399511c2a144877657770e0eff7ac9df40cb",
+      "rows": 3,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "cluster_members",
+      "filename": "cluster_members.csv",
+      "bytes": 4825,
+      "sha256": "8d5d24d61b56083bd043bc099cadcd77eb84ca7b6da532a1e3b9019c7b37a1e4",
+      "rows": 23,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "courses",
+      "filename": "courses.csv",
+      "bytes": 78,
+      "sha256": "271cefe5a0657b3e8574a448f1e943be809ac9b733c9720fe1dc81cdc06b2f49",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "cross_case_correlations",
+      "filename": "cross_case_correlations.csv",
+      "bytes": 168,
+      "sha256": "6f3f6d718884712eb401b770b2047c0e838fc4c0f50769c1f4abbadcd89c5480",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "cross_case_links",
+      "filename": "cross_case_links.csv",
+      "bytes": 97,
+      "sha256": "9da7ab5d532091b83c33d26e42ca82d22f0d09ebd0c9e56618a8fd8d6fbb1f10",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "email_candidates",
+      "filename": "email_candidates.csv",
+      "bytes": 25731,
+      "sha256": "686b4b8cf171db2ee3e54cb9b32213342a893d07fb6d5b5a5c86cce844ad90fd",
+      "rows": 140,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "entities",
+      "filename": "entities.csv",
+      "bytes": 1408,
+      "sha256": "ab1092ea582861559d4330901de9bdf99cfd5a6200bfa384a50fe0cd60e4044c",
+      "rows": 10,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "entity_monitors",
+      "filename": "entity_monitors.csv",
+      "bytes": 298,
+      "sha256": "e0a8822b85d65e6a603452626ad13d4b4fa5192a5e7634f86f16b30f9d48d529",
+      "rows": 1,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "entity_observations",
+      "filename": "entity_observations.csv",
+      "bytes": 34379,
+      "sha256": "0438e6b2d8f2aabfb098296510e35c9908b8848bfe1b70f6f5cb488b1cf70463",
+      "rows": 151,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "entity_relationships",
+      "filename": "entity_relationships.csv",
+      "bytes": 76,
+      "sha256": "ee4b240bfb64bf7766f7eef93e1a740d329ffe42a3be60c301a3f3e5bd9b7644",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "entity_scores",
+      "filename": "entity_scores.csv",
+      "bytes": 29968,
+      "sha256": "4ea876bf2f64eb5e08ae8fad692c427046468f19efbd0ce338556c3567c99241",
+      "rows": 65,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "entity_timeline",
+      "filename": "entity_timeline.csv",
+      "bytes": 86,
+      "sha256": "b67966387ebc1c7e700fd3aa3a3530d5462fbe51ee05ad611c5b99b7ab781088",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "events",
+      "filename": "events.csv",
+      "bytes": 54,
+      "sha256": "21ac3b223a1aa6ba893006251fde35e9765d43c9c769efe38d1797872806c427",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "evidence_logs",
+      "filename": "evidence_logs.csv",
+      "bytes": 1679,
+      "sha256": "f1054d0e053b98b52b67b9ea868c1d7b4661d1774189a7eb454b23ffa09b1025",
+      "rows": 9,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "expansion_logs",
+      "filename": "expansion_logs.csv",
+      "bytes": 2223,
+      "sha256": "690ddd28935c5c1ee5521688f7fdcfabbffabe3d7341bccfa90dbd63de931ce8",
+      "rows": 9,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "identity_clusters",
+      "filename": "identity_clusters.csv",
+      "bytes": 810,
+      "sha256": "4a398ae6b1179ce6a14cd09dd55ef8fdca4f90ab371b810f3b72251aa6f6e757",
+      "rows": 5,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "identity_entities",
+      "filename": "identity_entities.csv",
+      "bytes": 24410,
+      "sha256": "2b44039ce458e8d2782fd415e3983f61c10fc1d5d9e52e995f490d325fb78ee6",
+      "rows": 85,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "identity_entity_links",
+      "filename": "identity_entity_links.csv",
+      "bytes": 2174,
+      "sha256": "5e499844391cffc64343c6228487ecf0915097d7d60eb907563d997a0d46fd5f",
+      "rows": 10,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "infrastructure_links",
+      "filename": "infrastructure_links.csv",
+      "bytes": 95,
+      "sha256": "539271cccfa2ef4ac0296534287cb883622b78b322e8e143d34e2325827a73a5",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "intelligence_executions",
+      "filename": "intelligence_executions.csv",
+      "bytes": 1169,
+      "sha256": "4382769678e5ee896081d8cb67df6a1dc09b4f15db903d2c3d875479cac1bc17",
+      "rows": 7,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "investigation_suggestions",
+      "filename": "investigation_suggestions.csv",
+      "bytes": 3265,
+      "sha256": "3aaee219dbf9b3c0adbb470f24b3b0dc9ce7d19c2ed255b813127653849ac33e",
+      "rows": 12,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "investigation_templates",
+      "filename": "investigation_templates.csv",
+      "bytes": 1674,
+      "sha256": "ab5cecb270a3c8768aee453c9b014abbe0f32375ed1fd0463cda6e83b95f0fd8",
+      "rows": 6,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "lessons",
+      "filename": "lessons.csv",
+      "bytes": 48,
+      "sha256": "5d0527489b6d1161b4458dc1a677f02c9ac96d997204107afbc731a2394d7771",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "modules",
+      "filename": "modules.csv",
+      "bytes": 40,
+      "sha256": "f73ac881894ced062b87522065a830aacd5b168d3c6b6da5fac4567fe8a52189",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "organization_invitations",
+      "filename": "organization_invitations.csv",
+      "bytes": 80,
+      "sha256": "534998adc5ae22bb237f646f71989db3a3b2ab7196865d50962b822a34b2f255",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "organization_members",
+      "filename": "organization_members.csv",
+      "bytes": 52,
+      "sha256": "c66aebee519b6351490d81a74952d7dff87c61b2fd123e584f74e87b2a3aaea2",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "organizations",
+      "filename": "organizations.csv",
+      "bytes": 210,
+      "sha256": "b86e52eca9ab956519f5d7ff3434335e197acb6d149efa7c8ba6fd53c03d41bf",
+      "rows": 1,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "pdl_lookups",
+      "filename": "pdl_lookups.csv",
+      "bytes": 43203,
+      "sha256": "4cb18841b3432591891b2a8682ed212a9ce2e8ed62a58999d7464b83627d925c",
+      "rows": 4,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "persona_events",
+      "filename": "persona_events.csv",
+      "bytes": 79956,
+      "sha256": "19d3f12e5403f33f89c3be026adbe1ca63c16205c65ef9e68237ee24aecfeb85",
+      "rows": 256,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "persona_identifiers",
+      "filename": "persona_identifiers.csv",
+      "bytes": 37169,
+      "sha256": "ad7e254464cbfcf8ea7e2f05585ee7a2938f9b9932d07e938b3f72caee4d68ab",
+      "rows": 187,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "personas",
+      "filename": "personas.csv",
+      "bytes": 1757,
+      "sha256": "f82b13c69c091a3605a9d12151a8ce27e78f201152348ec419bb89e9b872744f",
+      "rows": 11,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "pipeline_runs",
+      "filename": "pipeline_runs.csv",
+      "bytes": 5791,
+      "sha256": "6067d58088a7a59de2c3eccbc54d221315b05906c676d599326ead08d73487f3",
+      "rows": 7,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "pipelines",
+      "filename": "pipelines.csv",
+      "bytes": 1519,
+      "sha256": "711102aca0c7838556bde4d8e95c47c9b8f53cfaa6bd497ff0506e2158c79ac9",
+      "rows": 4,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "platform_accounts",
+      "filename": "platform_accounts.csv",
+      "bytes": 59549,
+      "sha256": "c7ec8a0e6bb61cab83a0649981b6f9b959b45ec4ff496f173818cf843cab0a27",
+      "rows": 262,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "profiles",
+      "filename": "profiles.csv",
+      "bytes": 222,
+      "sha256": "e1bfaeaf9e318bac6fee7b047defc1c27900b31e2f9862bfebb6ae25e793eb01",
+      "rows": 2,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "progress",
+      "filename": "progress.csv",
+      "bytes": 64,
+      "sha256": "434ae178bdfbc166105d4c119ea05f5f8fd1a252fd1d08ceb309ef3cfd8a4b59",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "reports",
+      "filename": "reports.csv",
+      "bytes": 1373,
+      "sha256": "1d92beaab99f299d39fe781f2ca218ea59978e7e2dafebe3108df2bac7fcceaa",
+      "rows": 3,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "similarity_scores",
+      "filename": "similarity_scores.csv",
+      "bytes": 81585,
+      "sha256": "5ebf663c8d630af4b4e88437df83c936fa63249c888a0265e9192cac3bc09858",
+      "rows": 339,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "social_graph_edges",
+      "filename": "social_graph_edges.csv",
+      "bytes": 34559,
+      "sha256": "f334f81623bcbf27f03ff479e6c52272d9e7286df5714ec47e23574f74a4fccd",
+      "rows": 151,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "subjects",
+      "filename": "subjects.csv",
+      "bytes": 574,
+      "sha256": "75cc6fd1dbb567146262bd592a5011ddffaa18deeb43564a4ca4f2b8f0b7fee8",
+      "rows": 4,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "subscriptions",
+      "filename": "subscriptions.csv",
+      "bytes": 512,
+      "sha256": "b31755d23588c1f36204750b5031a9697b853ee047df2511d471874cd42b0309",
+      "rows": 2,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "system_logs",
+      "filename": "system_logs.csv",
+      "bytes": 42,
+      "sha256": "a3ca8ccbeaa4945d5faee3f6237a17dadcafaf511fcbab5173df128bfa0ad4a3",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "tags",
+      "filename": "tags.csv",
+      "bytes": 18,
+      "sha256": "81bb44c08f7f17187654133a56f8bdac5c417ad90bd0bd29f58b4382c069dcc1",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "tool_marketplace",
+      "filename": "tool_marketplace.csv",
+      "bytes": 21358,
+      "sha256": "8c9e5cfa88a4116d6ebaecaa6e20635b97063b65341bef466b05df396c40fbb2",
+      "rows": 50,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "tool_permissions",
+      "filename": "tool_permissions.csv",
+      "bytes": 59,
+      "sha256": "39477f7505c77af766803034a4eb5826a5af47fd69f32a2ce22d85adc26d0224",
+      "rows": 0,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "tool_results",
+      "filename": "tool_results.csv",
+      "bytes": 121702,
+      "sha256": "cec6aa005a8c4c31933d38351acdf2394482441d9e799596aacee80a48f815b7",
+      "rows": 37,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "usage_metrics",
+      "filename": "usage_metrics.csv",
+      "bytes": 10989,
+      "sha256": "9d53f331caa6347116a36db2237c7b2ad83d73377fa7606f3f213de3bf911cd2",
+      "rows": 55,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "user_installed_tools",
+      "filename": "user_installed_tools.csv",
+      "bytes": 14628,
+      "sha256": "eb3d0c8f9878ba3c32e57dd8fa45d2d1f79d3d38728a5859025e7d2ddb75e532",
+      "rows": 100,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "user_roles",
+      "filename": "user_roles.csv",
+      "bytes": 136,
+      "sha256": "75ebf42a578a57148b129450a3559c2a6b43a772ca20104a7c496da794fc629c",
+      "rows": 1,
+      "exactUiCountBound": true
+    },
+    {
+      "table": "username_candidates",
+      "filename": "username_candidates.csv",
+      "bytes": 18285,
+      "sha256": "c0a9c2ad256c4335f0cca3635403c72e811de4431f798f8c0dd8ed39a7a74832",
+      "rows": 106,
+      "exactUiCountBound": true
+    }
+  ],
+  "all63CaptureCountsBoundToUiEvidence": true,
+  "newNullCellsResolvedByExactIdUiBinding": 151,
+  "nullEvidenceSha256": "19fbe105037dabfdc3cbf70d794d0e2575299a04982a97cc536e63aaf40fed5c",
+  "sourceActivityDrift": {
+    "capturedRows": 720,
+    "laterObservedRows": 721,
+    "notIncludedLaterRows": 1
+  },
+  "sqlGenerated": false,
+  "privateManifestSha256": "4947857f8a88e179535698471dd18036230f507e2419bfd0b56c17ca9d589d08"
+}

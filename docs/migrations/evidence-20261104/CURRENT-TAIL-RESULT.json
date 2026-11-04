@@ -1,0 +1,23 @@
+{
+  "run": "InsightNexus_csv_tail_20261104_4947857f",
+  "project": "ocliymtdvtxfxczxgbjr",
+  "queryBytes": 498319,
+  "querySha256": "1ff6cdb43af9fa29e82e6e2b26aa32376dd099a1b97711c54264c355d52bf41f",
+  "expectedInserts": 162,
+  "expectedUpdates": 42,
+  "expectedPublicRows": 2874,
+  "testsPassed": 17,
+  "sourceSnapshotAtomic": false,
+  "operation": "completed_once",
+  "startedAtUtc": "2026-11-04 09:02:27 UTC",
+  "completedAtUtc": "2026-11-04 09:02:50 UTC",
+  "result": {
+    "reconcile_id": "InsightNexus_csv_tail_20261104_4947857f",
+    "imported_source_rows": 162,
+    "updated_source_rows": 42,
+    "migration_audit_rows": 0,
+    "public_rows": 2874
+  },
+  "independentPostReadVerified": false,
+  "productionRoutingChanged": false
+}

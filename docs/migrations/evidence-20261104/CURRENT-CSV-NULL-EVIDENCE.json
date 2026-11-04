@@ -1,0 +1,54 @@
+{
+  "recordedAtUtc": "2026-11-04T08:41:05.369767+00:00",
+  "sourceSnapshotUtc": "2026-11-04T05:03:44Z",
+  "csvTimestampVerification": {
+    "activity_logs": {
+      "newCsvRows": 150,
+      "uniqueNewIds": 150,
+      "allCreatedStrictlyAfterArchive": true,
+      "earliestCreatedAtUtc": "2026-11-04T05:03:52.726083+00:00",
+      "latestCreatedAtUtc": "2026-11-04T06:58:29.331877+00:00"
+    },
+    "personas": {
+      "newCsvRows": 1,
+      "uniqueNewIds": 1,
+      "allCreatedStrictlyAfterArchive": true,
+      "earliestCreatedAtUtc": "2026-11-04T06:19:24.267547+00:00",
+      "latestCreatedAtUtc": "2026-11-04T06:19:24.267547+00:00"
+    }
+  },
+  "rootReportedUiEvidence": {
+    "activityLogsCurrentTotal": 721,
+    "activityLogsCsvTotal": 720,
+    "uniqueUiRowsInspected": 371,
+    "postSnapshotUiRows": 151,
+    "allPostSnapshotInspectedIpCellsRenderNull": true,
+    "nullMarker": "italic span.text-tertiary-pulse",
+    "personasCurrentTotal": 11,
+    "postSnapshotPersonas": 1,
+    "postSnapshotPersonaNotesRenderNull": true
+  },
+  "classification": "Exact exported-ID set hashes match root-observed fully rendered UI rows with explicit italic SQL-null markers. Resolved for all 150 new activity IP fields and the one new persona notes field.",
+  "exactIdBindingVerified": true,
+  "sourceActivityRowGrowthSinceExport": 1,
+  "sqlGenerated": false,
+  "databaseWrites": 0,
+  "updatedAtUtc": "2026-11-04T08:48:13.267147+00:00",
+  "exactIdSetBinding": {
+    "hashConvention": "SHA256 of sorted canonical UUIDs joined with LF, no trailing LF",
+    "activity_logs": {
+      "rows": 150,
+      "column": "ip_address",
+      "uiSha256": "3def4e7bd6639aea817ba46a0d35ada93cfbd5720128957a93f961ae8088175f",
+      "privateCsvSha256": "3def4e7bd6639aea817ba46a0d35ada93cfbd5720128957a93f961ae8088175f",
+      "resolution": "SQL NULL"
+    },
+    "personas": {
+      "rows": 1,
+      "column": "notes",
+      "uiSha256": "614ff5dbebe366e7855d299b16a68c6ad0226cf3d9e593df649772f6366acdac",
+      "privateCsvSha256": "614ff5dbebe366e7855d299b16a68c6ad0226cf3d9e593df649772f6366acdac",
+      "resolution": "SQL NULL"
+    }
+  }
+}
