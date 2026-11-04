@@ -1,0 +1,38 @@
+{
+  "checked_at": "2026-11-04T22:24:26Z",
+  "service": "insight-nexus-monitors",
+  "source_commit": "176dfc8e10f2591cb12430f4e9a5aa979f1ef769",
+  "monitor_code_commit": "54b2a1f06919aa9cbf2f92a471144fd57ccc868e",
+  "version": "4c5698c6-de60-464f-9071-1a918113109d",
+  "deployment": "d88a98f6-1a2a-4ffa-9ecc-15154d3286e4",
+  "created_on": "2026-11-04T22:24:04.982672Z",
+  "traffic_percent": 100,
+  "previous_version": "af1d2ccb-e1c4-4080-af17-679ce3c5637d",
+  "runtime": {
+    "migration_tag": "v1",
+    "compatibility_date": "2026-10-13",
+    "usage_model": "standard"
+  },
+  "namespace_id": "e930f47b29404901a9d891041cfc8cf3",
+  "backend": "zisrsttmjeipkmllqubi",
+  "hold_var": "omitted",
+  "all_six_variables_unchanged": true,
+  "bundle_sha256": "ec8c66caa06c6891b87ba31db648d82e8091b82fd27efdfa012db2b27fc12f51",
+  "sql_sha256": "c1b5624a362693f7babcb51c5cfce86a67df20e6d3abbecca0902991dcb89f63",
+  "deployment_exit_code": 0,
+  "authenticated_browser": {
+    "visible_monitors_before": 4,
+    "visible_monitors_after": 4,
+    "all_enabled_before_and_after": true,
+    "labels_kinds_enabled_equal": true,
+    "scheduler_checks": 1,
+    "scheduler_failures": 0,
+    "manual_provider_checks": 0
+  },
+  "limits": [
+    "Hold activation, paused drain, owned-backend rebinding and deliberate resume not tested live.",
+    "Existing automatic scheduler continuity is not broad provider acceptance.",
+    "Previous uninstrumented version is not a safe paused rollback.",
+    "Production still uses original backend."
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "checkedAtUtc": "2026-11-04T09:21:08.023252+00:00",
+  "scope": "Local saved-backup integrity and receipt-chain checkpoint only; no live source/target access or new acceptance tests",
+  "newlyExecuted": [
+    {
+      "check": "final private manifest matches pinned sanitized receipt",
+      "passed": true,
+      "sha256": "4947857f8a88e179535698471dd18036230f507e2419bfd0b56c17ca9d589d08"
+    },
+    {
+      "check": "complete private manifest matches pinned sanitized receipt",
+      "passed": true
+    },
+    {
+      "check": "final sanitized manifest content matches private manifest",
+      "passed": true
+    },
+    {
+      "check": "63 unique referenced CSV files exist inside approved directory",
+      "passed": true,
+      "files": 63
+    },
+    {
+      "check": "CSV bytes and SHA256 match pinned final manifest",
+      "passed": true,
+      "verified": 63,
+      "total": 63
+    },
+    {
+      "check": "manifest row totals and recorded UI bindings are consistent",
+      "passed": true,
+      "rows": 2872
+    },
+    {
+      "check": "final manifest null-evidence hash matches retained evidence",
+      "passed": true
+    },
+    {
+      "check": "tail preparation binds final captured-source manifest",
+      "passed": true
+    },
+    {
+      "check": "captured-tail forward SQL preserved and hash matches receipt",
+      "passed": true,
+      "bytes": 498319,
+      "sha256": "1ff6cdb43af9fa29e82e6e2b26aa32376dd099a1b97711c54264c355d52bf41f"
+    },
+    {
+      "check": "executed-tail result binds exact preserved forward SQL",
+      "passed": true
+    },
+    {
+      "check": "captured-tail rollback SQL preserved and hash matches receipt",
+      "passed": true,
+      "bytes": 273010,
+      "sha256": "b4486991ccb8deea2cba2bffd9c852daacda5b734feed26a83c9b4832dc9fc62"
+    },
+    {
+      "check": "rollback before-image file matches retained receipt",
+      "passed": true,
+      "recordedRows": 42
+    },
+    {
+      "check": "saved post-verification query matches preparation and verification receipts",
+      "passed": true
+    },
+    {
+      "check": "earlier public delta forward SQL matches retained receipt",
+      "passed": true,
+      "bytes": 2018291,
+      "sha256": "746dfb14d1dde4cd182ad25f14d3bca7674b77af4fb0c6751b1318544dced829"
+    },
+    {
+      "check": "earlier execution receipt binds preserved delta SQL",
+      "passed": true
+    },
+    {
+      "check": "earlier public delta rollback SQL matches retained receipt",
+      "passed": true,
+      "bytes": 648192,
+      "sha256": "d7044dff027fb47fa575b4036d8b88e5995e00d32914a311245cba2d08c3823a"
+    },
+    {
+      "check": "saved object-byte proof and sanitized summary agree",
+      "passed": true
+    }
+  ],
+  "newCheckCount": 17,
+  "newChecksPassed": 17,
+  "newChecksFailed": 0,
+  "csvFilesHashed": 63,
+  "capturedCsvRows": 2872,
+  "csvRowContentsParsedOrPrinted": false,
+  "privateRollbackFilesHashed": 2,
+  "reusedHistoricalEvidence": {
+    "storageReceiptCheckedAtUtc": "2026-11-04T08:47:41.017442+00:00",
+    "sourceTargetRetainedObjectsSha256Equal": 3,
+    "retainedProductBytes": 23067,
+    "sourceZipCrcChecksReused": 3,
+    "storageBinariesRehashedThisRun": false,
+    "zipCrcChecksRepeated": false,
+    "priorLiveTailVerificationReused": true,
+    "liveVerificationRerun": false,
+    "schemaHeaderIdForeignKeyChecksRerun": false,
+    "historicalArchiveDecodeOrHashRepeated": false
+  },
+  "currentPrivateObjectCompletenessVerified": false,
+  "targetVersionContinuityEstablished": false,
+  "remainingLimits": [
+    "The final63 CSVs are a separately timed immutable capture, not an atomic/current cutover snapshot. Saved evidence records later source activity outside the capture.",
+    "Retained target object bytes lack binding to current target versions/updated_at; no fresh target download or exact target-version continuity is claimed.",
+    "Rollback SQL/before-image hashes establish artifact preservation, not a newly executed rollback or current live-state compatibility."
+  ],
+  "smallestAuthorizedNextStep": "No additional local binary rehash or unchanged test is needed. Preserve the pinned capture and rollback artifacts; when the live continuation is authorized/resumed, complete existing sign-in verification and capture the final source write cutoff/delta plus authenticated current target-object byte/version evidence before production cutover.",
+  "networkCalls": 0,
+  "uiCalls": 0,
+  "liveSqlCalls": 0,
+  "testsRun": 0,
+  "deployments": 0,
+  "repositoryEdits": 0,
+  "credentialUse": false,
+  "objectNamesOrRecordsIncluded": false
+}

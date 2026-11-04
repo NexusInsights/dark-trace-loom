@@ -1,5 +1,11 @@
 # Lovable exit preparation
 
+## Current checkpoint — November 4, 2026
+
+Use [the current live checkpoint](../../docs/migrations/INDEPENDENT-LIVE-CHECKPOINT-20261104.json) and [acceptance record](../../ACCEPTANCE.md) for release state. The owned preview has 20 Edge functions and intentionally no monitor binding. The existing production monitor now has hold-aware code but still authenticates against the original backend. All three current target private files passed fresh byte/version verification. Target-owner sign-in, the final source delta and production/monitor backend cutover remain pending. Root/default production configuration still targets the original backend and must be reviewed before production publication. Static builder-independence checks alone do not establish backend ownership.
+
+The preparation narrative below is historical. Its older row/function counts and isolated-preview-monitor description are superseded by the linked checkpoint; do not use them as current release acceptance.
+
 This directory prepares local migration/security artifacts and a reproducible source snapshot; its tools do not connect to or restore a database. The parent separately created approved owned Free target `ocliymtdvtxfxczxgbjr`, restored authoritative schema and completed baseline plus guarded delta import. Parent-reported fidelity covers 1,829 real records, 64 counted public/Auth tables and 555 copied fields, including original IDs and password hashes; a fresh source comparison had zero drift. Original source `zisrsttmjeipkmllqubi` and existing TJK project `dbdkvrkmeowdydizrsmn` remain protected. Credential, authentication and live cutover acceptance are separate from import evidence.
 
 The parent caught source drift beyond the original 1,619-row export and reconciled the 12 changed tables. All three private product report objects, totaling 23,067 bytes across three private buckets, are now restored with byte-identical target downloads and original ownership/ID/timestamp metadata. A fourth backup-only source object is the privately preserved database archive. Recheck subsequent source writes before cutover; no continuous replication is claimed.

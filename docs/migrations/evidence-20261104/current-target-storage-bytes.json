@@ -1,0 +1,15 @@
+{
+  "checkedAtUtc": "2026-11-04T22:32:49.870048+00:00",
+  "project": "ocliymtdvtxfxczxgbjr",
+  "objects": 3,
+  "totalBytes": 23067,
+  "freshAuthenticatedDownloads": 3,
+  "allSourceSha256Equal": true,
+  "allSizesEqual": true,
+  "allCurrentTargetVersionsPresent": true,
+  "prePostTargetMetadataEqual": true,
+  "privateReceiptSha256": "acbef26cf938d6fefa788460a5e214620f3dfb0fcce0c011a5fada420aeaa2a9",
+  "binariesAndNamesKeptPrivate": true,
+  "credentialOrPermissionChanges": false,
+  "scope": "Current target bytes/version match retained source snapshot at this check; later source writes still require final cutover reconciliation."
+}

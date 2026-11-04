@@ -129,5 +129,33 @@
     ]
   },
   "latestIndependentMigration": "docs/migrations/INDEPENDENT-LIVE-CHECKPOINT-20261104.json",
-  "independentCutoverStatus": "Preview live; official snapshot and captured tail imported and independently verified at 2,874 rows; sign-in, final freshness, current storage bytes and monitor cutover pending"
+  "independentCutoverStatus": "Preview live; official snapshot and captured tail independently verified at 2,874 rows; all three current destination private files freshly downloaded and SHA256/version verified at 22:32:49 UTC; monitor hold control code deployed with unchanged source-backend configuration and hold omitted. Target sign-in, final freshness and guarded same-namespace monitor/backend cutover remain pending. Further private downloads/exports paused by later coordination pending original-source denial-scope clarification; no action pending or uncertain.",
+  "latestMonitorRelease": {
+    "service": "insight-nexus-monitors",
+    "versionId": "4c5698c6-de60-464f-9071-1a918113109d",
+    "deploymentId": "d88a98f6-1a2a-4ffa-9ecc-15154d3286e4",
+    "deployedAtUtc": "2026-11-04T22:24:04.982672Z",
+    "trafficPercent": 100,
+    "previousVersionId": "af1d2ccb-e1c4-4080-af17-679ce3c5637d",
+    "testedMonitorSourceCommit": "54b2a1f06919aa9cbf2f92a471144fd57ccc868e",
+    "monitorTreeEqualsCurrentCommit": "176dfc8e10f2591cb12430f4e9a5aa979f1ef769",
+    "frozenJavaScriptSha256": "ec8c66caa06c6891b87ba31db648d82e8091b82fd27efdfa012db2b27fc12f51",
+    "wranglerVersion": "4.149.0",
+    "backend": "zisrsttmjeipkmllqubi",
+    "namespace": "e930f47b29404901a9d891041cfc8cf3",
+    "sixVariablesNamespaceAndRuntimeUnchanged": true,
+    "holdConfiguration": "omitted; control code deployed without hold activation or backend rebind",
+    "beforeAfterEnabledMonitors": 4,
+    "privateLabelsKindsAndEnabledStatesEqual": true,
+    "schedulerCompletedAtUtc": "2026-11-04T22:24:26Z",
+    "schedulerChecks": 1,
+    "schedulerFailures": 0,
+    "manualProviderTriggerPerformed": false,
+    "historicalExactTreeMonitorTests": 40,
+    "newRuntimeTestsExecuted": false,
+    "details": "docs/migrations/INDEPENDENT-LIVE-CHECKPOINT-20261104.json",
+    "nextStep": "Verify original-owner target sign-in and existing-route baseline/access parity, then explicitly hold, reconcile prior-version drain and rebind the same namespace without transforming stored monitor data.",
+    "recoveryBoundary": "No blanket full Durable Object export gate for reversible authentication-only rebinding. Namespace/data replacement, owner rewrites, restoration or deletion require separate recovery safeguards.",
+    "privateLabelsOrKeyValuesIncluded": false
+  }
 }

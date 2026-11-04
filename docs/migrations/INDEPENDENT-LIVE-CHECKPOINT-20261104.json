@@ -1,6 +1,7 @@
 {
   "recordedAtUtc": "2026-11-04T09:06:40.277204+00:00",
-  "status": "Independent preview and captured source-data migration verified; production cutover pending",
+  "lastMonitorEvidenceAtUtc": "2026-11-04T22:24:26Z",
+  "status": "Independent preview and captured source-data migration verified; monitor hold control code deployed without activating hold; production backend cutover pending",
   "repository": "https://github.com/NexusInsights/dark-trace-loom",
   "backupBranch": "codex/lovable-exit-20261104",
   "deployedApplicationSourceSha": "83efceb6b6369113015f773d434d368cac963111",
@@ -91,12 +92,48 @@
   },
   "monitor": {
     "service": "insight-nexus-monitors",
-    "liveVersion": "af1d2ccb-e1c4-4080-af17-679ce3c5637d",
+    "liveVersion": "4c5698c6-de60-464f-9071-1a918113109d",
+    "deploymentId": "d88a98f6-1a2a-4ffa-9ecc-15154d3286e4",
+    "deployedAtUtc": "2026-11-04T22:24:04.982672Z",
+    "trafficPercent": 100,
+    "previousLiveVersion": "af1d2ccb-e1c4-4080-af17-679ce3c5637d",
     "liveBackend": "zisrsttmjeipkmllqubi",
     "namespace": "e930f47b29404901a9d891041cfc8cf3",
     "holdSourceCommit": "54b2a1f06919aa9cbf2f92a471144fd57ccc868e",
-    "holdDeployed": false,
-    "gate": "Verify live Durable Object recovery point, owner/access mapping, old-version drain and held state before backend cutover. Supabase export does not include monitor state."
+    "sourceTreeEqualsCurrentCommit": "176dfc8e10f2591cb12430f4e9a5aa979f1ef769",
+    "holdDeployed": true,
+    "holdDeploymentMeaning": "Hold control code is deployed; this release did not activate the hold or change the authentication backend.",
+    "holdConfiguration": "MONITOR_MIGRATION_HOLD omitted; prior configuration preserved",
+    "holdActivatedByThisRelease": false,
+    "backendRebound": false,
+    "wranglerVersion": "4.149.0",
+    "frozenJavaScriptSha256": "ec8c66caa06c6891b87ba31db648d82e8091b82fd27efdfa012db2b27fc12f51",
+    "releaseEvidence": "docs/migrations/evidence-20261104/monitor-preparation-live.json",
+    "sameNamespaceAudit": "docs/migrations/evidence-20261104/monitor-cutover-readonly-audit.md",
+    "configurationContinuity": {
+      "variablesCompared": 6,
+      "allValuesUnchanged": true,
+      "namespaceUnchanged": true,
+      "runtimeSettingsUnchanged": true,
+      "keyValuesIncluded": false
+    },
+    "existingMonitorContinuity": {
+      "enabledMonitorCountBefore": 4,
+      "enabledMonitorCountAfter": 4,
+      "labelsKindsEnabledStatesEqual": true,
+      "privateLabelsIncluded": false,
+      "schedulerCompletedAtUtc": "2026-11-04T22:24:26Z",
+      "schedulerChecks": 1,
+      "schedulerFailures": 0,
+      "manualProviderTriggerPerformed": false,
+      "scope": "Existing scheduled polling and bounded before/after UI continuity only; not every-job or target-backend acceptance"
+    },
+    "testEvidence": {
+      "historicalExactTreeTestsPassed": 40,
+      "newRuntimeTestsExecuted": false
+    },
+    "gate": "Verify the original owner's target session and owner-scoped baseline/access parity; explicitly activate and verify the hold and prior-version drain before the same-service authentication rebind and deliberate release.",
+    "recoveryScope": "A full Durable Object export is useful recovery hardening, not a prerequisite for a reversible Auth URL/public-key change that preserves namespace, owners and data. Namespace replacement, owner rewrites, storage restoration or deletion require separate recovery safeguards. Supabase exports do not contain Durable Object state."
   },
   "otherRuntimes": {
     "aiWorker": "Actual deployed Auth binding uses owned target; no current free-plan entitlement or inference acceptance claimed",
@@ -146,16 +183,21 @@
     "byteIdenticalPreservedTargetDownloads": 3,
     "sourceArchiveCrcChecksPassed": 3,
     "currentSourceExportVersionsAndMetadataMatchRetainedSource": true,
-    "currentDestinationBytesDownloaded": false,
-    "currentDestinationVersionContinuityVerified": false,
-    "remainingEvidence": "October 14 target downloads lack object-version sidecar receipts; retained current target metadata lacks version and updated_at. This is an evidence gap, not a detected byte mismatch.",
-    "destinationDashboardRead": "Existing browser route reached sign-in; no new login, credential or permission was supplied"
+    "currentDestinationBytesDownloaded": true,
+    "currentDestinationVersionContinuityVerified": true,
+    "freshDownloadCount": 3,
+    "allFreshSourceSha256AndSizesMatch": true,
+    "targetMetadataEqualBeforeAndAfterDownloads": true,
+    "currentBytesCheckedAtUtc": "2026-11-04T22:32:49.870048+00:00",
+    "evidence": "docs/migrations/evidence-20261104/current-target-storage-bytes.json",
+    "remainingEvidence": "Target bytes/version gap resolved for the captured source snapshot; later source changes remain outside this check.",
+    "destinationDashboardRead": "Existing authenticated Edge session on owned target; three ordinary downloads completed and saved privately. Earlier unauthenticated IAB route was not used.",
+    "laterDownloadExportPause": "Received after all three downloads and integrity verification completed; no pending or uncertain download and no further download/export performed. Original-source SQL denial scope remains unresolved; no original-source SQL retry occurred."
   },
   "remainingCutoverChecks": [
     "User sign-in on independent preview and authenticated original workflow",
-    "Private bytes/hash comparison for3 product files; metadata equality is insufficient",
     "Complete post-snapshot source delta and controlled write cutover",
-    "Monitor state recovery/drain/owner verification and guarded existing-service rebind",
+    "Monitor original-owner target-session/access parity, explicit hold and old-version drain verification, guarded same-namespace authentication rebind and deliberate release; no blanket full-export prerequisite",
     "Verify final production frontend, backend, storage, session issuer and monitoring after cutover"
   ],
   "privateEvidenceRoot": "D:/CodexData/InsightNexus-Migration/2026-11-04",
