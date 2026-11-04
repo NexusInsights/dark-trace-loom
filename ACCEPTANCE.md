@@ -4,6 +4,8 @@ Deployed application source **7367316ba62a98224b9e2346467567da6c89028f**, produc
 
 Final signed-in readback verified the new entry asset, retained mascot source, persisted rejection, exclusion from current identities, and persisted successful manual DEV pipeline history. No provider was queried again after the diagnostic-only follow-up. The live retrieval/support/rejection/manual/pipeline checks below belong to its parent application source50b850e; the exact change and verification boundaries remain explicit. Browser errors0.
 
+The completed route audit covers all32 sidebar destinations across the two verified releases, including the original platform, separate person/research workspace, resources and account pages. Administration reached its authorized page; no access/settings changed. This is route-rendering acceptance, not acceptance of every provider action. See `docs/repairs/ORIGINAL-NAVIGATION-32.json`; private record titles are omitted.
+
 The **original Lovable URL is unchanged**. Its editor is now readable, but it contains older source and the Pages API workflow needs a compatible release path there. GitHub's one unavailable manual lookup remains unexplained; paid/unconfigured providers, legacy Supabase live policy/body acceptance, exact ImageScript and private export integrity remain separate gates. This release does not claim every provider works or that matching handles prove person ownership.
 
 See `docs/repairs/ORIGINAL-PLATFORM-RELEASE-20261104.json` for final source, artifact hashes, live limits, CI, backup and rollback. The historical records below remain preserved.

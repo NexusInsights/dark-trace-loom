@@ -114,5 +114,10 @@
       "sha256": "ecdcfa0d2ac1536150d2d3a6454c2096ac592250cbcfffeeb701ff7d06ff787c",
       "bytes": 71865
     }
-  ]
+  ],
+  "completeNavigationAudit": {
+    "destinations": 32,
+    "receipt": "docs/repairs/ORIGINAL-NAVIGATION-32.json",
+    "scope": "All sidebar destinations rendered across parent50b850e and final7367316; no provider actions, private record titles or settings changes"
+  }
 }

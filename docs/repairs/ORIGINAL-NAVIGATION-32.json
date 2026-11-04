@@ -1,0 +1,304 @@
+{
+  "atUtc": "2026-11-04T06:46:08.549Z",
+  "scope": "Read-only route rendering across the two verified releases; not provider/action acceptance. No settings changed or private record titles retained.",
+  "destinations": [
+    {
+      "route": "/dashboard",
+      "errors": [],
+      "headings": [
+        "Intelligence Analytics"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/tools",
+      "errors": [],
+      "headings": [
+        "Tool Suite"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/marketplace",
+      "errors": [],
+      "headings": [
+        "Tool Marketplace"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/agents",
+      "errors": [],
+      "headings": [
+        "Investigation Agents"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/pipelines",
+      "errors": [],
+      "headings": [
+        "OSINT Pipelines"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/investigations",
+      "errors": [],
+      "headings": [],
+      "login": false,
+      "confirmedVisible": "SELECT OR CREATE A CASE",
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/reports",
+      "errors": [],
+      "headings": [
+        "Report Generator"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/correlations",
+      "errors": [],
+      "headings": [
+        "Correlation Engine"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/social-graph",
+      "errors": [],
+      "headings": [
+        "Social Graph Mining"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/persona-profile",
+      "errors": [],
+      "headings": [
+        "Persona Profile Builder"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/persona-intel",
+      "errors": [],
+      "headings": [],
+      "login": false,
+      "confirmedVisible": "Persona evidence overview",
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/person-investigations",
+      "errors": [],
+      "headings": [
+        "Investigate a person"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/person-reports",
+      "errors": [],
+      "headings": [
+        "Person investigation reports"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/research",
+      "errors": [],
+      "headings": [],
+      "login": false,
+      "confirmedVisible": "Research Workbench",
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/intelligence",
+      "errors": [],
+      "headings": [
+        "Intelligence Lab"
+      ],
+      "login": false,
+      "sourceSha": "50b850e1e905b2910bc0d8285771a07c2708525b"
+    },
+    {
+      "route": "/",
+      "hasAlert": false,
+      "headings": [
+        "Insight NexusIntelligence Platform"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/pdl-history",
+      "hasAlert": false,
+      "headings": [
+        " PDL Lookup History"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/evidence-export",
+      "hasAlert": false,
+      "headings": [
+        "Legal Evidence Export"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/organizations",
+      "hasAlert": false,
+      "headings": [
+        "Organizations"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/alerts",
+      "hasAlert": false,
+      "headings": [
+        "Alerts"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/monitoring",
+      "hasAlert": false,
+      "headings": [
+        "Continuous Monitoring"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/sources",
+      "hasAlert": false,
+      "headings": [
+        "Sources for person investigations"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/training",
+      "hasAlert": false,
+      "headings": [
+        "Training Academy"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/knowledge",
+      "hasAlert": false,
+      "headings": [
+        "Knowledge Base"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/api",
+      "hasAlert": false,
+      "headings": [
+        "API Access"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/pricing",
+      "hasAlert": false,
+      "headings": [
+        "Intelligence at every scale"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/billing",
+      "hasAlert": false,
+      "headings": [
+        "Subscription & Billing"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/admin",
+      "hasAlert": false,
+      "headings": [
+        "System Administration"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/activity",
+      "hasAlert": false,
+      "headings": [
+        "Activity Logs"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/settings",
+      "hasAlert": false,
+      "headings": [
+        "Workspace settings"
+      ],
+      "loading": false,
+      "login": false,
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f"
+    },
+    {
+      "route": "/personas",
+      "headings": [
+        "Account discovery and evidence"
+      ],
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f",
+      "verifiedBy": "final live workflow readback"
+    },
+    {
+      "route": "/identity",
+      "headings": [
+        "Identity Resolution"
+      ],
+      "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f",
+      "verifiedBy": "settled rejection readback"
+    }
+  ]
+}
