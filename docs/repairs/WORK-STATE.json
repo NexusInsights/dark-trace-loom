@@ -127,5 +127,13 @@
       "When a provider fails, retain its now-visible reason; do not mark unavailable sources as findings",
       "Review legacy backend and export gates using authorized access only; no existing approval is implied for installations, scope expansion or paid calls"
     ]
+  },
+  "latestIndependentMigration": {
+    "branch": "codex/lovable-exit-20261104",
+    "handover": "docs/migrations/2026-11-04-independent-platform.md",
+    "receipt": "docs/migrations/INDEPENDENT-PREPARATION-20261104.json",
+    "sourceBackend": "zisrsttmjeipkmllqubi",
+    "targetBackend": "ocliymtdvtxfxczxgbjr",
+    "status": "Current source prepared and tested; destination additive schema verified; public-data delta/login/cutover pending"
   }
 }

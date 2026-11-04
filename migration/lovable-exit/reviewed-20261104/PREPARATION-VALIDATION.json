@@ -1,0 +1,56 @@
+{
+  "recordedAtUtc": "2026-11-04T07:08:21.167414+00:00",
+  "baselineCommit": "c1438f10f96e5d4f892340e514dcef87c49c7f00",
+  "scope": "Local current-source preparation and synthetic regression evidence; no migration, deployment, provider or live acceptance",
+  "historicalBundleAndManifestUnchanged": true,
+  "bundle": {
+    "path": "migration/lovable-exit/reviewed-20261104/bundle",
+    "manifestSha256": "9ff7bf731af0ecf08570211ed0b496dfa581dee278a1f555260184120cc35192",
+    "format": 2,
+    "files": 110,
+    "migrations": 55,
+    "publicTables": 63,
+    "functions": 20,
+    "sourceFreshnessVerified": true
+  },
+  "deploymentManifest": {
+    "path": "migration/lovable-exit/reviewed-20261104/deployment-manifest.json",
+    "sha256": "15eae9456c4853bc1dd0a686211affcf9a7a650815cfab8f7bfe41d0046717c1",
+    "format": 2,
+    "functions": 20,
+    "workers": 2,
+    "pagesRoutes": 8
+  },
+  "validation": [
+    {
+      "command": "node --test migration/lovable-exit/verify-bundle.test.mjs migration/lovable-exit/prepare-edge-deploy.test.mjs",
+      "passed": 28,
+      "failed": 0,
+      "exit": 0,
+      "outputChunk": "e5a11e"
+    },
+    {
+      "command": "node migration/lovable-exit/compare-counts.test.mjs",
+      "passed": 10,
+      "failed": 0,
+      "exit": 0,
+      "outputChunk": "577e44"
+    },
+    {
+      "command": "targeted ESLint on nine changed migration tooling/test modules",
+      "exit": 0,
+      "outputChunk": "577e44"
+    },
+    {
+      "command": "node migration/lovable-exit/verify-bundle.mjs --bundle migration/lovable-exit/reviewed-20261104/bundle",
+      "exit": 0,
+      "sourceFreshnessVerified": true,
+      "outputChunk": "c6c324"
+    }
+  ],
+  "transportCoverage": "All20function payloads were prepared in memory and canonical content hashes compared with their reviewed manifest. No payload was transmitted.",
+  "databaseActions": 0,
+  "deployments": 0,
+  "providerCalls": 0,
+  "remaining": "Current destination ownership, data delta, source/schema parity, auth/SMTP/provider settings and live cutover acceptance require separate evidence; no replay on populated targets."
+}

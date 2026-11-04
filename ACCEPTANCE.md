@@ -1,3 +1,13 @@
+## November 4, 2026 — complete independence migration in progress
+
+The user requested zero Lovable dependency. The independent destination was verified through the Supabase connector; the latest official export was privately downloaded, CRC checked and fully decoded. Compared with the destination: 1,822 public rows match, 887 are source-only, one destination-only cluster must be preserved, and one pipeline differs only in timestamps. No public-record import or production backend switch has occurred at this checkpoint.
+
+Actual destination changes: added the empty protected intelligence journal, applied the guarded research admission extension and seven restrictive ownership policies. Live catalog checks confirm their expected bodies/access. This is schema evidence, not authenticated workflow acceptance.
+
+Current source/build checks: 1,361 app tests/105 files and all aggregate suites passed, plus 28 migration preparation tests and 10 count contracts. Typecheck/build passed; lint has zero errors and 15 existing warnings. The owned-backend build passed the static source/artifact independence check (340 files, zero findings). The old standalone marketplace checker retains its 25 unchanged Deno/import/type diagnostics.
+
+See [migration plan](docs/migrations/2026-11-04-independent-platform.md) and [preparation receipt](docs/migrations/INDEPENDENT-PREPARATION-20261104.json). Historical release evidence below is retained. Production remains on the preceding Cloudflare release and source backend until current-data reconciliation, sign-in and other cutover checks pass.
+
 # Final original full-platform release - November 4, 2026
 
 Deployed application source **7367316ba62a98224b9e2346467567da6c89028f**, production deployment **eb26475f-1561-4e10-a0bb-56de43276a78**, is verified at [the updated platform](https://dark-trace-loom.pages.dev/dashboard) and [immutable release](https://eb26475f.dark-trace-loom.pages.dev). The diagnostic follow-up is live. [Exact-source CI41786450910](https://github.com/NexusInsights/dark-trace-loom/actions/runs/41786450910) passed:1,333 app tests in104 files plus the aggregate worker/research/monitor/retained suites, lint, types and build. Both origins passed65 HTTP checks. Prior rollback is `3138de43-8117-46ce-94f9-f0363baa8cfc`.

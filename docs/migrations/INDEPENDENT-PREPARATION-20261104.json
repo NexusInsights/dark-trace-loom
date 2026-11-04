@@ -1,0 +1,74 @@
+{
+  "status": "Independent migration in progress; no production backend cutover",
+  "baselineApplicationSha": "7367316ba62a98224b9e2346467567da6c89028f",
+  "sourceBackend": "zisrsttmjeipkmllqubi",
+  "destinationBackend": "ocliymtdvtxfxczxgbjr",
+  "sourceExport": {
+    "snapshotUtc": "2026-11-04T05:03:44Z",
+    "archiveSha256": "20922fa19c030c3a4f9efe0d506de6be4417e4d24e6e3ab4e12be03e52d5b4e8",
+    "crcAndFullDecodePassed": true,
+    "restoreVerified": false
+  },
+  "dataComparison": {
+    "identicalSharedRows": 1822,
+    "sourceOnlyRows": 887,
+    "targetOnlyRows": 1,
+    "changedSharedRows": 1,
+    "importedThisContinuation": false
+  },
+  "destinationSchema": {
+    "target": "ocliymtdvtxfxczxgbjr",
+    "productionUnchanged": true,
+    "migrations": [
+      {
+        "name": "prepare_independent_intelligence_admission",
+        "success": true
+      },
+      {
+        "name": "extend_independent_research_admission",
+        "success": true
+      },
+      {
+        "name": "restrict_independent_tool_execution_ownership",
+        "success": true
+      }
+    ],
+    "verified": {
+      "journalRows": 0,
+      "rls": true,
+      "anonAndAuthenticatedDirectTableAccess": false,
+      "anonAdmissionExecute": false,
+      "authenticatedAdmissionExecute": true,
+      "restrictivePolicies": 7,
+      "reserveBodyMd5": "bad7133f8547a2af77037e2c4a3dec47",
+      "finishBodyMd5": "b6c9631d88bd2cbde312d6428bbf578f"
+    },
+    "dataImported": false,
+    "credentialsChanged": false,
+    "limitations": "Authenticated workflow and current source delta remain pending."
+  },
+  "validation": {
+    "applicationTests": 1361,
+    "applicationFiles": 105,
+    "aggregateExit": 0,
+    "migrationPrepNodeTests": 28,
+    "countContracts": 10,
+    "typecheckExit": 0,
+    "lintErrors": 0,
+    "lintExistingWarnings": 15,
+    "ownedBackendFrontendBuildExit": 0,
+    "staticSourceAndArtifactScan": {
+      "files": 340,
+      "findings": 0,
+      "artifactChecked": true
+    }
+  },
+  "limits": [
+    "Source export predates later production writes; final delta still required",
+    "User destination sign-in pending; Google disabled, email enabled",
+    "Data import and private file-byte comparison pending",
+    "Server redeployment and independent monitor binding pending",
+    "Static scan does not prove runtime/backend independence",
+    "Existing isolated marketplace checker retains25baselineDeno/type diagnostics"
+  ]
+}

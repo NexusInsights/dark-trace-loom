@@ -1,73 +1,35 @@
-# Welcome to your Lovable project
+# Insight Nexus
 
-## Project info
+A React/TypeScript intelligence workspace with source-backed account observations, explicit association review, cases, reports, research tools and monitoring.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Repository: https://github.com/NexusInsights/dark-trace-loom
 
-## How can I edit this code?
+Live application: https://dark-trace-loom.pages.dev/dashboard
 
-There are several ways of editing your application.
+## Run and build
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Use Node 24 and the committed npm lockfile. On a fresh development environment, restore the locked dependencies with `npm ci --ignore-scripts --no-fund`. Set the public backend URL/key in a private `.env.local`; never put a server credential in a `VITE_` variable. See `.env.example` for configuration names.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
+npm run typecheck
+npm run lint
+npm test
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+The build checks production inputs and compiled output for builder endpoints, SDKs and session-broker hooks. Backend control and billing independence require separate live verification; passing this scan is not proof of completed data migration.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Hosting and backend ownership
 
-**Use GitHub Codespaces**
+Cloudflare Pages hosts the app and its same-origin API routes. Code, tests, build and release artifacts are maintained in this repository without a Lovable editor/build/publish requirement. Supabase provides database, authentication, storage, Realtime and Edge Functions; direct ownership of the selected Supabase project is required for complete independence.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Production currently uses the retained source backend `zisrsttmjeipkmllqubi`. Independently owned migration destination `ocliymtdvtxfxczxgbjr` exists, but a production switch requires current data reconciliation and successful authenticated acceptance. Do not confuse a preview or a healthy database status with completed migration.
 
-## What technologies are used for this project?
+Current work and rollback: [migration plan](docs/migrations/2026-11-04-independent-platform.md). Prior verified release: [release record](docs/repairs/ORIGINAL-PLATFORM-RELEASE-20261104.json). Coverage and limits: [acceptance matrix](ACCEPTANCE.md).
 
-This project is built with:
+## Release
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Review an exact Git revision, run the checks above, preserve the prior deployment/configuration and back up the revision. Build for the explicitly selected backend and package the current `functions/` alongside the frontend. Use the existing Cloudflare account and project; verify asset hashes, API authorization, sign-in, persistence and error handling on the immutable deployment before switching traffic.
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Do not replay migration history on a populated database. The existing migration destination already contains imported users and application records; use reviewed, guarded changes and preserve newer destination authentication settings. Keep database archives and private records outside this repository.

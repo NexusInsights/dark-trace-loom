@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "build": "node scripts/verify-builder-independence.mjs && vite build && node scripts/verify-builder-independence.mjs --artifact dist",
+    "build:dev": "node scripts/verify-builder-independence.mjs && vite build --mode development && node scripts/verify-builder-independence.mjs --artifact dist",
+    "verify:independence": "node scripts/verify-builder-independence.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "npm run test:app && npm run test:intelligence-worker && npm run test:cloudflare && npm run test:intelligence-client && npm run test:intelligence-sql && npm run test:research && npm run test:monitors && npm run test:retained-repairs",
+    "test": "npm run test:app && npm run test:intelligence-worker && npm run test:cloudflare && npm run test:intelligence-client && npm run test:intelligence-sql && npm run test:research && npm run test:monitors && npm run test:retained-repairs && npm run test:migration-prep",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "deploy": "npm run build && wrangler pages deploy dist --project-name dark-trace-loom --branch main --commit-dirty=true",
@@ -23,7 +24,8 @@
     "test:research": "node --test services/research/*.test.mjs src/features/research/*.test.mjs test/research-admission.test.mjs",
     "test:monitors": "node --test monitor-worker/test/*.test.mjs",
     "test:retained-repairs": "node scripts/verify-dispatch-release.mjs && node scripts/verify-github-route-parity.mjs && node --test test/tool-ownership-migration.test.mjs",
-    "research:catalog": "node scripts/build-research-catalog.mjs"
+    "research:catalog": "node scripts/build-research-catalog.mjs",
+    "test:migration-prep": "node --test migration/lovable-exit/verify-bundle.test.mjs migration/lovable-exit/prepare-edge-deploy.test.mjs && node migration/lovable-exit/compare-counts.test.mjs"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "5.3.0",

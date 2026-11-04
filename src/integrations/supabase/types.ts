@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      // Structural contract from the retained intelligence admission migration.
+      // Table access remains server-only; this type does not grant Data API access.
+      intelligence_executions: {
+        Row: {
+          id: string
+          user_id: string
+          action: string
+          state: string
+          started_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          action: string
+          state?: string
+          started_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          action?: string
+          state?: string
+          started_at?: string
+          completed_at?: string | null
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string
@@ -2558,6 +2587,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      reserve_intelligence_execution: {
+        Args: { p_action: string }
+        Returns: Json
+      }
+      finish_intelligence_execution: {
+        Args: { p_execution_id: string; p_success: boolean }
+        Returns: Json
+      }
       can_access_case: {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean

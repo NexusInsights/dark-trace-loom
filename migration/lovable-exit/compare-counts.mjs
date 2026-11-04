@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {spawnSync} from 'node:child_process';
 function parseCsv(text){
   const rows=[];let row=[],field='',quoted=false;
   for(let i=0;i<text.length;i++){
@@ -23,10 +24,15 @@ function parseCsv(text){
   return map;
 }
 try{
-  if(process.argv.length!==4)throw new Error('Usage: node compare-counts.mjs SOURCE_COUNTS.csv TARGET_COUNTS.csv');
+  const args=process.argv.slice(2);
+  if(args.length!==2 && !(args.length===4&&args[2]==='--bundle'&&args[3]))throw new Error('Usage: node compare-counts.mjs SOURCE_COUNTS.csv TARGET_COUNTS.csv [--bundle CURRENT_BUNDLE_DIRECTORY]');
+  const taskDir=path.dirname(fileURLToPath(import.meta.url));
+  const bundle=args.length===4?path.resolve(args[3]):path.join(taskDir,'bundle');
+  const verification=spawnSync(process.execPath,[path.join(taskDir,'verify-bundle.mjs'),'--bundle',bundle],{encoding:'utf8',timeout:30000,windowsHide:true});
+  if(verification.error||verification.status!==0)throw new Error('Count acceptance requires a current verified bundle; use --bundle CURRENT_BUNDLE_DIRECTORY: '+(verification.stderr||verification.error?.message||'verification failed').trim());
   const source=parseCsv(fs.readFileSync(process.argv[2],'utf8').replace(/^\uFEFF/,''));
   const target=parseCsv(fs.readFileSync(process.argv[3],'utf8').replace(/^\uFEFF/,''));
-  const inventory=JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)),'bundle','inventory.json'),'utf8'));
+  const inventory=JSON.parse(fs.readFileSync(path.join(bundle,'inventory.json'),'utf8'));
   if(!Array.isArray(inventory.public_tables)||!inventory.public_tables.length)throw new Error('Expected bundle table inventory is missing');
   const required=[...inventory.public_tables.map(table=>`public.${table}`),'auth.users','auth.identities'];
   if(required.some(relation=>!source.has(relation)||!target.has(relation)))throw new Error('Count evidence omits a required local table or Auth relation; subset equality is not complete acceptance');

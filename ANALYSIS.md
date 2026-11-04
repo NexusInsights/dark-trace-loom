@@ -1,3 +1,5 @@
+> Historical October 12 archive record. This describes an older release, including a removed OAuth broker. For current runtime and migration status, read [README](README.md) and the [independent-platform migration plan](docs/migrations/2026-11-04-independent-platform.md).
+
 # Insight Nexus archive analysis
 
 Source: `C:/Users/gloss/Downloads/dark-trace-loom.zip`, preserved unchanged.

@@ -11,6 +11,12 @@ function independentAiEnv(name: string): string {
   const runtime = globalThis as unknown as { Deno?: { env: { get(key: string): string | undefined } } };
   return runtime.Deno?.env.get(name)?.trim() || "";
 }
+function independentAiBuilderEndpoint(value: string): boolean {
+  let host: string;
+  try { host = new URL(value).hostname.toLowerCase().replace(/\.+$/, ""); } catch { return false; }
+  const excluded = ["lovable.dev", "lovable.app", "lovableproject.com", "lovableproject-dev.com", "gptengineer.app", "gptengineer.run", "gpt-eng.com"];
+  return excluded.some(domain => host === domain || host.endsWith(`.${domain}`));
+}
 export function independentAiConfiguration() {
   const mode = independentAiEnv("AI_AUTH_MODE") || "api_key";
   const validMode = ["api_key", "supabase_user"].includes(mode);
@@ -19,7 +25,8 @@ export function independentAiConfiguration() {
   if (!validMode) missing.push("AI_AUTH_MODE");
   const enabled = independentAiEnv("AI_ENABLED") === "true";
   const zeroSpendVerified = independentAiEnv("AI_ZERO_SPEND_VERIFIED") === "true";
-  return { ready: !missing.length && enabled && zeroSpendVerified, required, missing, enabled, authentication_mode: mode, requires_caller_authorization: mode === "supabase_user", zero_spend_verified: zeroSpendVerified, cost_policy: "No requests unless the account allowance and absence of paid overage have been independently verified." };
+  const excludedBuilderEndpoint = independentAiBuilderEndpoint(independentAiEnv("AI_CHAT_COMPLETIONS_URL"));
+  return { ready: !missing.length && enabled && zeroSpendVerified && !excludedBuilderEndpoint, required, missing, enabled, excluded_builder_endpoint: excludedBuilderEndpoint, authentication_mode: mode, requires_caller_authorization: mode === "supabase_user", zero_spend_verified: zeroSpendVerified, cost_policy: "No requests unless the account allowance and absence of paid overage have been independently verified." };
 }
 function independentAiObject(value: unknown): IndependentAiObject {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new IndependentAiError("The AI provider returned an invalid completion object.");
@@ -34,6 +41,8 @@ async function independentAiRead(response: Response, limit: number): Promise<str
   const bytes = new Uint8Array(size); let offset = 0; for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; } return new TextDecoder().decode(bytes);
 }
 export async function independentAiChat(input: IndependentAiInput, context: IndependentAiInvocationContext = {}) {
+  // Check the destination before reading a provider key or forwarding caller authorization.
+  if (independentAiBuilderEndpoint(independentAiEnv("AI_CHAT_COMPLETIONS_URL"))) throw new IndependentAiError("Lovable-hosted AI endpoints are disabled for this independent deployment. No provider request was sent.", 424);
   const config = independentAiConfiguration();
   if (!config.ready) throw new IndependentAiError(`Independent AI is not configured or authorized under the zero-new-spend policy. Required: ${config.missing.join(", ") || "AI_ENABLED=true and AI_ZERO_SPEND_VERIFIED=true after account/overage verification"}. No provider request was sent.`, 424);
   let endpoint: URL;

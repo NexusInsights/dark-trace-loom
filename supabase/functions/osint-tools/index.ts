@@ -179,7 +179,7 @@ async function reverseGeo(lat: string, lng: string) {
   const r = await safeFetch(
     `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&format=json&addressdetails=1`,
     {
-      headers: { "User-Agent": "lovable-osint/1.0" },
+      headers: { "User-Agent": "InsightNexus/1.0" },
     },
   );
   if (!r.ok) throw new Error(`nominatim ${r.status}`);
@@ -370,7 +370,7 @@ async function usernameSearch(username: string) {
   const results = await Promise.all(
     checks.map(async (c) => {
       try {
-        const r = await safeFetch(c.url, { headers: { "User-Agent": "Mozilla/5.0 lovable-osint" } }, 8000);
+        const r = await safeFetch(c.url, { headers: { "User-Agent": "Mozilla/5.0 InsightNexus" } }, 8000);
         if (r.status === 401 || r.status === 403 || r.status === 429 || r.status >= 500) throw new Error("Provider HTTP " + r.status);
         const found = await c.check(r);
         return {
@@ -391,7 +391,7 @@ async function pasteSearch(keyword: string) {
   // Public scrape paste indexes are gone; use Google site: search via DuckDuckGo HTML
   const q = encodeURIComponent(`"${keyword}" site:pastebin.com OR site:rentry.co OR site:ghostbin.com`);
   const r = await safeFetch(`https://html.duckduckgo.com/html/?q=${q}`, {
-    headers: { "User-Agent": "Mozilla/5.0 lovable-osint" },
+    headers: { "User-Agent": "Mozilla/5.0 InsightNexus" },
   });
   if (!r.ok) throw new Error(`DuckDuckGo HTTP ${r.status}`);
   const html = await r.text();
@@ -408,7 +408,7 @@ async function pasteSearch(keyword: string) {
 async function darkWebSearch(keyword: string) {
   // Surface-web index of indexed onion content via Ahmia
   const r = await safeFetch(`https://ahmia.fi/search/?q=${encodeURIComponent(keyword)}`, {
-    headers: { "User-Agent": "Mozilla/5.0 lovable-osint" },
+    headers: { "User-Agent": "Mozilla/5.0 InsightNexus" },
   });
   if (!r.ok) throw new Error(`Ahmia HTTP ${r.status}`);
   const html = await r.text();
@@ -602,6 +602,12 @@ function independentAiEnv(name: string): string {
   const runtime = globalThis as unknown as { Deno?: { env: { get(key: string): string | undefined } } };
   return runtime.Deno?.env.get(name)?.trim() || "";
 }
+function independentAiBuilderEndpoint(value: string): boolean {
+  let host: string;
+  try { host = new URL(value).hostname.toLowerCase().replace(/\.+$/, ""); } catch { return false; }
+  const excluded = ["lovable.dev", "lovable.app", "lovableproject.com", "lovableproject-dev.com", "gptengineer.app", "gptengineer.run", "gpt-eng.com"];
+  return excluded.some(domain => host === domain || host.endsWith(`.${domain}`));
+}
 function independentAiConfiguration() {
   const mode = independentAiEnv("AI_AUTH_MODE") || "api_key";
   const validMode = ["api_key", "supabase_user"].includes(mode);
@@ -610,7 +616,8 @@ function independentAiConfiguration() {
   if (!validMode) missing.push("AI_AUTH_MODE");
   const enabled = independentAiEnv("AI_ENABLED") === "true";
   const zeroSpendVerified = independentAiEnv("AI_ZERO_SPEND_VERIFIED") === "true";
-  return { ready: !missing.length && enabled && zeroSpendVerified, required, missing, enabled, authentication_mode: mode, requires_caller_authorization: mode === "supabase_user", zero_spend_verified: zeroSpendVerified, cost_policy: "No requests unless the account allowance and absence of paid overage have been independently verified." };
+  const excludedBuilderEndpoint = independentAiBuilderEndpoint(independentAiEnv("AI_CHAT_COMPLETIONS_URL"));
+  return { ready: !missing.length && enabled && zeroSpendVerified && !excludedBuilderEndpoint, required, missing, enabled, excluded_builder_endpoint: excludedBuilderEndpoint, authentication_mode: mode, requires_caller_authorization: mode === "supabase_user", zero_spend_verified: zeroSpendVerified, cost_policy: "No requests unless the account allowance and absence of paid overage have been independently verified." };
 }
 function independentAiObject(value: unknown): IndependentAiObject {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new IndependentAiError("The AI provider returned an invalid completion object.");
@@ -625,6 +632,8 @@ async function independentAiRead(response: Response, limit: number): Promise<str
   const bytes = new Uint8Array(size); let offset = 0; for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; } return new TextDecoder().decode(bytes);
 }
 async function independentAiChat(input: IndependentAiInput, context: IndependentAiInvocationContext = {}) {
+  // Check the destination before reading a provider key or forwarding caller authorization.
+  if (independentAiBuilderEndpoint(independentAiEnv("AI_CHAT_COMPLETIONS_URL"))) throw new IndependentAiError("Lovable-hosted AI endpoints are disabled for this independent deployment. No provider request was sent.", 424);
   const config = independentAiConfiguration();
   if (!config.ready) throw new IndependentAiError(`Independent AI is not configured or authorized under the zero-new-spend policy. Required: ${config.missing.join(", ") || "AI_ENABLED=true and AI_ZERO_SPEND_VERIFIED=true after account/overage verification"}. No provider request was sent.`, 424);
   let endpoint: URL;
@@ -664,7 +673,6 @@ async function independentAiChat(input: IndependentAiInput, context: Independent
     throw new IndependentAiError(controller.signal.aborted ? "The AI provider timed out after 30 seconds. No automatic retry was made." : "The AI provider request failed. No automatic retry or substitute response was generated.");
   } finally { clearTimeout(timer); }
 }
-
 
 // Source: marketplacePublic.ts
 // Public, authoritative marketplace integrations. No generated records or paid fallbacks.
@@ -1599,7 +1607,7 @@ function marketplaceStatus() {
     const unverified = [...new Set(names.map(name=>marketplaceAllowanceFlags[name]).filter(Boolean))].filter(flag=>Deno.env.get(flag)!=='true');
     const usesAi = slug === 'translation' || slug === 'sentiment-analysis';
     const allowanceVerified = unverified.length === 0 && (!usesAi || ai.zero_spend_verified);
-    const blocked = !allowanceVerified ? 'Verified included provider access is required under the zero-new-spend setting. Credential presence does not establish a free allowance. No provider request will be sent.' : usesAi && !ai.enabled ? 'Independent AI is disabled. Enable it only after verifying the configured account allowance and absence of paid overage. No provider request will be sent.' : null;
+    const blocked = usesAi && ai.excluded_builder_endpoint ? 'Lovable-hosted AI endpoints are disabled for this independent deployment. Configure an independent endpoint; no provider request will be sent.' : !allowanceVerified ? 'Verified included provider access is required under the zero-new-spend setting. Credential presence does not establish a free allowance. No provider request will be sent.' : usesAi && !ai.enabled ? 'Independent AI is disabled. Enable it only after verifying the configured account allowance and absence of paid overage. No provider request will be sent.' : null;
     tools[slug] = { configured: missing.length === 0 && !blocked && (!usesAi || ai.ready), missing_secrets: missing, provider: usesAi ? "Configured independent AI provider" : "Documented external provider", scope: blocked || "Provider access and complete listing coverage are verified only by actual execution. See runner scope and sourced result.", allowance_verified: allowanceVerified, blocked_reason: blocked };
   }
   return { tools, checked_at: new Date().toISOString(), status_meaning: "Configured means required backend setup and verified included-access checks pass. Provider response and data coverage still require a successful sourced run.", new_provider_spend_allowed: false };

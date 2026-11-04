@@ -10,6 +10,52 @@ const completion=(text:string,extras:Record<string,unknown>={})=>new Response(JS
 beforeEach(()=>vi.stubGlobal("Deno",{env:{get:(name:string)=>env[name]}}));
 afterEach(()=>{vi.useRealTimers();vi.unstubAllGlobals();});
 describe("independent AI zero-spend boundary",()=>{
+  it.each([
+    "https://lovable.dev/v1/chat/completions",
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    "https://AI.GATEWAY.LOVABLE.DEV./v1/chat/completions",
+    "https://oauth.lovable.app/v1/chat/completions",
+    "https://project.lovableproject.com/v1/chat/completions",
+    "https://project.lovableproject-dev.com/v1/chat/completions",
+    "https://api.gptengineer.app/v1/chat/completions",
+    "https://api.gptengineer.run/v1/chat/completions",
+    "https://api.gpt-eng.com/v1/chat/completions",
+    "https://ai.gateway.%6covable.dev/v1/chat/completions",
+  ])("rejects builder-owned endpoint before key/caller access: %s", async endpoint => {
+    const reads: string[] = [];
+    vi.stubGlobal("Deno", { env: { get: (name: string) => { reads.push(name); return name === "AI_CHAT_COMPLETIONS_URL" ? endpoint : env[name]; } } });
+    const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);
+    const context = { get authorization(): string { throw new Error("Caller token must not be read"); } };
+    await expect(independentAiChat({ messages: [{ role: "user", content: "fixture" }] }, context)).rejects.toMatchObject({ httpStatus: 424, message: expect.stringContaining("Lovable-hosted AI endpoints are disabled") });
+    expect(reads).not.toContain("AI_API_KEY");
+    expect(fetch).not.toHaveBeenCalled();
+    expect(independentAiConfiguration()).toMatchObject({ ready: false, excluded_builder_endpoint: true });
+  });
+  it("preserves an unrelated hostname containing a builder-like prefix", async () => {
+    const endpoint = "https://lovable.dev.independent.example/v1/chat/completions";
+    vi.stubGlobal("Deno", { env: { get: (name: string) => name === "AI_CHAT_COMPLETIONS_URL" ? endpoint : env[name] } });
+    const fetch = vi.fn().mockResolvedValue(completion("Source-derived fixture.")); vi.stubGlobal("fetch", fetch);
+    expect(independentAiConfiguration()).toMatchObject({ ready: true, excluded_builder_endpoint: false });
+    await independentAiChat({ messages: [{ role: "user", content: "fixture" }] });
+    expect(fetch.mock.calls[0][0]).toBe(endpoint);
+    expect(fetch.mock.calls[0][1].redirect).toBe("error");
+  });
+  it("ships the same independent AI guard in the assembled manual tools function", () => {
+    const source = readFileSync("supabase/functions/_shared/independentAi.ts", "utf8").replace(/\r\n/g, "\n").replace(/^export /gm, "").trim();
+    const assembled = readFileSync("supabase/functions/osint-tools/index.ts", "utf8").replace(/\r\n/g, "\n");
+    const section = assembled.split("// Source: ../_shared/independentAi.ts\n")[1].split("// Source: marketplacePublic.ts")[0].trim();
+    expect(section).toBe(source);
+  });
+  it("explains the rejected endpoint in manual marketplace status instead of requesting an empty secret list", () => {
+    vi.stubGlobal("Deno", { env: { get: (name: string) => name === "AI_CHAT_COMPLETIONS_URL" ? "https://ai.gateway.lovable.dev/v1/chat/completions" : env[name] } });
+    const source = readFileSync("supabase/functions/osint-tools/marketplaceDispatch.ts", "utf8");
+    const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.None, target: ts.ScriptTarget.ES2022 } }).outputText;
+    const required = { translation: ["AI_CHAT_COMPLETIONS_URL", "AI_MODEL", "AI_API_KEY"], "sentiment-analysis": ["AI_CHAT_COMPLETIONS_URL", "AI_MODEL", "AI_API_KEY"] };
+    const status = new Function("independentAiConfiguration", "CONNECTED_FREE_ALLOWANCE_FLAGS", "CONNECTED_REQUIRED_SECRETS", "MARKETPLACE_REQUIRED_SECRETS", js + ";return marketplaceStatus();")(independentAiConfiguration, {}, required, {});
+    for (const tool of ["translation", "sentiment-analysis"]) expect(status.tools[tool]).toMatchObject({ configured: false, missing_secrets: [], blocked_reason: expect.stringContaining("Lovable-hosted AI endpoints are disabled") });
+    const assembled = readFileSync("supabase/functions/osint-tools/index.ts", "utf8").replace(/\r\n/g, "\n");
+    expect(assembled.split("// Source: marketplaceDispatch.ts\n")[1].split("// END GENERATED MARKETPLACE ADAPTERS")[0].trim()).toBe(source.replace(/\r\n/g, "\n").trim());
+  });
   it("needs no long-lived API key in user mode but requires a per-call verified bearer and tool identifier",async()=>{vi.stubGlobal("Deno",{env:{get:(name:string)=>name==="AI_AUTH_MODE"?"supabase_user":name==="AI_API_KEY"?undefined:env[name]}});const fetch=vi.fn().mockResolvedValue(completion('{"sentiment":"neutral"}'));vi.stubGlobal("fetch",fetch);expect(independentAiConfiguration()).toMatchObject({ready:true,authentication_mode:"supabase_user",requires_caller_authorization:true});expect(independentAiConfiguration().required).not.toContain("AI_API_KEY");await expect(independentAiChat({messages:[{role:"user",content:"fixture"}]})).rejects.toMatchObject({httpStatus:401});await expect(independentAiChat({messages:[{role:"user",content:"fixture"}]},{authorization:"Bearer verified-fixture",tool_id:"unsupported"})).rejects.toMatchObject({httpStatus:400});expect(fetch).not.toHaveBeenCalled();const result=await independentAiChat({messages:[{role:"user",content:"fixture"}],json:true},{authorization:"Bearer verified-fixture",tool_id:"sentiment-analysis"});expect(result.model).toBe("returned-fixture-model");expect(fetch.mock.calls[0][1].headers.Authorization).toBe("Bearer verified-fixture");expect(JSON.parse(fetch.mock.calls[0][1].body).tool_id).toBe("sentiment-analysis");});
   it("rejects unknown authentication modes before network access",async()=>{vi.stubGlobal("Deno",{env:{get:(name:string)=>name==="AI_AUTH_MODE"?"unsupported-mode":env[name]}});const fetch=vi.fn();vi.stubGlobal("fetch",fetch);expect(independentAiConfiguration().ready).toBe(false);await expect(independentAiChat({messages:[{role:"user",content:"fixture"}]})).rejects.toMatchObject({httpStatus:424});expect(fetch).not.toHaveBeenCalled();});
   it("fails closed with no credential, endpoint, or verified allowance before any request",async()=>{const fetch=vi.fn();vi.stubGlobal("fetch",fetch);for(const omitted of ["AI_CHAT_COMPLETIONS_URL","AI_API_KEY","AI_MODEL","AI_ENABLED","AI_ZERO_SPEND_VERIFIED"]){vi.stubGlobal("Deno",{env:{get:(name:string)=>name===omitted?undefined:env[name]}});expect(independentAiConfiguration().ready).toBe(false);await expect(independentAiChat({messages:[{role:"user",content:"Supplied fixture."}]})).rejects.toMatchObject({httpStatus:424});}expect(fetch).not.toHaveBeenCalled();});
