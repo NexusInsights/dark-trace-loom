@@ -1,0 +1,18 @@
+{
+  "checkedAtUtc": "2026-11-04T07:33:44.836Z",
+  "scope": "Known read-only API resource with absent/invalid key; no case data accepted",
+  "results": [
+    {
+      "mode": "missing-session",
+      "status": 401,
+      "error": "API key required",
+      "passed": true
+    },
+    {
+      "mode": "invalid-session",
+      "status": 403,
+      "error": "Invalid or inactive API key.",
+      "passed": true
+    }
+  ]
+}

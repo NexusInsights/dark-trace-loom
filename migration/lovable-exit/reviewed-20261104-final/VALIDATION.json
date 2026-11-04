@@ -1,0 +1,30 @@
+{
+  "checkedAtUtc": "2026-11-04T07:58:47.369Z",
+  "sourceHeadBeforeCommit": "54b2a1f06919aa9cbf2f92a471144fd57ccc868e",
+  "deployedEdgeSourceSha": "83efceb6b6369113015f773d434d368cac963111",
+  "functionsCompared": 20,
+  "functionRuntimeAndAssemblyFilesCompared": 39,
+  "functionRecordsEqualDeployedManifest": true,
+  "functionSourceHashesEqualDeployedCommit": true,
+  "edgeReuploadRequiredByThisChange": false,
+  "counts": {
+    "migrations": 55,
+    "publicTables": 63,
+    "bundleFiles": 110,
+    "edgeFunctions": 20,
+    "workerRuntimes": 3,
+    "pagesRoutes": 8,
+    "sharedFiles": 8,
+    "containerRuntimeFiles": 10,
+    "containerBuildSourceFiles": 17
+  },
+  "thirdRuntimeDeploymentStatus": "not_deployed",
+  "thirdRuntimeGate": "Cloudflare Containers requires Workers Paid; prior account check was rejected. No paid-plan/resource approval or live container acceptance is established by this inventory.",
+  "tests": {
+    "migrationNodeTestsPassed": 35,
+    "syntheticCountChecksPassed": 10,
+    "scope": "Offline source/inventory/metadata regressions only"
+  },
+  "remoteActions": 0,
+  "secretValuesCopied": 0
+}

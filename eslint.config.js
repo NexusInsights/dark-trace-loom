@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "migration/lovable-exit/bundle/**", "migration/lovable-exit/reviewed-20261104/bundle/**", "migration/lovable-exit/reference/**", "migration/lovable-exit/test-sdk/**"] },
+  { ignores: ["dist", "migration/lovable-exit/bundle/**", "migration/lovable-exit/reviewed-20261104/bundle/**", "migration/lovable-exit/reviewed-20261104-final/bundle/**", "migration/lovable-exit/reference/**", "migration/lovable-exit/test-sdk/**"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

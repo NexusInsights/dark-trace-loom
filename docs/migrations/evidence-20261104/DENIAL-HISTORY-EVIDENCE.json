@@ -1,0 +1,97 @@
+{
+  "checkedAtUtc": "2026-11-04T07:53:53.415Z",
+  "source": "Supported native mcp__codex_app__read_thread only",
+  "threadId": "01a13138-2afe-70e8-a9cd-55ce90d590f4",
+  "hostId": "durable",
+  "turnId": "01a19928-9e91-7620-9c81-7ff0d0e6c78e",
+  "turnStartUtc": "2026-11-01T22:08:58.000Z",
+  "turnCompletedUtc": "2026-11-01T22:24:48.000Z",
+  "exactPerCallTimestampAvailable": false,
+  "readerOptions": {
+    "turnLimit": 1,
+    "includeOutputs": true,
+    "maxOutputCharsPerItem": 1000
+  },
+  "calls": [
+    {
+      "id": "exec-f08dcae2-c09e-4500-a972-db7041c12c86",
+      "server": "codex_apps",
+      "tool": "lovable.query_database",
+      "target": "ddb190d3-9e1f-408e-9b17-113c51f6576f",
+      "sql": "SELECT tablename, policyname, permissive, roles::text AS roles, cmd, qual, with_check FROM pg_policies WHERE schemaname = 'public' AND tablename IN ('tool_results','pipelines','pipeline_runs','agent_runs','tool_permissions') ORDER BY tablename, policyname",
+      "status": "failed",
+      "durationMs": 2189,
+      "returnedFieldNames": [
+        "type",
+        "id",
+        "server",
+        "tool",
+        "arguments",
+        "status",
+        "durationMs"
+      ],
+      "originalErrorText": null
+    },
+    {
+      "id": "exec-07035cfa-3d2a-466e-92be-04863c05473f",
+      "server": "codex_apps",
+      "tool": "lovable.query_database",
+      "target": "ddb190d3-9e1f-408e-9b17-113c51f6576f",
+      "sql": "SELECT n.nspname AS schema, p.proname AS name, pg_get_function_identity_arguments(p.oid) AS arguments, p.prosecdef AS security_definer, p.proconfig AS settings, p.proacl::text AS acl, md5(pg_get_functiondef(p.oid)) AS definition_md5 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname IN ('is_case_owner','is_case_collaborator') ORDER BY p.proname",
+      "status": "failed",
+      "durationMs": 1242,
+      "returnedFieldNames": [
+        "type",
+        "id",
+        "server",
+        "tool",
+        "arguments",
+        "status",
+        "durationMs"
+      ],
+      "originalErrorText": null
+    },
+    {
+      "id": "exec-8c7b15e4-4529-4306-93b6-9ff21667adbe",
+      "server": "codex_apps",
+      "tool": "lovable.query_database",
+      "target": "ddb190d3-9e1f-408e-9b17-113c51f6576f",
+      "sql": "SELECT table_name, column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('tool_results','pipelines','pipeline_runs','agent_runs','tool_permissions') ORDER BY table_name, ordinal_position",
+      "status": "failed",
+      "durationMs": 1517,
+      "returnedFieldNames": [
+        "type",
+        "id",
+        "server",
+        "tool",
+        "arguments",
+        "status",
+        "durationMs"
+      ],
+      "originalErrorText": null
+    }
+  ],
+  "rawErrorRetrieved": false,
+  "exactGate": "The supported native history reader returned MCP call arguments/status/duration, but no output, result or error field for any of these three failed calls. An output truncation marker was not present on these call records. Original provider error wording/code therefore cannot be quoted or classified directly.",
+  "contemporarySecondaryEvidence": [
+    {
+      "id": "msg_0369fbf79450a586016ae7b938796087d288bcd524be95fed7",
+      "text": "Lovable confirms the project is still on `9546fc8`; the tested repairs are backed up on the separate repair branch. Its SQL connector lacks the scope required even for `SELECT`, so I\u2019m leaving that access unchanged.\n\nThe review also found remaining authentication and request-bound gaps. I\u2019m correcting those in the isolated repair branch while continuing the source comparison.\n",
+      "evidenceType": "Assistant statement, not original service response"
+    },
+    {
+      "id": "msg_0369fbf79450a586016ae7bbf77f1887d2a479cd55cd65343c",
+      "text": "GitHub has the exact `3a893eb` backup commit. CI has passed dependency restore, lint and type checking; the aggregate tests are running.\n\nLive policy inspection remains blocked by the connector\u2019s missing SQL scope. The authorized project reads and source export completed successfully.\n",
+      "evidenceType": "Assistant statement, not original service response"
+    },
+    {
+      "id": "msg_0369fbf79450a586016ae7bc2de23487d2bc49f5bfbd5f902a",
+      "text": "I used the logged-in session and exported eight relevant Insight Nexus source files.\n\n- Corrected additional authentication, permission and request-limit gaps.\n- **1,064 app tests, 212 other test executions and 43 gateway checks passed.**\n- Backed up commit `3a893eb`; [CI passed](https://github.com/NexusInsights/dark-trace-loom/actions/runs/41356723340). Working tree is clean.\n\nLive-policy inspection still requires the Lovable connector\u2019s missing `projects:write` scope. Production remains unchanged.",
+      "evidenceType": "Assistant statement, not original service response"
+    }
+  ],
+  "classification": "Missing projects:write scope is a contemporaneous assistant/documentation report. These supported records establish failed metadata SELECT attempts but do not independently establish raw OAuth error wording, HTTP status, tool-policy denial, or user rejection.",
+  "prohibitedPathsRead": false,
+  "sqlRetried": false,
+  "permissionsChanged": false
+}

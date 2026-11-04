@@ -1,0 +1,35 @@
+{
+  "checkedAtUtc": "2026-11-04T07:38:50.382489+00:00",
+  "deploymentId": "698e5307-011d-4146-b774-6577d1444edd",
+  "sourceSha": "83efceb6b6369113015f773d434d368cac963111",
+  "beforeConfigSha256": "65962838ec79acb8b305b38a587ce49bcb3d9c4fc27650be115bf16be28de784",
+  "afterConfigSha256": "005882c463e620a97b90101ee6754d6e8d386c091357726fbbc7163ba6751a70",
+  "preparedConfigSha256": "67d3a9e24b95f63fcafb138aff60ecbf49b1db7cfae5b656968a01a504fbfa32",
+  "readRoute": "Existing Wrangler 4.149.0 pages download config dark-trace-loom; authenticated read-only project metadata",
+  "normalizationEvidence": "Installed Wrangler simplifyEnvironments copies preview into topLevel; omitted services is normalized to [].",
+  "productionSettingsUnchanged": true,
+  "productionBackend": "https://zisrsttmjeipkmllqubi.supabase.co",
+  "productionPublicKeyUnchanged": true,
+  "productionServices": [
+    {
+      "binding": "MARKETPLACE_MONITOR",
+      "service": "insight-nexus-monitors",
+      "environment": ""
+    }
+  ],
+  "compatibilityDate": "2026-10-12",
+  "compatibilityFlags": [
+    "nodejs_compat"
+  ],
+  "previewMatchesPrepared": true,
+  "previewBackend": "https://ocliymtdvtxfxczxgbjr.supabase.co",
+  "previewServices": [],
+  "sharedPreviewConfigurationChanged": true,
+  "pagesBuildOutputDirectory": {
+    "before": "dist",
+    "after": "frontend"
+  },
+  "projectNameUnchanged": true,
+  "scope": "Fresh Pages configuration metadata; does not prove authenticated backend workflows",
+  "readOnlyOperation": true
+}

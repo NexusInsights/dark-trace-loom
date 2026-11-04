@@ -1,0 +1,330 @@
+{
+  "verifiedAtUtc": "2026-11-04T07:31:06.203Z",
+  "sourceSha": "83efceb6b6369113015f773d434d368cac963111",
+  "projectId": "ocliymtdvtxfxczxgbjr",
+  "scope": "Live missing/invalid-session rejection only. No authenticated workflow, provider, purchase or data acceptance.",
+  "passed": 39,
+  "total": 40,
+  "results": [
+    {
+      "function": "accept-invite",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 760
+    },
+    {
+      "function": "accept-invite",
+      "mode": "invalid-session",
+      "status": 400,
+      "pass": false,
+      "reason": "invalid_body",
+      "milliseconds": 363
+    },
+    {
+      "function": "admin-users",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 274
+    },
+    {
+      "function": "admin-users",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Invalid token",
+      "milliseconds": 278
+    },
+    {
+      "function": "analyze-case",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 284
+    },
+    {
+      "function": "analyze-case",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 800
+    },
+    {
+      "function": "api-gateway",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Missing or invalid API key.",
+      "milliseconds": 299
+    },
+    {
+      "function": "api-gateway",
+      "mode": "invalid-session",
+      "status": 403,
+      "pass": true,
+      "reason": "Invalid or inactive API key.",
+      "milliseconds": 974
+    },
+    {
+      "function": "api-keys",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 402
+    },
+    {
+      "function": "api-keys",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 501
+    },
+    {
+      "function": "breach-lookup",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Missing Authorization",
+      "milliseconds": 418
+    },
+    {
+      "function": "breach-lookup",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 550
+    },
+    {
+      "function": "check-alerts",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 408
+    },
+    {
+      "function": "check-alerts",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 252
+    },
+    {
+      "function": "check-subscription",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 472
+    },
+    {
+      "function": "check-subscription",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 512
+    },
+    {
+      "function": "create-checkout",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 429
+    },
+    {
+      "function": "create-checkout",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 575
+    },
+    {
+      "function": "customer-portal",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 529
+    },
+    {
+      "function": "customer-portal",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 562
+    },
+    {
+      "function": "identity-expansion",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 318
+    },
+    {
+      "function": "identity-expansion",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 408
+    },
+    {
+      "function": "image-hash",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 378
+    },
+    {
+      "function": "image-hash",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 135
+    },
+    {
+      "function": "intelligence-provider-status",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 174
+    },
+    {
+      "function": "intelligence-provider-status",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 185
+    },
+    {
+      "function": "intelligence-tools",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 236
+    },
+    {
+      "function": "intelligence-tools",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 299
+    },
+    {
+      "function": "invite-member",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "missing_auth",
+      "milliseconds": 461
+    },
+    {
+      "function": "invite-member",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 232
+    },
+    {
+      "function": "osint-dispatch",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 431
+    },
+    {
+      "function": "osint-dispatch",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 419
+    },
+    {
+      "function": "osint-tools",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 411
+    },
+    {
+      "function": "osint-tools",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "unauthenticated",
+      "milliseconds": 231
+    },
+    {
+      "function": "social-profile-scrape",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 224
+    },
+    {
+      "function": "social-profile-scrape",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "Unauthorized",
+      "milliseconds": 375
+    },
+    {
+      "function": "stripe-webhook",
+      "mode": "missing-session",
+      "status": 424,
+      "pass": true,
+      "reason": "webhook_not_configured",
+      "milliseconds": 462
+    },
+    {
+      "function": "stripe-webhook",
+      "mode": "invalid-session",
+      "status": 424,
+      "pass": true,
+      "reason": "webhook_not_configured",
+      "milliseconds": 370
+    },
+    {
+      "function": "wigle-lookup",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 239
+    },
+    {
+      "function": "wigle-lookup",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "reason": "",
+      "milliseconds": 412
+    }
+  ]
+}

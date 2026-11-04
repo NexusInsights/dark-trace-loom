@@ -4,13 +4,17 @@ import crypto from 'node:crypto';
 import ts from 'typescript';
 import {fileURLToPath} from 'node:url';
 import {canonicalTextBytes, checkedSource} from './bundle-sources.mjs';
+import {cloudflareRuntimeInventory} from './cloudflare-runtime-inventory.mjs';
 
 // Inventory only. Resolves local import closures and hashes bytes; does not
 // fetch modules, inspect secret values, call providers, or deploy functions.
-const app=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+let app=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const args=process.argv.slice(2);
-if(args.length && (args.length!==2||args[0]!=='--output'||!args[1])){console.error('Usage: node build-deployment-manifest.mjs [--output NEW_FILE]');process.exit(1);}
-const output=path.resolve(args.length?args[1]:path.join(app,'migration/lovable-exit/deployment-manifest.json'));
+let selectedOutput,verificationFile;
+const seenArgs=new Set();
+for(let index=0;index<args.length;index+=2){const flag=args[index],value=args[index+1];if(!['--output','--source-root','--verify'].includes(flag)||!value||value.startsWith('--')||seenArgs.has(flag)){console.error('Usage: node build-deployment-manifest.mjs [--output NEW_FILE | --verify EXISTING_FILE] [--source-root APP_DIRECTORY]');process.exit(1);}seenArgs.add(flag);if(flag==='--source-root')app=path.resolve(value);else if(flag==='--output')selectedOutput=path.resolve(value);else verificationFile=path.resolve(value);}
+if(selectedOutput&&verificationFile){console.error('--output and --verify are mutually exclusive');process.exit(1);}
+const output=selectedOutput??path.join(app,'migration/lovable-exit/deployment-manifest.json');
 const slash=value=>value.split(path.sep).join('/');
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 function boundedFile(file){const relative=path.relative(app,file);return checkedSource(app,relative);}
@@ -77,7 +81,7 @@ const boundary={
   'wigle-lookup':'Shared remote session verification before provider request',
 };
 try{
-  if(fs.existsSync(output))throw new Error('Manifest output already exists and is preserved; choose --output NEW_FILE');
+  if(!verificationFile&&fs.existsSync(output))throw new Error('Manifest output already exists and is preserved; choose --output NEW_FILE');
   const dir=path.join(app,'supabase/functions');const config=fs.readFileSync(path.join(app,'supabase/config.toml'),'utf8');
   const names=fs.readdirSync(dir,{withFileTypes:true}).filter(row=>row.isDirectory()&&!row.name.startsWith('_')).map(row=>row.name).sort();
   const functions=names.map(name=>({name,entrypoint:`supabase/functions/${name}/index.ts`,verify_jwt_local_config:verifyJwt(config,name),authorization_contract_known:Object.hasOwn(boundary,name),authorization_review_requirement:boundary[name]??'Manual handler permission review required',...closure(path.join(dir,name,'index.ts'))}));
@@ -90,9 +94,12 @@ try{
     if(parsed.error)throw new Error(`Worker configuration could not be parsed: ${name}`);
     const worker=parsed.config;const dependencies=closure(path.join(app,name,worker.main));return {name,...dependencies,configuration_file:fileRecord(configFile),configuration_names_only:[...new Set([...dependencies.configuration_names_only,...Object.keys(worker.vars??{})])].sort(),binding_names:[...(worker.ai?[worker.ai.binding]:[]),...(worker.durable_objects?.bindings??[]).map(row=>row.name)].sort(),backend_project_refs:[...new Set(JSON.stringify(worker.vars??{}).match(/[a-z]{20}(?=\.supabase\.co)/g)??[])],deployment_requirement:name==='monitor-worker'?'Update old backend configuration to owned target while preserving existing Durable Object namespace/jobs and original user IDs; reauthenticate stored source sessions, avoid duplicate schedulers':'Verify free-plan/no-overage entitlement, model allowance and Auth/permission before one authorized inference'};
   });
+  workers.push(cloudflareRuntimeInventory(app,{closure,fileRecord}));
   function pageRoutes(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(row=>{const file=path.join(dir,row.name);if(row.isSymbolicLink())throw new Error('Pages route symlink requires review');return row.isDirectory()?pageRoutes(file):/\.[cm]?[jt]s$/.test(row.name)&&!/(?:\.test|\.spec)\./.test(row.name)?[slash(path.relative(path.join(app,'functions'),file))]:[];}).sort();}
   const pages=pageRoutes(path.join(app,'functions/api')).map(name=>({route_file:`functions/${name}`,...closure(path.join(app,'functions',name)),deployment_requirement:'Owned target Pages Auth configuration/bearer verification and correct service bindings; active scan still requires explicit PORTSCAN_ALLOWED_IPS'}));
   const manifest={format_version:2,text_encoding:'utf8-lf',provenance:'Static local deployment dependency manifest; source hashes/configuration names only. Not evidence of deployment, secret availability, provider entitlement or fully implemented tool scope.',destination_project_ref:'ocliymtdvtxfxczxgbjr',protected_project_refs:['zisrsttmjeipkmllqubi','dbdkvrkmeowdydizrsmn'],functions,workers,cloudflare_pages_routes:pages,shared_source_files:fs.readdirSync(path.join(dir,'_shared')).filter(name=>name.endsWith('.ts')).sort().map(name=>fileRecord(path.join(dir,'_shared',name))),required_prior_database_changes:['authoritative owned-target application schema and original record restoration','reviewed invitation policy hardening and service-role-only SECURITY INVOKER accept_organization_invitation RPC','reviewed postgres-only stored alert engine and authenticated no-input owner wrapper before deploying check-alerts','rollback fixture/ACL/concurrency review before separate native cron activation'],remote_actions:0,secret_values_copied:0};
-  fs.writeFileSync(output,JSON.stringify(manifest,null,2)+'\n',{flag:'wx'});
-  console.log(JSON.stringify({prepared:true,functions:functions.length,workers:workers.length,pages_routes:pages.length,shared_files:manifest.shared_source_files.length,path:slash(path.relative(app,output)),sha256:hash(fs.readFileSync(output)),remote_actions:0,secret_values_copied:0}));
+  const rendered=JSON.stringify(manifest,null,2)+'\n';
+  if(verificationFile){if(canonicalTextBytes(fs.readFileSync(verificationFile)).toString('utf8')!==rendered)throw new Error('Deployment manifest source inventory is stale; regenerate a new reviewed candidate');}
+  else fs.writeFileSync(output,rendered,{flag:'wx'});
+  console.log(JSON.stringify({prepared:!verificationFile,source_freshness_verified:Boolean(verificationFile),functions:functions.length,workers:workers.length,pages_routes:pages.length,shared_files:manifest.shared_source_files.length,path:slash(path.relative(app,verificationFile??output)),sha256:hash(Buffer.from(rendered)),remote_actions:0,secret_values_copied:0}));
 }catch(error){console.error(error instanceof Error?error.message:error);process.exitCode=1;}

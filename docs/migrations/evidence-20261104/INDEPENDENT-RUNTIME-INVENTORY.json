@@ -1,0 +1,101 @@
+{
+  "checkedAtUtc": "2026-11-04T07:42:25.378939+00:00",
+  "scope": "Read-only runtime independence inventory. No inference, container readiness, deployment, source SQL, configuration mutation or credential creation.",
+  "aiWorker": {
+    "name": "insight-nexus-ai",
+    "deploymentId": "319ba710-f858-40e0-a548-453360e190e3",
+    "versionId": "6c64abec-0066-48e1-a5bb-ab79da9515dc",
+    "trafficPercent": 100,
+    "deployedAtUtc": "2026-10-14T22:14:23.033296Z",
+    "actualAuthBackend": "https://ocliymtdvtxfxczxgbjr.supabase.co",
+    "classification": "Deployed independently with owned-backend Auth binding; current inference acceptance is not established",
+    "aiBindingPresent": true,
+    "publicKeyBindingPresent": true,
+    "safeBindings": [
+      {
+        "name": "AI",
+        "type": "ai"
+      },
+      {
+        "name": "SUPABASE_PUBLISHABLE_KEY",
+        "type": "plain_text"
+      },
+      {
+        "name": "SUPABASE_URL",
+        "type": "plain_text",
+        "value": "https://ocliymtdvtxfxczxgbjr.supabase.co"
+      },
+      {
+        "name": "WORKERS_AI_ENABLED",
+        "type": "plain_text",
+        "value": "true"
+      },
+      {
+        "name": "WORKERS_AI_VERIFICATION_EXPIRES_AT",
+        "type": "plain_text",
+        "value": ""
+      },
+      {
+        "name": "WORKERS_AI_VERIFIED_AT",
+        "type": "plain_text",
+        "value": ""
+      },
+      {
+        "name": "WORKERS_AI_VERIFIED_PLAN",
+        "type": "plain_text",
+        "value": "free"
+      },
+      {
+        "name": "WORKERS_AI_ZERO_SPEND_VERIFIED",
+        "type": "plain_text",
+        "value": "true"
+      }
+    ],
+    "sourceHardcodesOwnedBackend": true,
+    "sourceLovableRuntimeEndpoint": false,
+    "sourceVersionEqualityVerified": false,
+    "inferencePerformed": false,
+    "currentAccountBillingEntitlementReverified": false,
+    "policyCaveat": "Enabled/zero-spend/free variables are saved operator assertions, not current billing proof. Timestamp guards are blank in deployed metadata.",
+    "readmeDrift": "README still describes preparation/undeployed and disabled default values; current deployment metadata and checked configuration differ.",
+    "sourceSha256": "babdc3d918eab7525319bd6325aa3c0677045cfe67b538a70e39a82d4005a9c4"
+  },
+  "intelligenceContainerRuntime": {
+    "directory": "services/cloudflare",
+    "workerName": "insightnexus-intelligence",
+    "classification": "Independent source prepared; configured Cloudflare Worker is not deployed",
+    "liveMetadataOperation": "wrangler deployments list --config services/cloudflare/wrangler.jsonc --json",
+    "exitCode": 1,
+    "cloudflareErrorCode": 10007,
+    "exactError": "This Worker does not exist on your account.",
+    "backendReferenceInConfiguration": false,
+    "lovableRuntimeDependencyFound": false,
+    "auth": "Shared INTELLIGENCE_WORKER_TOKEN required before Durable Object/container acquisition; provider keys remain in Edge functions",
+    "runtime": "Cloudflare Worker/Durable Object plus one Chromium/Tor Container; standard-1, max_instances=1; readiness can start billable compute",
+    "existingGate": "Saved WORK-STATE and services/cloudflare/README document unapproved Workers Paid/Containers cost. No paid-plan activation or container deployment.",
+    "deniedContainersListRetried": false,
+    "healthOrReadinessCalled": false,
+    "containerStarted": false,
+    "configSha256": "b1bfec9f13a9e66f3983e1648bbc2ab7a88daaf0e71eb35b8c475bc627d6512b",
+    "controllerSha256": "0dd74cfce48b4e5dfa82a7513deda3637f9e74cce3c92e469770aa65992e2bfc",
+    "edgeConfiguration": "intelligence-tools needs verified INTELLIGENCE_WORKER_URL plus matching existing secure token before profile/onion runtime; secret values/readiness were not inspected"
+  },
+  "productionMonitor": {
+    "sourceConfigBackend": "https://zisrsttmjeipkmllqubi.supabase.co",
+    "classification": "Production configuration remains source-backend-bound; other task owns current migration/preview verification",
+    "liveMetadataQueriedByThisAudit": false
+  },
+  "inventoryGap": {
+    "manifestWorkerNames": [
+      "ai-worker",
+      "monitor-worker"
+    ],
+    "missingRuntime": "services/cloudflare",
+    "meaning": "Twenty Edge functions and two listed Workers do not cover deployment/activation of the browser/Tor Container runtime. It is an optional unconfigured independent runtime, not a new Lovable dependency.",
+    "recommendedRecord": "Include container runtime identity, image/config source, authenticated readiness contract and explicit cost/unconfigured status in migration inventory without deploying it."
+  },
+  "mutations": 0,
+  "providerCalls": 0,
+  "inferenceCalls": 0,
+  "credentialValuesIncluded": false
+}

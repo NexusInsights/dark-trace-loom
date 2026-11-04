@@ -1,0 +1,71 @@
+{
+  "checkedAtUtc": "2026-11-04T07:27:50.539785+00:00",
+  "sourceSnapshotUtc": "2026-11-04T05:03:44Z",
+  "sourceProject": "zisrsttmjeipkmllqubi",
+  "targetProject": "ocliymtdvtxfxczxgbjr",
+  "sourceMethod": "Previously retrieved official export decoded privately; no source SQL request",
+  "targetMethod": "Authorized Supabase read-only aggregate storage metadata query",
+  "sourceProductObjects": 3,
+  "sourceProductBytesFromMetadata": 23067,
+  "sourceProductPrivateObjects": 3,
+  "sourceProductPublicObjects": 0,
+  "sourceBackupObjectsExcluded": 1,
+  "sourceStorageSelectPolicies": [
+    {
+      "command": "SELECT",
+      "authenticatedRole": true,
+      "usesAuthUid": true,
+      "usesFolderName": true,
+      "unconditional": false
+    },
+    {
+      "command": "SELECT",
+      "authenticatedRole": true,
+      "usesAuthUid": true,
+      "usesFolderName": true,
+      "unconditional": false
+    }
+  ],
+  "targetStorage": {
+    "productBucketCount": 2,
+    "publicProductBucketCount": 0,
+    "privateProductBucketCount": 2,
+    "productObjectCount": 3,
+    "publicProductObjectCount": 0,
+    "privateProductObjectCount": 3,
+    "storageObjectRlsEnabled": true,
+    "selectPolicies": [
+      {
+        "roles": [
+          "authenticated"
+        ],
+        "command": "SELECT",
+        "usesAuthUid": true,
+        "usesFolderName": true,
+        "usesOwner": false,
+        "unconditional": false
+      },
+      {
+        "roles": [
+          "authenticated"
+        ],
+        "command": "SELECT",
+        "usesAuthUid": true,
+        "usesFolderName": true,
+        "usesOwner": false,
+        "unconditional": false
+      }
+    ]
+  },
+  "previousSavedIdPathSizeComparison": "3 IDs/paths and sizes match; eTag/lastModified differ and one mimetype differs. Metadata equality is not byte equality.",
+  "binaryRetrievalAttempted": false,
+  "sourceDestinationContentSha256Compared": false,
+  "publicObjectRetrievalEligible": false,
+  "exactGate": "All product objects are private on source and target. Need an existing authorized Storage download session/signed download for each object on both backends, or independently retained object binaries with trustworthy hashes. No public URL can establish content equality. No credentials, permissions, URLs or access mechanisms were created or expanded.",
+  "privateManifest": "D:/CodexData/InsightNexus-Migration/2026-11-04/storage-product-manifest.private.json",
+  "sourceObjectManifestSha256": "c98ac277cc2b9a509497b4c02395ab54832735277ce4c8b417e58ffd75d0eaf0",
+  "productDataOrPathsIncluded": false,
+  "databaseMutations": 0,
+  "providerCalls": 0,
+  "newExports": 0
+}

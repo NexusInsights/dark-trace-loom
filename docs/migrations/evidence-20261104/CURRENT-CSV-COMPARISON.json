@@ -1,0 +1,76 @@
+{
+  "generatedAtUtc": "2026-11-04T07:48:14.469220+00:00",
+  "sourceSnapshotUtc": "2026-11-04T05:03:44Z",
+  "mode": "Read-only CSV comparison; no SQL generated or executed",
+  "tables": [
+    {
+      "table": "activity_logs",
+      "fileBytes": 130446,
+      "fileSha256": "76a863692aba7aebd72608e335e101053092d0b7a5841c04dfbac0836f2a75df",
+      "fileLastModifiedUtc": "2026-11-04T07:42:17.873925+00:00",
+      "csvRows": 720,
+      "uniqueIds": 720,
+      "snapshotRows": 570,
+      "sharedIds": 570,
+      "newIdsSinceSnapshot": 150,
+      "snapshotIdsAbsentFromCsv": 0,
+      "sharedRowsSemanticallyUnchanged": 570,
+      "sharedRowsChanged": 0,
+      "changedColumns": [],
+      "csvRowsWithBlankNullAmbiguity": 720,
+      "ambiguousColumns": [
+        "ip_address"
+      ],
+      "targetCheckpointExactDigestMatches": 570,
+      "targetCheckpointDifferentOrNormalizationLoss": 0,
+      "idsNotInTargetCheckpointModel": 150,
+      "pipelineTargetDifferingColumns": [],
+      "completeCurrentExportIndependentlyVerified": false,
+      "newRowsWithAmbiguousBlanks": 150,
+      "sharedRowsWithAmbiguousBlanks": 570
+    },
+    {
+      "table": "pipelines",
+      "fileBytes": 1519,
+      "fileSha256": "711102aca0c7838556bde4d8e95c47c9b8f53cfaa6bd497ff0506e2158c79ac9",
+      "fileLastModifiedUtc": "2026-11-04T07:40:32.645667+00:00",
+      "csvRows": 4,
+      "uniqueIds": 4,
+      "snapshotRows": 3,
+      "sharedIds": 3,
+      "newIdsSinceSnapshot": 1,
+      "snapshotIdsAbsentFromCsv": 0,
+      "sharedRowsSemanticallyUnchanged": 3,
+      "sharedRowsChanged": 0,
+      "changedColumns": [],
+      "csvRowsWithBlankNullAmbiguity": 1,
+      "ambiguousColumns": [
+        "description"
+      ],
+      "targetCheckpointExactDigestMatches": 2,
+      "targetCheckpointDifferentOrNormalizationLoss": 1,
+      "idsNotInTargetCheckpointModel": 1,
+      "pipelineTargetDifferingColumns": [
+        "last_run_at",
+        "updated_at"
+      ],
+      "completeCurrentExportIndependentlyVerified": false,
+      "newRowsWithAmbiguousBlanks": 0,
+      "sharedRowsWithAmbiguousBlanks": 1
+    }
+  ],
+  "limits": [
+    "UI card counts are estimates and are not completeness evidence.",
+    "Historical ID coverage does not prove all current new IDs were exported.",
+    "Nullable text/JSON blank fields can lose NULL versus empty or JSON-null distinctions. No write is inferred from an ambiguous CSV field. Semantically unchanged means compatible, conditional on those ambiguities.",
+    "Target digest comparisons normalize ambiguous blanks as SQL NULL; they do not prove raw NULL/empty fidelity.",
+    "Target model is the verified import checkpoint, preserving the prior pipeline timestamp conflict and target-only cluster; it is not a new live target query.",
+    "The extra target-generated evidence audit row is intentionally outside the source snapshot model.",
+    "Files exported at different times are not an atomic database snapshot."
+  ],
+  "normalizationTests": {
+    "passed": 12,
+    "total": 12,
+    "scope": "Synthetic parser/normalization fixtures; not export completeness or live acceptance"
+  }
+}

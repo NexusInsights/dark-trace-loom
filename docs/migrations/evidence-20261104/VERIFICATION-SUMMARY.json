@@ -1,0 +1,34 @@
+{
+  "verifiedAtUtc": "2026-11-04T07:39:17.974367+00:00",
+  "sourceSha": "83efceb6b6369113015f773d434d368cac963111",
+  "deploymentId": "698e5307-011d-4146-b774-6577d1444edd",
+  "assetOrigins": {
+    "immutable": {
+      "files": 21,
+      "sha256Manifest": "3093632ab16403fe28cebe747df0c2ff73ba70a89fbfdc402dc5a0804dfdb5e1"
+    },
+    "alias": {
+      "files": 21,
+      "sha256Manifest": "3093632ab16403fe28cebe747df0c2ff73ba70a89fbfdc402dc5a0804dfdb5e1"
+    }
+  },
+  "allAssetsExact": true,
+  "servedBuilderFindings": 0,
+  "productionSettingsUnchanged": true,
+  "previewServices": [],
+  "previewBackend": "https://ocliymtdvtxfxczxgbjr.supabase.co",
+  "sideEffect": {
+    "pagesBuildOutputDirectory": {
+      "before": "dist",
+      "after": "frontend"
+    },
+    "sharedPreviewConfigurationChanged": true
+  },
+  "evidence": {
+    "ASSET-CHECKS.json": "24011cc31f42ab9221c3eb582e6971fee93a78a7ba84d2c0873c80bab08fb313",
+    "BUILDER-ENDPOINT-CHECKS.json": "0d3f32dbe66b976a5a9d8068730dda638c9e4c243d59fbe5db7f0b15cb0a14f4",
+    "CONFIG-SIDEEFFECTS.json": "fec3e23f1b0b459306d8cfe776e577e5643d63f683acda21c1c4cd8e47208787"
+  },
+  "authenticatedAcceptance": false,
+  "mutationAttempted": false
+}

@@ -1,0 +1,8 @@
+{
+  "checkedAtUtc": "2026-11-04T07:31:58.124Z",
+  "function": "accept-invite",
+  "scope": "Structurally valid synthetic request with invalid user session; no invitation acceptance",
+  "status": 401,
+  "error": "unauthenticated",
+  "passed": true
+}

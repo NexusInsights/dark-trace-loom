@@ -128,12 +128,6 @@
       "Review legacy backend and export gates using authorized access only; no existing approval is implied for installations, scope expansion or paid calls"
     ]
   },
-  "latestIndependentMigration": {
-    "branch": "codex/lovable-exit-20261104",
-    "handover": "docs/migrations/2026-11-04-independent-platform.md",
-    "receipt": "docs/migrations/INDEPENDENT-PREPARATION-20261104.json",
-    "sourceBackend": "zisrsttmjeipkmllqubi",
-    "targetBackend": "ocliymtdvtxfxczxgbjr",
-    "status": "Current source prepared and tested; destination additive schema verified; public-data delta/login/cutover pending"
-  }
+  "latestIndependentMigration": "docs/migrations/INDEPENDENT-LIVE-CHECKPOINT-20261104.json",
+  "independentCutoverStatus": "preview live and snapshot imported; authenticated freshness/storage/monitor acceptance pending"
 }

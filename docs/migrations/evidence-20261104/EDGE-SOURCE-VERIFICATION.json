@@ -1,0 +1,149 @@
+{
+  "verifiedAtUtc": "2026-11-04T07:30:01.565Z",
+  "sourceSha": "83efceb6b6369113015f773d434d368cac963111",
+  "projectId": "ocliymtdvtxfxczxgbjr",
+  "deployed": 17,
+  "unchangedSourceVerified": 3,
+  "checks": [
+    {
+      "name": "accept-invite",
+      "status": "ACTIVE",
+      "version": 3,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "admin-users",
+      "status": "ACTIVE",
+      "version": 3,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "analyze-case",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "api-gateway",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "api-keys",
+      "status": "ACTIVE",
+      "version": 3,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "breach-lookup",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "check-alerts",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "check-subscription",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "create-checkout",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "customer-portal",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "identity-expansion",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "image-hash",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "intelligence-provider-status",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "intelligence-tools",
+      "status": "ACTIVE",
+      "version": 1,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "invite-member",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "osint-dispatch",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "osint-tools",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "social-profile-scrape",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "stripe-webhook",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    },
+    {
+      "name": "wigle-lookup",
+      "status": "ACTIVE",
+      "version": 5,
+      "verifyJwt": false,
+      "sourceClosureMatches": true
+    }
+  ]
+}

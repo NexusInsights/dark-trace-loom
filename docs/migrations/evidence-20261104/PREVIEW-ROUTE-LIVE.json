@@ -1,0 +1,122 @@
+{
+  "checkedAtUtc": "2026-11-04T07:32:25.653Z",
+  "origin": "https://lovable-exit.dark-trace-loom.pages.dev",
+  "sourceSha": "83efceb6b6369113015f773d434d368cac963111",
+  "scope": "Live authentication rejection; monitor intentionally unbound. No authenticated provider workflow.",
+  "passed": 14,
+  "total": 16,
+  "results": [
+    {
+      "path": "/api/breach-preview",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "message": "Sign in to query the provider"
+    },
+    {
+      "path": "/api/breach-preview",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "message": "Sign in to query the provider"
+    },
+    {
+      "path": "/api/marketplace-port-scan",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "message": "Sign in with a verified session to use this tool."
+    },
+    {
+      "path": "/api/marketplace-port-scan",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "message": "Sign in with a verified session to use this tool."
+    },
+    {
+      "path": "/api/person-records",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "message": "Sign in to search public records."
+    },
+    {
+      "path": "/api/person-records",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "message": "Sign in to search public records."
+    },
+    {
+      "path": "/api/profile-search",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "message": "Sign in to search profiles"
+    },
+    {
+      "path": "/api/profile-search",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "message": "Session could not be verified. Sign in again."
+    },
+    {
+      "path": "/api/research-email",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "message": ""
+    },
+    {
+      "path": "/api/research-email",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "message": ""
+    },
+    {
+      "path": "/api/research-gleif",
+      "mode": "missing-session",
+      "status": 401,
+      "pass": true,
+      "message": ""
+    },
+    {
+      "path": "/api/research-gleif",
+      "mode": "invalid-session",
+      "status": 401,
+      "pass": true,
+      "message": ""
+    },
+    {
+      "path": "/api/gateway/tools",
+      "mode": "missing-session",
+      "status": 404,
+      "pass": false,
+      "message": "Unknown API resource"
+    },
+    {
+      "path": "/api/gateway/tools",
+      "mode": "invalid-session",
+      "status": 404,
+      "pass": false,
+      "message": "Unknown API resource"
+    },
+    {
+      "path": "/api/marketplace-monitor/jobs",
+      "mode": "missing-session",
+      "status": 503,
+      "pass": true,
+      "message": "The durable monitoring service is not deployed or bound to this app."
+    },
+    {
+      "path": "/api/marketplace-monitor/jobs",
+      "mode": "invalid-session",
+      "status": 503,
+      "pass": true,
+      "message": "The durable monitoring service is not deployed or bound to this app."
+    }
+  ]
+}

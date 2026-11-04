@@ -1,0 +1,537 @@
+{
+  "verifiedAtUtc": "2026-11-04T07:40:40.822Z",
+  "operation": "Independent read-only post-import verification",
+  "target": "ocliymtdvtxfxczxgbjr",
+  "reconcileId": "InsightNexus_public_delta_20261104_20922fa1",
+  "sourceSnapshotUtc": "2026-11-04T05:03:44Z",
+  "forwardSha256": "746dfb14d1dde4cd182ad25f14d3bca7674b77af4fb0c6751b1318544dced829",
+  "databaseWritesByThisVerification": 0,
+  "verification": {
+    "tables": [
+      {
+        "table_name": "activity_logs",
+        "current_rows": 570,
+        "original_rows": 384,
+        "checkpoint_rows": 570,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "agent_runs",
+        "current_rows": 7,
+        "original_rows": 5,
+        "checkpoint_rows": 7,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "agents",
+        "current_rows": 5,
+        "original_rows": 5,
+        "checkpoint_rows": 5,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "alert_notifications",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "alerts",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "analysis_reports",
+        "current_rows": 4,
+        "original_rows": 4,
+        "checkpoint_rows": 4,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "api_keys",
+        "current_rows": 1,
+        "original_rows": 1,
+        "checkpoint_rows": 1,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "api_usage",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "articles",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "artifacts",
+        "current_rows": 9,
+        "original_rows": 8,
+        "checkpoint_rows": 9,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "billing_events",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "breach_records",
+        "current_rows": 8,
+        "original_rows": 0,
+        "checkpoint_rows": 8,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "case_collaborators",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "cases",
+        "current_rows": 3,
+        "original_rows": 3,
+        "checkpoint_rows": 3,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "cluster_members",
+        "current_rows": 23,
+        "original_rows": 0,
+        "checkpoint_rows": 23,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "courses",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "cross_case_correlations",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "cross_case_links",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "email_candidates",
+        "current_rows": 140,
+        "original_rows": 140,
+        "checkpoint_rows": 140,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "entities",
+        "current_rows": 10,
+        "original_rows": 10,
+        "checkpoint_rows": 10,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "entity_monitors",
+        "current_rows": 1,
+        "original_rows": 1,
+        "checkpoint_rows": 1,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "entity_observations",
+        "current_rows": 150,
+        "original_rows": 17,
+        "checkpoint_rows": 150,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "entity_relationships",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "entity_scores",
+        "current_rows": 65,
+        "original_rows": 0,
+        "checkpoint_rows": 65,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "entity_timeline",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "events",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "evidence_logs",
+        "current_rows": 10,
+        "original_rows": 8,
+        "checkpoint_rows": 10,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "expansion_logs",
+        "current_rows": 9,
+        "original_rows": 9,
+        "checkpoint_rows": 9,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "identity_clusters",
+        "current_rows": 6,
+        "original_rows": 1,
+        "checkpoint_rows": 6,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "identity_entities",
+        "current_rows": 85,
+        "original_rows": 17,
+        "checkpoint_rows": 85,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "identity_entity_links",
+        "current_rows": 10,
+        "original_rows": 0,
+        "checkpoint_rows": 10,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "infrastructure_links",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "intelligence_executions",
+        "current_rows": 7,
+        "original_rows": 0,
+        "checkpoint_rows": 7,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "investigation_suggestions",
+        "current_rows": 12,
+        "original_rows": 12,
+        "checkpoint_rows": 12,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "investigation_templates",
+        "current_rows": 6,
+        "original_rows": 6,
+        "checkpoint_rows": 6,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "lessons",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "modules",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "organization_invitations",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "organization_members",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "organizations",
+        "current_rows": 1,
+        "original_rows": 1,
+        "checkpoint_rows": 1,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "pdl_lookups",
+        "current_rows": 4,
+        "original_rows": 4,
+        "checkpoint_rows": 4,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "persona_events",
+        "current_rows": 256,
+        "original_rows": 256,
+        "checkpoint_rows": 256,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "persona_identifiers",
+        "current_rows": 185,
+        "original_rows": 177,
+        "checkpoint_rows": 185,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "personas",
+        "current_rows": 10,
+        "original_rows": 8,
+        "checkpoint_rows": 10,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "pipeline_runs",
+        "current_rows": 6,
+        "original_rows": 5,
+        "checkpoint_rows": 6,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "pipelines",
+        "current_rows": 3,
+        "original_rows": 3,
+        "checkpoint_rows": 3,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "platform_accounts",
+        "current_rows": 262,
+        "original_rows": 262,
+        "checkpoint_rows": 262,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "profiles",
+        "current_rows": 2,
+        "original_rows": 2,
+        "checkpoint_rows": 2,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "progress",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "reports",
+        "current_rows": 3,
+        "original_rows": 3,
+        "checkpoint_rows": 3,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "similarity_scores",
+        "current_rows": 339,
+        "original_rows": 0,
+        "checkpoint_rows": 339,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "social_graph_edges",
+        "current_rows": 151,
+        "original_rows": 151,
+        "checkpoint_rows": 151,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "subjects",
+        "current_rows": 4,
+        "original_rows": 4,
+        "checkpoint_rows": 4,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "subscriptions",
+        "current_rows": 2,
+        "original_rows": 2,
+        "checkpoint_rows": 2,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "system_logs",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "tags",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "tool_marketplace",
+        "current_rows": 50,
+        "original_rows": 50,
+        "checkpoint_rows": 50,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "tool_permissions",
+        "current_rows": 0,
+        "original_rows": 0,
+        "checkpoint_rows": 0,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "tool_results",
+        "current_rows": 33,
+        "original_rows": 18,
+        "checkpoint_rows": 33,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "usage_metrics",
+        "current_rows": 53,
+        "original_rows": 40,
+        "checkpoint_rows": 53,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "user_installed_tools",
+        "current_rows": 100,
+        "original_rows": 100,
+        "checkpoint_rows": 100,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "user_roles",
+        "current_rows": 1,
+        "original_rows": 1,
+        "checkpoint_rows": 1,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      },
+      {
+        "table_name": "username_candidates",
+        "current_rows": 106,
+        "original_rows": 106,
+        "checkpoint_rows": 106,
+        "checkpoint_matches": true,
+        "original_rows_unchanged": true
+      }
+    ],
+    "auth_users": 2,
+    "table_count": 63,
+    "public_total": 2712,
+    "original_total": 1824,
+    "auth_identities": 3,
+    "checkpoint_count": 63,
+    "run_identity_matches": true,
+    "all_checkpoints_match": true,
+    "recorded_changed_rows": 0,
+    "recorded_inserted_rows": 888,
+    "password_values_compared": false,
+    "all_original_rows_unchanged": true,
+    "auth_user_membership_unchanged": true,
+    "auth_identity_membership_unchanged": true
+  },
+  "authScope": "Compared user IDs and identity IDs/owners/providers only. Passwords, sessions and provider configuration were not read or compared.",
+  "limits": [
+    "Frozen export excludes later source writes around 06:20Z; reconcile before cutover.",
+    "Authenticated application/login acceptance remains separate.",
+    "This query is a point-in-time read-only snapshot; later writes can validly change checkpoint equality and block rollback."
+  ]
+}

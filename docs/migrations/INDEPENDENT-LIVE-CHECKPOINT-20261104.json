@@ -1,0 +1,118 @@
+{
+  "recordedAtUtc": "2026-11-04T07:56:15.838004+00:00",
+  "status": "Independent preview and snapshot data migration verified; production cutover pending",
+  "repository": "https://github.com/NexusInsights/dark-trace-loom",
+  "backupBranch": "codex/lovable-exit-20261104",
+  "deployedApplicationSourceSha": "83efceb6b6369113015f773d434d368cac963111",
+  "sourceCi": {
+    "run": 41791966053,
+    "conclusion": "success",
+    "url": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41791966053"
+  },
+  "preview": {
+    "deployment": "698e5307-011d-4146-b774-6577d1444edd",
+    "url": "https://lovable-exit.dark-trace-loom.pages.dev",
+    "immutableUrl": "https://698e5307.dark-trace-loom.pages.dev",
+    "backend": "ocliymtdvtxfxczxgbjr",
+    "servedAssetHashChecks": 42,
+    "servedAssetHashChecksPassed": 42,
+    "sourceBackendOrBuilderEndpointsInServedAssets": false,
+    "monitorBinding": "intentionally omitted; truthful HTTP503 until monitor migration is verified",
+    "signInVerified": false
+  },
+  "production": {
+    "deployment": "eb26475f-1561-4e10-a0bb-56de43276a78",
+    "sourceSha": "7367316ba62a98224b9e2346467567da6c89028f",
+    "backend": "zisrsttmjeipkmllqubi",
+    "runtimeBindingsChanged": false,
+    "cutoverAttempted": false,
+    "rollbackDeployment": "3138de43-8117-46ce-94f9-f0363baa8cfc"
+  },
+  "configurationSideEffect": "Pages project output-directory metadata changed from dist to frontend for the packaged direct upload. Preview configuration applies to all preview branches. Production variables, public key, service bindings, compatibility date and flags verified unchanged.",
+  "destinationFunctions": {
+    "sourceClosuresVerified": 20,
+    "updated": 17,
+    "alreadyIdentical": 3,
+    "rollbackSourcesPreserved": 18
+  },
+  "negativeLiveChecks": {
+    "edgeInitial": "39/40 expectations; accept-invite rejected malformed body with400 before remote session check",
+    "edgeFollowup": "Structurally valid synthetic accept-invite body with invalid session rejected401; no invitation accepted",
+    "pagesInitial": "14/16 expectations; invented gateway/tools path correctly rejected404",
+    "pagesFollowup": "Actual gateway/v1/cases read route rejected missing key401 and invalid key403",
+    "stripe": "Unconfigured webhook rejected424; no Stripe request or purchase",
+    "scope": "Missing/invalid-auth and unavailable-service behavior only; not authenticated workflow or provider acceptance"
+  },
+  "database": {
+    "snapshotUtc": "2026-11-04T05:03:44Z",
+    "archiveSha256": "20922fa19c030c3a4f9efe0d506de6be4417e4d24e6e3ab4e12be03e52d5b4e8",
+    "run": "InsightNexus_public_delta_20261104_20922fa1",
+    "sourceRowsInserted": 887,
+    "migrationAuditRowsInserted": 1,
+    "publicRowsAfter": 2712,
+    "tablesVerifiedByCountAndDigest": 63,
+    "originalRowsVerifiedUnchanged": 1824,
+    "authUserIdsPreserved": 2,
+    "authIdentityMappingsPreserved": 3,
+    "passwordOrSessionValuesCompared": false,
+    "preservedConflicts": "Destination-only cluster and pre-existing pipeline timestamps retained",
+    "rollback": "Private exact-delta rollback rehearsed with synthetic data; not executed live; refuses later writes"
+  },
+  "offlineValidation": {
+    "appTests": 1361,
+    "appFiles": 105,
+    "migrationPreparationTests": 45,
+    "dataDeltaTests": 27,
+    "csvNormalizationTests": 12,
+    "monitorTests": 40,
+    "typecheck": "passed",
+    "lint": "0 errors,15 existing warnings",
+    "independentBuild": "passed"
+  },
+  "monitor": {
+    "service": "insight-nexus-monitors",
+    "liveVersion": "af1d2ccb-e1c4-4080-af17-679ce3c5637d",
+    "liveBackend": "zisrsttmjeipkmllqubi",
+    "namespace": "e930f47b29404901a9d891041cfc8cf3",
+    "holdSourceCommit": "54b2a1f06919aa9cbf2f92a471144fd57ccc868e",
+    "holdDeployed": false,
+    "gate": "Verify live Durable Object recovery point, owner/access mapping, old-version drain and held state before backend cutover. Supabase export does not include monitor state."
+  },
+  "otherRuntimes": {
+    "aiWorker": "Actual deployed Auth binding uses owned target; no current free-plan entitlement or inference acceptance claimed",
+    "optionalContainer": "Independent source; Worker absent (Cloudflare10007). Historical paid Containers setup gate retained; not activated"
+  },
+  "currentCsvReads": {
+    "tables": [
+      "pipelines",
+      "activity_logs",
+      "alerts"
+    ],
+    "newIdsObserved": 151,
+    "newIdsImported": 0,
+    "historicalCoverage": "All old IDs present in pipelines/activity_logs",
+    "gates": [
+      "Exact current completeness not proven",
+      "Nullable text blanks ambiguous",
+      "Original source SQL error body unavailable; further source exports paused while denial scope is clarified"
+    ]
+  },
+  "remainingCutoverChecks": [
+    "User sign-in on independent preview and authenticated original workflow",
+    "Private bytes/hash comparison for3 product files; metadata equality is insufficient",
+    "Complete post-snapshot source delta and controlled write cutover",
+    "Monitor state recovery/drain/owner verification and guarded existing-service rebind",
+    "Verify final production frontend, backend, storage, session issuer and monitoring after cutover"
+  ],
+  "privateEvidenceRoot": "D:/CodexData/InsightNexus-Migration/2026-11-04",
+  "privateDataIncludedInRepository": false,
+  "sourceDeletionOrSubscriptionCancellationPerformed": false,
+  "currentSourceInventory": {
+    "candidate": "migration/lovable-exit/reviewed-20261104-final",
+    "deploymentManifestSha256": "df63808bcb53a08c5cd357699cee43ec52627573c338978602c4b788e71310a6",
+    "functions": 20,
+    "workerRuntimes": 3,
+    "pagesRoutes": 8,
+    "edgeSourceStillEqualsDeployedCommit": true
+  }
+}

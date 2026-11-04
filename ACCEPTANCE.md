@@ -1,3 +1,13 @@
+# Independent migration live checkpoint — November 4, 2026
+
+Independent preview698e5307 now serves source83efceb from owned backendocliymtdvtxfxczxgbjr;42/42 served-file hashes match and20 Edge function source closures match the reviewed source. The guarded official-snapshot transfer added887 missing records plus1 audit entry. Independent live SQL verifies63/63 table digests,2,712 public rows and all1,824 prior rows unchanged.
+
+Production has NOT switched: eb26475f still useszisrsttmjeipkmllqubi. Actual destination sign-in,3 private-file byte comparisons, complete post-05:03Z source changes and monitor recovery/draining remain cutover gates. Monitor hold source has40 passing offline tests and is prepared, not activated. CSV downloads are retained privately and unimported. Failed test expectations and their corrected endpoint/body follow-ups remain in the evidence; no fixture is counted as authenticated acceptance.
+
+See docs/migrations/INDEPENDENT-LIVE-CHECKPOINT-20261104.json and evidence-20261104/. No source deletion, credential/access expansion, paid provider call or production cutover occurred.
+
+---
+
 ## November 4, 2026 — complete independence migration in progress
 
 The user requested zero Lovable dependency. The independent destination was verified through the Supabase connector; the latest official export was privately downloaded, CRC checked and fully decoded. Compared with the destination: 1,822 public rows match, 887 are source-only, one destination-only cluster must be preserved, and one pipeline differs only in timestamps. No public-record import or production backend switch has occurred at this checkpoint.
