@@ -1,0 +1,118 @@
+{
+  "verifiedAtUtc": "2026-11-04T06:42:47.250877+00:00",
+  "applicationSourceSha": "7367316ba62a98224b9e2346467567da6c89028f",
+  "repository": "https://github.com/NexusInsights/dark-trace-loom",
+  "backupBranch": "codex/original-evidence-workflow-20261104",
+  "deploymentId": "eb26475f-1561-4e10-a0bb-56de43276a78",
+  "productionUrl": "https://dark-trace-loom.pages.dev",
+  "immutableUrl": "https://eb26475f.dark-trace-loom.pages.dev",
+  "completedAtUtc": "2026-11-04T06:38:14.490656+00:00",
+  "rollbackDeployment": "3138de43-8117-46ce-94f9-f0363baa8cfc",
+  "rollbackUrl": "https://3138de43.dark-trace-loom.pages.dev",
+  "originalLovableUrl": "https://dark-trace-loom.lovable.app",
+  "lovablePublished": false,
+  "backend": "zisrsttmjeipkmllqubi",
+  "separateStaging": "ocliymtdvtxfxczxgbjr",
+  "ci": {
+    "id": 41786450910,
+    "url": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41786450910",
+    "headSha": "7367316ba62a98224b9e2346467567da6c89028f",
+    "conclusion": "success"
+  },
+  "tests": {
+    "app": 1333,
+    "appFiles": 104,
+    "worker": 36,
+    "cloudflare": 19,
+    "intelligenceClient": 15,
+    "intelligenceSql": 11,
+    "research": 117,
+    "monitors": 23,
+    "ownershipSql": 1,
+    "dispatcherContract": 37,
+    "githubParityContract": 10,
+    "scope": "Offline suites include repeated SQL cases; not unique live-provider acceptance"
+  },
+  "build": {
+    "frontendExit": 0,
+    "functionsExit": 0,
+    "artifactFiles": 23,
+    "googleOAuthUnchanged": true,
+    "publicBindingsUnchanged": true
+  },
+  "httpChecks": [
+    {
+      "origin": "https://dark-trace-loom.pages.dev",
+      "passed": true,
+      "checks": 65
+    },
+    {
+      "origin": "https://eb26475f.dark-trace-loom.pages.dev",
+      "passed": true,
+      "checks": 65
+    }
+  ],
+  "liveWorkflow": {
+    "executedOnParentSource": "50b850e1e905b2910bc0d8285771a07c2708525b",
+    "receipt": "docs/repairs/ORIGINAL-LIVE-WORKFLOW.json",
+    "navigationRoutesRendered": 15,
+    "finalSourceReadback": {
+      "entryAsset": "/assets/index-DZzn14hV.js",
+      "mascotSourceRetained": true,
+      "rejectionRetained": true,
+      "currentIdentityExcludesRejectedAccount": true,
+      "manualDevPipelineHistoryRetained": true,
+      "browserErrors": 0
+    },
+    "noAdditionalProviderRequestsAfterDiagnosticFollowup": true
+  },
+  "limits": [
+    "Original Lovable URL was not published; editor now readable, source remains older and Cloudflare Pages API route needs a compatible original-host release path",
+    "GitHub manual lookup unavailable once after prior successful mascot retrieval; original message hid cause and upstream cause remains unknown",
+    "Explicit outbound-account-link traversal is fixture-tested but was not exercised by the two benign live targets",
+    "Legacy Supabase function/policy/foreign-user acceptance, private export format/integrity, paid/unconfigured providers and exact ImageScript remain separately unverified",
+    "No personal investigation, paid API usage, new credential/access, install, migration, backend rebind or monitor release"
+  ],
+  "artifacts": [
+    {
+      "file": "PREPARED.json",
+      "sha256": "151c8997527a5890b26f8ed2a0fe41024ddd011a951657be560a80f46498e551",
+      "bytes": 7603
+    },
+    {
+      "file": "DEPLOYMENT-RESULT.json",
+      "sha256": "1a34667baf5fc3c6a18a0a04031234c09cd35905209197d3b9cf2ee4006b6f5a",
+      "bytes": 1455
+    },
+    {
+      "file": "post-deployment-list.json",
+      "sha256": "09c519f71020bba00d879d6da4eae21751d7e2d16258a214d5484558d4379589",
+      "bytes": 9170
+    },
+    {
+      "file": "VALIDATION.json",
+      "sha256": "7afb834a34a36cbad8869ce9432a683aa3c759014045faf5034767661ef4ae55",
+      "bytes": 2510
+    },
+    {
+      "file": "exact-source-ci.log",
+      "sha256": "aefd1645d309849d1fd455c1f95305257969908bc82fb4ae30b2ac6cf18785ab",
+      "bytes": 115194
+    },
+    {
+      "file": "release-production-http.json",
+      "sha256": "7dfd62586e73558c9393b256d216bcdb2a43e79cf8093af69723cb969770cfb0",
+      "bytes": 8739
+    },
+    {
+      "file": "release-eb26475f-http.json",
+      "sha256": "7a724f260c6825c4afc7431c1b4e5d69ba46d4bb138912fa9dbb957a7ec1cbad",
+      "bytes": 8748
+    },
+    {
+      "file": "live-evidence-final.png",
+      "sha256": "ecdcfa0d2ac1536150d2d3a6454c2096ac592250cbcfffeeb701ff7d06ff787c",
+      "bytes": 71865
+    }
+  ]
+}

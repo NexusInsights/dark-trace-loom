@@ -1,4 +1,16 @@
-# Original full-platform live workflow - November 4, 2026
+# Final original full-platform release - November 4, 2026
+
+Deployed application source **7367316ba62a98224b9e2346467567da6c89028f**, production deployment **eb26475f-1561-4e10-a0bb-56de43276a78**, is verified at [the updated platform](https://dark-trace-loom.pages.dev/dashboard) and [immutable release](https://eb26475f.dark-trace-loom.pages.dev). The diagnostic follow-up is live. [Exact-source CI41786450910](https://github.com/NexusInsights/dark-trace-loom/actions/runs/41786450910) passed:1,333 app tests in104 files plus the aggregate worker/research/monitor/retained suites, lint, types and build. Both origins passed65 HTTP checks. Prior rollback is `3138de43-8117-46ce-94f9-f0363baa8cfc`.
+
+Final signed-in readback verified the new entry asset, retained mascot source, persisted rejection, exclusion from current identities, and persisted successful manual DEV pipeline history. No provider was queried again after the diagnostic-only follow-up. The live retrieval/support/rejection/manual/pipeline checks below belong to its parent application source50b850e; the exact change and verification boundaries remain explicit. Browser errors0.
+
+The **original Lovable URL is unchanged**. Its editor is now readable, but it contains older source and the Pages API workflow needs a compatible release path there. GitHub's one unavailable manual lookup remains unexplained; paid/unconfigured providers, legacy Supabase live policy/body acceptance, exact ImageScript and private export integrity remain separate gates. This release does not claim every provider works or that matching handles prove person ownership.
+
+See `docs/repairs/ORIGINAL-PLATFORM-RELEASE-20261104.json` for final source, artifact hashes, live limits, CI, backup and rollback. The historical records below remain preserved.
+
+---
+
+# Previous original full-platform live workflow - November 4, 2026
 
 Application source `50b850e1e905b2910bc0d8285771a07c2708525b` is live on the existing Cloudflare app, deployment `3138de43-8117-46ce-94f9-f0363baa8cfc`; CI41784162782 passed for that SHA. Production and immutable origins passed65 HTTP checks each. The original Lovable URL remains unchanged. See `docs/repairs/ORIGINAL-WORKFLOW-20261104.md` for exact source/rollback/backup evidence.
 

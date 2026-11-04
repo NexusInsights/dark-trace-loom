@@ -105,5 +105,27 @@
   "sourceComparison": "LOVABLE-SOURCE-COMPARISON.json",
   "previousValidationReceipt": "SECURITY-FOLLOWUP.json",
   "currentModule": "DNS outcome parity (bounded local follow-up)",
-  "currentModuleParent": "3a893eb8ebe288de4366b3d425f3a3a19315febc"
+  "currentModuleParent": "3a893eb8ebe288de4366b3d425f3a3a19315febc",
+  "latestOriginalWorkflow": {
+    "applicationSourceSha": "7367316ba62a98224b9e2346467567da6c89028f",
+    "backupBranch": "codex/original-evidence-workflow-20261104",
+    "deploymentId": "eb26475f-1561-4e10-a0bb-56de43276a78",
+    "productionUrl": "https://dark-trace-loom.pages.dev",
+    "immutableUrl": "https://eb26475f.dark-trace-loom.pages.dev",
+    "ci": {
+      "id": 41786450910,
+      "url": "https://github.com/NexusInsights/dark-trace-loom/actions/runs/41786450910",
+      "headSha": "7367316ba62a98224b9e2346467567da6c89028f",
+      "conclusion": "success"
+    },
+    "receipt": "docs/repairs/ORIGINAL-PLATFORM-RELEASE-20261104.json",
+    "handover": "docs/repairs/ORIGINAL-WORKFLOW-20261104.md",
+    "status": "Released; original Lovable publication and explicitly listed backend/provider acceptance remain separate",
+    "nextSteps": [
+      "Use restored original platform on Cloudflare; preserve exact rollback",
+      "For original Lovable publication, reconcile current source and provide a compatible server profile route; do not publish old source or bypass denied backend routes",
+      "When a provider fails, retain its now-visible reason; do not mark unavailable sources as findings",
+      "Review legacy backend and export gates using authorized access only; no existing approval is implied for installations, scope expansion or paid calls"
+    ]
+  }
 }

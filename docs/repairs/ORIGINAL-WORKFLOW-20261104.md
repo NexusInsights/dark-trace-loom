@@ -1,5 +1,17 @@
 # Original platform workflow and evidence repair
 
+## Final verified state
+
+Application `7367316ba62a98224b9e2346467567da6c89028f` is deployed to the existing Cloudflare project as `eb26475f-1561-4e10-a0bb-56de43276a78` (2026-11-04 06:38:14 UTC). Use https://dark-trace-loom.pages.dev/dashboard or immutable https://eb26475f.dark-trace-loom.pages.dev. Source is backed up on `codex/original-evidence-workflow-20261104`; CI41786450910 succeeded for that exact SHA. The final app suite passed1,333 tests in104 files; all other aggregate suite components, lint, types, frontend build and Pages packaging passed. Production and immutable HTTP checks passed65 each. Rollback is `3138de43-8117-46ce-94f9-f0363baa8cfc`.
+
+The failure-reason follow-up is deployed. Final signed-in browser readback verified `/assets/index-DZzn14hV.js`, preserved mascot observation and rejection, exclusion from current identity findings, and the saved successful DEV pipeline history. No new provider request was made after this diagnostic-only change. The full live retrieval/review/rejection and pipeline actions below remain accurately attributed to parent source50b850e. A clearly labelled rejected DEMO dossier and manual DEMO pipeline remain as audit evidence; no background schedule was configured. No commands or uncertain release operations remain at this checkpoint.
+
+Final receipt: `docs/repairs/ORIGINAL-PLATFORM-RELEASE-20261104.json`. Full build/HTTP/CI logs, source and asset manifests, and screenshot: sibling `insight-nexus-original-diagnostics-release-20261104`; first release/live-action evidence remains in sibling `insight-nexus-original-release-20261104`. Preserve both one-shot release directories and the previously completed source/frontend/private archives. Do not rerun deployment helpers.
+
+The original Lovable URL remains unchanged. Its editor is now accessible, but publishing its older source would omit these repairs; the new Pages API path also needs compatible server hosting on that origin. This is a remaining release-path task, not a claim that sign-in is still blocked. Do not switch backends, publish old source, change billing, or bypass denied backend routes. Legacy Supabase deployed-body/RLS/foreign-user verification, private export format/integrity and exact ImageScript acceptance remain unverified. GitHub's one unavailable manual lookup has no recovered upstream cause; other live sources must not be relabelled failed because of it, and the failed source must not be shown as a finding.
+
+Next safe continuation: start from this receipt and the current remote branch, coordinate any new writer, and inspect only materially changed gates. Keep source-backed observations distinct from analyst associations, fixtures distinct from live acceptance, and explicit provider failures visible. No further installation, credential, scope expansion, paid provider or migration permission is implied by this release.
+
 ## Verified Cloudflare release and live workflow
 
 Source `50b850e1e905b2910bc0d8285771a07c2708525b` was released at 2026-11-04 06:18:32 UTC as Cloudflare deployment `3138de43-8117-46ce-94f9-f0363baa8cfc`. Production is https://dark-trace-loom.pages.dev and the immutable release is https://3138de43.dark-trace-loom.pages.dev. Exact-source CI run41784162782 passed lint, types, the complete aggregate test command and build. The source is backed up on `codex/original-evidence-workflow-20261104`; remote/local equality was checked. Prior rollback is `a2e6328b-b45a-47b5-9a34-d9d11d2fc114`.
